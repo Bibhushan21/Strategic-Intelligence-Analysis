@@ -1,0 +1,6 @@
+fastapi==0.110.0
+uvicorn==0.27.1
+python-dotenv==1.0.1
+langchain-core>=0.3.49
+langchain-mistralai==0.2.10
+mistralai==0.0.12
