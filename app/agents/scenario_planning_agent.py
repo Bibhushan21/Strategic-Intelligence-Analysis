@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 class ScenarioPlanningAgent(BaseAgent):
     def get_system_prompt(self) -> str:
-        return """You are the Scenario Planning Agent. Create 3-4 distinct scenarios for EV market development in Africa. For each scenario, provide:
+        return """You are the Scenario Planning Agent. Create 3-4 distinct scenarios for the given strategic challenge. For each scenario, provide:
 1. A clear title
 2. A narrative description
 3. Key drivers
@@ -24,14 +24,18 @@ Scenario 2: [Title]
 
     def format_prompt(self, input_data: Dict[str, Any]) -> str:
         strategic_question = input_data.get('strategic_question', 'N/A')
+        time_frame = input_data.get('time_frame', 'N/A')
+        region = input_data.get('region', 'N/A')
         problem_statement = input_data.get('problem_analysis', {}).get('data', {}).get('problem_statement', 'N/A')
         
-        return f"""Create distinct scenarios for EV market development in Africa (2025-2040).
+        return f"""Create distinct scenarios for the following strategic challenge:
 
 Strategic Question: {strategic_question}
+Time Frame: {time_frame}
+Region/Scope: {region}
 Problem Context: {problem_statement}
 
-Provide 3-4 distinct scenarios that cover different possible futures."""
+Provide 3-4 distinct scenarios that cover different possible futures. Consider various factors that could influence the outcome."""
 
     async def process(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         try:

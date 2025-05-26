@@ -152,11 +152,17 @@ Provide a coordinated analysis plan and execution strategy."""
         try:
             logger.info("\nStarting analysis workflow...")
             
+            # Validate input data first
+            self.validate_input(input_data)
+            
             # Phase 1: Initial Analysis
             logger.info("\nPhase 1: Problem Analysis")
             problem_frame = await self.rate_limited_process(self.problem_explorer, input_data, "Problem Explorer")
             if problem_frame.get('status') != 'success':
-                raise Exception(f"Problem Explorer failed: {problem_frame.get('error', 'Unknown error')}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Problem Explorer failed: {problem_frame.get('error', 'Unknown error')}"
+                )
             
             # Update input data with problem frame
             input_data['problem_analysis'] = problem_frame
@@ -165,11 +171,17 @@ Provide a coordinated analysis plan and execution strategy."""
             logger.info("\nPhase 2: Best Practices and Horizon Scanning")
             best_practices = await self.rate_limited_process(self.best_practices, input_data, "Best Practices")
             if best_practices.get('status') != 'success':
-                raise Exception(f"Best Practices failed: {best_practices.get('error', 'Unknown error')}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Best Practices failed: {best_practices.get('error', 'Unknown error')}"
+                )
                 
             horizon_scan = await self.rate_limited_process(self.horizon_scanning, input_data, "Horizon Scanning")
             if horizon_scan.get('status') != 'success':
-                raise Exception(f"Horizon Scanning failed: {horizon_scan.get('error', 'Unknown error')}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Horizon Scanning failed: {horizon_scan.get('error', 'Unknown error')}"
+                )
             
             # Update input data with new results
             input_data['best_practices'] = best_practices
@@ -183,7 +195,10 @@ Provide a coordinated analysis plan and execution strategy."""
                 "Scenario Planning"
             )
             if scenarios.get('status') != 'success':
-                raise Exception(f"Scenario Planning failed: {scenarios.get('error', 'Unknown error')}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Scenario Planning failed: {scenarios.get('error', 'Unknown error')}"
+                )
             input_data['scenarios'] = scenarios
 
             # Phase 4: Research Synthesis
@@ -194,7 +209,10 @@ Provide a coordinated analysis plan and execution strategy."""
                 "Research Synthesis"
             )
             if synthesis.get('status') != 'success':
-                raise Exception(f"Research Synthesis failed: {synthesis.get('error', 'Unknown error')}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Research Synthesis failed: {synthesis.get('error', 'Unknown error')}"
+                )
             input_data['synthesis'] = synthesis
 
             # Phase 5: Action Planning
@@ -205,7 +223,10 @@ Provide a coordinated analysis plan and execution strategy."""
                 "Strategic Action"
             )
             if action_plan.get('status') != 'success':
-                raise Exception(f"Strategic Action failed: {action_plan.get('error', 'Unknown error')}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Strategic Action failed: {action_plan.get('error', 'Unknown error')}"
+                )
             input_data['action_plan'] = action_plan
 
             # Phase 6: High-Impact Initiatives
@@ -216,7 +237,10 @@ Provide a coordinated analysis plan and execution strategy."""
                 "High Impact"
             )
             if initiatives.get('status') != 'success':
-                raise Exception(f"High Impact failed: {initiatives.get('error', 'Unknown error')}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"High Impact failed: {initiatives.get('error', 'Unknown error')}"
+                )
             input_data['initiatives'] = initiatives
 
             # Phase 7: Backcasting
@@ -227,7 +251,10 @@ Provide a coordinated analysis plan and execution strategy."""
                 "Backcasting"
             )
             if prioritized_tasks.get('status') != 'success':
-                raise Exception(f"Backcasting failed: {prioritized_tasks.get('error', 'Unknown error')}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Backcasting failed: {prioritized_tasks.get('error', 'Unknown error')}"
+                )
 
             logger.info("\nAnalysis workflow completed successfully!")
             

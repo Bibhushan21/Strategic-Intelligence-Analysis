@@ -8,6 +8,9 @@ from app.agents.horizon_scan_agent import HorizonScanAgent
 from app.agents.synthesis_agent import SynthesisAgent
 import json
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/agents", tags=["agents"])
 templates = Jinja2Templates(directory="app/templates")
@@ -35,10 +38,27 @@ async def process_agent(agent_name: str, input_data: Dict[str, Any]):
         raise HTTPException(status_code=404, detail="Agent not found")
     
     try:
+        # Log the incoming request
+        logger.info(f"Processing request for agent: {agent_name}")
+        logger.info(f"Input data: {json.dumps(input_data, indent=2)}")
+        
+        # Process the request
         result = await agents[agent_name].process(input_data)
+        
+        # Log the result
+        logger.info(f"Agent {agent_name} processing completed")
+        logger.info(f"Result: {json.dumps(result, indent=2)}")
+        
         return result
+    except HTTPException as he:
+        logger.error(f"HTTP Exception in agent {agent_name}: {he.detail}")
+        raise he
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Unexpected error in agent {agent_name}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing request: {str(e)}"
+        )
 
 @router.get("/{agent_name}/status")
 async def get_agent_status(agent_name: str):
@@ -46,8 +66,17 @@ async def get_agent_status(agent_name: str):
     if agent_name not in agents:
         raise HTTPException(status_code=404, detail="Agent not found")
     
-    return {
-        "status": "active",
-        "agent_name": agent_name,
-        "capabilities": agents[agent_name].get_system_prompt()
-    } 
+    try:
+        return {
+            "status": "active",
+            "agent_name": agent_name,
+            "capabilities": agents[agent_name].get_system_prompt(),
+            "required_fields": agents[agent_name].required_fields,
+            "optional_fields": agents[agent_name].optional_fields
+        }
+    except Exception as e:
+        logger.error(f"Error getting status for agent {agent_name}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error getting agent status: {str(e)}"
+        ) 

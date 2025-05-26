@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 class BestPracticesAgent(BaseAgent):
     def get_system_prompt(self) -> str:
-        return """You are the Best Practices Agent. Analyze and provide 3-5 key best practices for EV market development in Africa. For each practice, provide:
+        return """You are the Best Practices Agent. Analyze and provide 3-5 key best practices for the given strategic challenge. For each practice, provide:
 1. A clear title
 2. A brief description
 3. A real-world example
@@ -27,14 +27,18 @@ Practice 2: [Title]
 
     def format_prompt(self, input_data: Dict[str, Any]) -> str:
         strategic_question = input_data.get('strategic_question', 'N/A')
+        time_frame = input_data.get('time_frame', 'N/A')
+        region = input_data.get('region', 'N/A')
         problem_statement = input_data.get('problem_analysis', {}).get('data', {}).get('problem_statement', 'N/A')
         
-        return f"""Analyze best practices for EV market development in Africa (2025-2040).
+        return f"""Analyze best practices for the following strategic challenge:
 
 Strategic Question: {strategic_question}
+Time Frame: {time_frame}
+Region/Scope: {region}
 Problem Context: {problem_statement}
 
-Provide 3-5 key best practices that have worked in similar emerging markets."""
+Provide 3-5 key best practices that have worked in similar situations or markets. Focus on practical, actionable strategies that have proven successful."""
 
     async def process(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         try:

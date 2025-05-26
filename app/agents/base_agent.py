@@ -6,6 +6,7 @@ from app.core.llm import get_llm
 import json
 import logging
 import sys
+from fastapi import HTTPException
 
 # Configure basic logging to stdout only
 logging.basicConfig(
@@ -29,6 +30,8 @@ class BaseAgent(ABC):
         self.timeout = 15
         self.retry_delay = 1
         self.system_prompt = self.get_system_prompt()
+        self.required_fields = ['strategic_question', 'time_frame', 'region']
+        self.optional_fields = ['additional_context']
 
     @abstractmethod
     def get_system_prompt(self) -> str:
@@ -45,6 +48,38 @@ class BaseAgent(ABC):
         Each agent must implement this method.
         """
         raise NotImplementedError("Each agent must implement format_prompt")
+
+    def validate_input(self, input_data: Dict[str, Any]) -> None:
+        """Validate the input data"""
+        # Check required fields
+        missing_fields = [field for field in self.required_fields if field not in input_data]
+        if missing_fields:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Missing required fields: {', '.join(missing_fields)}"
+            )
+
+        # Validate field types
+        if not isinstance(input_data['strategic_question'], str):
+            raise HTTPException(
+                status_code=400,
+                detail="strategic_question must be a string"
+            )
+        if not isinstance(input_data['time_frame'], str):
+            raise HTTPException(
+                status_code=400,
+                detail="time_frame must be a string"
+            )
+        if not isinstance(input_data['region'], str):
+            raise HTTPException(
+                status_code=400,
+                detail="region must be a string"
+            )
+        if 'additional_context' in input_data and not isinstance(input_data['additional_context'], str):
+            raise HTTPException(
+                status_code=400,
+                detail="additional_context must be a string"
+            )
 
     def format_output(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Format the output data"""
@@ -84,6 +119,9 @@ class BaseAgent(ABC):
     async def process(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """Process the input data and return the result"""
         try:
+            # Validate input data
+            self.validate_input(input_data)
+            
             agent_name = self.__class__.__name__
             logger.info(f"\n{'='*80}\n{agent_name} Output:\n{'='*80}")
             
@@ -99,6 +137,13 @@ class BaseAgent(ABC):
             
             return output
             
+        except HTTPException as he:
+            logger.error(f"HTTP Exception: {he.detail}")
+            return {
+                "status": "error",
+                "error": he.detail,
+                "agent_type": self.__class__.__name__
+            }
         except Exception as e:
             error_output = {
                 "status": "error",
