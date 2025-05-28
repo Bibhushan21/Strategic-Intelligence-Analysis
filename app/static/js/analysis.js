@@ -19,6 +19,24 @@ function createAgentOutputSection(agentName) {
     return section;
 }
 
+// Update section content
+function updateSection(sectionId, content) {
+    const section = document.querySelector(`[data-section="${sectionId}"]`);
+    if (!section) return;
+
+    const loadingIndicator = section.querySelector('.loading-indicator');
+    const contentElement = section.querySelector('pre');
+
+    if (loadingIndicator) {
+        loadingIndicator.remove();
+    }
+
+    if (contentElement) {
+        contentElement.textContent = content;
+        contentElement.classList.remove('hidden');
+    }
+}
+
 // Update agent output
 function updateAgentOutput(agentName, output) {
     const outputDiv = document.getElementById(`${agentName}Output`);
@@ -67,6 +85,7 @@ function updateAgentOutput(agentName, output) {
         `;
         container.appendChild(rawDiv);
 
+        // Clear and update the output div
         outputDiv.innerHTML = '';
         outputDiv.appendChild(container);
 
@@ -166,31 +185,46 @@ analysisForm.addEventListener('submit', async (e) => {
         const decoder = new TextDecoder();
         
         while (true) {
-            const {value, done} = await reader.read();
+            const { done, value } = await reader.read();
             if (done) break;
             
             const chunk = decoder.decode(value);
-            try {
-                const updates = JSON.parse(chunk);
+            const lines = chunk.split('\n');
+            
+            for (const line of lines) {
+                if (!line.trim()) continue;
                 
-                // Update each agent's output
-                for (const [agent, output] of Object.entries(updates)) {
-                    if (output.status === 'success' && output.data && output.data.formatted_output) {
-                        updateAgentOutput(agent, output.data.formatted_output);
-                        removeLoadingState(agent);
-                    } else if (output.status === 'error') {
-                        showError(`Error in ${agent}: ${output.error || 'Unknown error'}`);
-                        removeLoadingState(agent);
+                try {
+                    const data = JSON.parse(line);
+                    console.log('Received data:', data); // Debug log
+                    
+                    // Get the first key from the data object (agent name)
+                    const agentName = Object.keys(data)[0];
+                    if (!agentName) {
+                        console.warn('No agent name found in data');
+                        continue;
                     }
+                    
+                    console.log('Processing agent:', agentName); // Debug log
+                    const outputDiv = document.getElementById(`${agentName}Output`);
+                    if (outputDiv) {
+                        const agentData = data[agentName];
+                        if (agentData && agentData.data) {
+                            updateAgentOutput(agentName, agentData.data.formatted_output || agentData.data.raw_response);
+                            removeLoadingState(agentName);
+                        } else {
+                            console.warn(`No data found for agent: ${agentName}`);
+                        }
+                    } else {
+                        console.warn(`Output div not found for agent: ${agentName}`);
+                    }
+                } catch (error) {
+                    console.error('Error parsing agent output:', error);
                 }
-            } catch (error) {
-                console.error('Error parsing chunk:', error);
-                showError('Error processing server response');
             }
         }
-        
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Analysis error:', error);
         showError(error.message);
     }
 }); 

@@ -1,109 +1,107 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from .base_agent import BaseAgent
+import logging
+import asyncio
+
+logger = logging.getLogger(__name__)
 
 class HorizonScanningAgent(BaseAgent):
     def get_system_prompt(self) -> str:
-        return """You are the Horizon Scanning Agent. Your mission is to identify key emerging trends and developments relevant to the strategic challenge. Focus on:
+        return """You are the Strategic Horizon Scanning Agent. Identify the top 5 most critical trends and uncertainties.
 
-1. Emerging Trends: Identify 2-3 key emerging trends (e.g., PESTLE).
-2. Technological Developments: Highlight 1-2 significant technology changes.
-3. Market Dynamics: Note 1-2 important shifts in the market.
-4. Potential Disruptions: Identify 1-2 potential disruptions or wildcard events.
+Format your response exactly like this:
 
-Keep your analysis concise and focused on the most impactful external factors."""
+## Weak Signals:
+**[Number]. [Title]**\n
+   - **Domain:** [Domain]
+    **Description:** [3 sentence]
+    **Impact:** [1-10]
+    **Time:** [Near/Medium/Long]\n
+
+
+\n##Key Uncertainties:
+** [Number]. [Title]**\n
+   - **Domain:** [Domain]
+    **Description:** [3 sentence]
+    **Impact:** [1-10]
+    **Time:** [Near/Medium/Long]\n
+
+
+## Change Drivers:\n
+**Tech:** [1 key driver]\n
+**Market:** [1 key driver]\n
+**Society:** [1 key driver]\n
+**Demographics:** [1 key driver]\n
+**Economic:** [1 key driver]\n
+**Political:** [1 key driver]\n
+**Legal:** [1 key driver]\n
+**Environmental:** [1 key driver]\n
+"""
 
     def format_prompt(self, input_data: Dict[str, Any]) -> str:
-        return f"""Scan the horizon for the following strategic challenge:
+        strategic_question = input_data.get('strategic_question', 'N/A')
+        time_frame = input_data.get('time_frame', 'N/A')
+        region = input_data.get('region', 'N/A')
+        
+        return f"""Analyze: {strategic_question}
+Time: {time_frame}
+Region: {region}
 
-Strategic Question: {input_data.get('strategic_question', 'N/A')}
-Time Frame: {input_data.get('time_frame', 'N/A')}
-Region: {input_data.get('region', 'N/A')}
-Scope: {', '.join(input_data.get('scope', []))}
-Additional Instructions: {input_data.get('prompt', 'N/A')}
-
-Problem Context:
-- Main Problem: {input_data.get('problem_analysis', {}).get('data', {}).get('problem_statement', 'N/A')}
-
-Provide a structured horizon scan."""
+Keep responses extremely brief and focused."""
 
     async def process(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         try:
             prompt = self.format_prompt(input_data)
-            response = await self.invoke_llm(prompt)
+            response = await asyncio.wait_for(
+                self.invoke_llm(prompt),
+                timeout=15
+            )
             
-            sections = {
-                "emerging_trends": [],
-                "technological_developments": [],
-                "market_dynamics": [],
-                "potential_disruptions": [] 
+            # Log the raw response for debugging
+            logger.info(f"Raw LLM Response:\n{response}")
+            
+            return self.format_output({
+                "raw_response": response
+            })
+            
+        except asyncio.TimeoutError:
+            logger.error("HorizonScanningAgent timed out")
+            return {
+                "status": "error",
+                "error": "Agent timed out. Please try again with a more focused prompt.",
+                "agent_type": self.__class__.__name__
             }
-            
-            current_section_key = None
-            for line in response.split('\n'):
-                line = line.strip()
-                if not line:
-                    continue
-                
-                if "Emerging Trends" in line:
-                    current_section_key = "emerging_trends"
-                    if ':' in line and line.split(':',1)[1].strip(): sections[current_section_key].append(line.split(':',1)[1].strip())
-                    continue
-                elif "Technological Developments" in line:
-                    current_section_key = "technological_developments"
-                    if ':' in line and line.split(':',1)[1].strip(): sections[current_section_key].append(line.split(':',1)[1].strip())
-                    continue
-                elif "Market Dynamics" in line:
-                    current_section_key = "market_dynamics"
-                    if ':' in line and line.split(':',1)[1].strip(): sections[current_section_key].append(line.split(':',1)[1].strip())
-                    continue
-                elif "Potential Disruptions" in line:
-                    current_section_key = "potential_disruptions"
-                    if ':' in line and line.split(':',1)[1].strip(): sections[current_section_key].append(line.split(':',1)[1].strip())
-                    continue
-                
-                if current_section_key:
-                    if line.startswith("- ") or line.startswith("* "):
-                        sections[current_section_key].append(line[2:].strip())
-                    elif sections[current_section_key] and isinstance(sections[current_section_key][-1], str):
-                        sections[current_section_key][-1] += " " + line
-                    else:
-                        sections[current_section_key].append(line)
-            
-            for key, value in sections.items():
-                if not value:
-                    sections[key] = ["N/A"]
-            
-            return self.format_output(sections)
-            
         except Exception as e:
+            logger.error(f"Error in HorizonScanningAgent: {str(e)}")
             return {
                 "status": "error",
                 "error": str(e),
                 "agent_type": self.__class__.__name__
             }
 
-    def format_output(self, sections: Dict[str, Any]) -> Dict[str, Any]:
+    def format_output(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Format the output in a structured way."""
-        # Create a human-readable markdown format
-        markdown_output = f"""# Horizon Scan
-
-## Emerging Trends
-{chr(10).join(f"- {trend}" for trend in sections['emerging_trends'])}
-
-## Technological Developments
-{chr(10).join(f"- {tech}" for tech in sections['technological_developments'])}
-
-## Market Dynamics
-{chr(10).join(f"- {dynamic}" for dynamic in sections['market_dynamics'])}
-
-## Potential Disruptions
-{chr(10).join(f"- {disruption}" for disruption in sections['potential_disruptions'])}
-"""
-
+        raw_response = data.get("raw_response", "")
+        
+        # Create a human-readable markdown format that matches the raw output
+        markdown_output = "# Horizon Scanning Analysis\n\n"
+        
+        # Split the raw response into sections
+        sections = raw_response.split("\n\n")
+        
+        for section in sections:
+            if section.strip():
+                # Add each section as is, preserving the original format
+                markdown_output += f"{section}\n\n"
+                
+                # Add a separator between signals and uncertainties for better readability
+                if ("**Weak Signals:**" in section or "**Key Uncertainties:**" in section) and "**Change Drivers:**" not in section:
+                    markdown_output += "---\n\n"
+        
         return {
             "status": "success",
             "data": {
-                "raw_sections": sections,
+                "raw_sections": data,
                 "formatted_output": markdown_output
             }
-        } 
+        }

@@ -24,20 +24,20 @@ How are these parts connected?
 Are there any hidden causes or unseen factors?
 What similar problems could offer ideas?
 
-📊 Phase 3: Assess the Information
+Phase 3: Assess the Information
 What info do we already have?
 What's missing?
 What would help us understand better?
 How could we gather the missing info?
 
-💡 Phase 4: Explore Solutions
+Phase 4: Explore Solutions
 Should we go big or start small?
 What ideas are worth exploring?
 Have others solved similar problems?
 What would a great solution look like?
 What results are we aiming for?
 
-🚀 Phase 5: Plan to Act
+Phase 5: Plan to Act
 What are the key next steps?
 Who needs to be involved?
 What's a realistic timeline?
