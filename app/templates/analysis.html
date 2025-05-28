@@ -3,154 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analysis - Strategic Intelligence App</title>
+    <title>Strategic Analysis - Strategic Intelligence App</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="/static/css/analysis.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="/static/js/analysis.js" defer></script>
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold mb-8">Analysis Results</h1>
+        <h1 class="text-3xl font-bold mb-8">Strategic Analysis</h1>
         
-        <!-- Analysis List -->
-        <div class="grid grid-cols-1 gap-6">
-            {% for analysis in analyses %}
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <h2 class="text-xl font-semibold">{{ analysis.title }}</h2>
-                    <span class="text-sm text-gray-500">{{ analysis.created_at }}</span>
+        <!-- Analysis Form -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <form id="analysisForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Strategic Question</label>
+                    <input type="text" name="strategic_question" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
                 
-                <!-- Best Practices -->
-                {% if analysis.best_practices %}
-                <div class="mb-6">
-                    <h3 class="text-lg font-medium mb-3">Best Practices</h3>
-                    <div class="space-y-4">
-                        {% for practice in analysis.best_practices %}
-                        <div class="border-l-4 border-blue-500 pl-4">
-                            <h4 class="font-medium">{{ practice.title }}</h4>
-                            <p class="text-gray-600">{{ practice.description }}</p>
-                            <p class="text-sm text-gray-500 mt-2">Example: {{ practice.example }}</p>
-                            <div class="mt-2">
-                                <h5 class="text-sm font-medium">Success Factors:</h5>
-                                <ul class="list-disc list-inside text-sm text-gray-600">
-                                    {% for factor in practice.success_factors %}
-                                    <li>{{ factor }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Time Frame</label>
+                    <input type="text" name="time_frame" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
-                {% endif %}
                 
-                <!-- Scenarios -->
-                {% if analysis.scenarios %}
-                <div class="mb-6">
-                    <h3 class="text-lg font-medium mb-3">Scenarios</h3>
-                    <div class="space-y-4">
-                        {% for scenario in analysis.scenarios %}
-                        <div class="border-l-4 border-green-500 pl-4">
-                            <h4 class="font-medium">{{ scenario.title }}</h4>
-                            <p class="text-gray-600">{{ scenario.narrative }}</p>
-                            <div class="mt-2">
-                                <p class="text-sm"><span class="font-medium">Key Driver:</span> {{ scenario.key_driver }}</p>
-                                <p class="text-sm"><span class="font-medium">Main Implication:</span> {{ scenario.main_implication }}</p>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Region</label>
+                    <input type="text" name="region" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
-                {% endif %}
                 
-                <!-- Emerging Trends -->
-                {% if analysis.emerging_trends %}
-                <div class="mb-6">
-                    <h3 class="text-lg font-medium mb-3">Emerging Trends</h3>
-                    <div class="space-y-4">
-                        {% for trend in analysis.emerging_trends %}
-                        <div class="border-l-4 border-purple-500 pl-4">
-                            <h4 class="font-medium">{{ trend.name }}</h4>
-                            <p class="text-gray-600">{{ trend.description }}</p>
-                            <div class="mt-2">
-                                <p class="text-sm"><span class="font-medium">Impact:</span> {{ trend.impact }}</p>
-                                <p class="text-sm"><span class="font-medium">Confidence:</span> {{ trend.confidence }}</p>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Additional Context (Optional)</label>
+                    <textarea name="prompt" rows="3"
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
                 </div>
-                {% endif %}
                 
-                <!-- Key Signals -->
-                {% if analysis.key_signals %}
-                <div class="mb-6">
-                    <h3 class="text-lg font-medium mb-3">Key Signals</h3>
-                    <div class="space-y-4">
-                        {% for signal in analysis.key_signals %}
-                        <div class="border-l-4 border-yellow-500 pl-4">
-                            <h4 class="font-medium">{{ signal.name }}</h4>
-                            <p class="text-gray-600">{{ signal.description }}</p>
-                            <div class="mt-2">
-                                <p class="text-sm"><span class="font-medium">Relevance:</span> {{ signal.relevance }}</p>
-                                <p class="text-sm"><span class="font-medium">Timeframe:</span> {{ signal.timeframe }}</p>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                        Start Analysis
+                    </button>
                 </div>
-                {% endif %}
-                
-                <!-- Key Insights -->
-                {% if analysis.key_insights %}
-                <div class="mb-6">
-                    <h3 class="text-lg font-medium mb-3">Key Insights</h3>
-                    <div class="space-y-4">
-                        {% for insight in analysis.key_insights %}
-                        <div class="border-l-4 border-red-500 pl-4">
-                            <h4 class="font-medium">{{ insight.title }}</h4>
-                            <p class="text-gray-600">{{ insight.description }}</p>
-                            <div class="mt-2">
-                                <p class="text-sm"><span class="font-medium">Supporting Evidence:</span> {{ insight.supporting_evidence }}</p>
-                                <p class="text-sm"><span class="font-medium">Strategic Implication:</span> {{ insight.strategic_implication }}</p>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-                
-                <!-- Strategic Narrative -->
-                {% if analysis.strategic_narrative %}
-                <div class="mb-6">
-                    <h3 class="text-lg font-medium mb-3">Strategic Narrative</h3>
-                    <p class="text-gray-600">{{ analysis.strategic_narrative }}</p>
-                </div>
-                {% endif %}
-                
-                <!-- Critical Uncertainties -->
-                {% if analysis.critical_uncertainties %}
-                <div class="mb-6">
-                    <h3 class="text-lg font-medium mb-3">Critical Uncertainties</h3>
-                    <div class="space-y-4">
-                        {% for uncertainty in analysis.critical_uncertainties %}
-                        <div class="border-l-4 border-orange-500 pl-4">
-                            <h4 class="font-medium">{{ uncertainty.uncertainty }}</h4>
-                            <p class="text-gray-600">{{ uncertainty.impact }}</p>
-                            <div class="mt-2">
-                                <h5 class="text-sm font-medium">Monitoring Indicators:</h5>
-                                <ul class="list-disc list-inside text-sm text-gray-600">
-                                    {% for indicator in uncertainty.monitoring_indicators %}
-                                    <li>{{ indicator }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-            {% endfor %}
+            </form>
+        </div>
+        
+        <!-- Agent Outputs -->
+        <div id="agentOutputs" class="space-y-8">
+            <!-- Outputs will be dynamically added here -->
         </div>
     </div>
 </body>

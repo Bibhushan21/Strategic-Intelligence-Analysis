@@ -123,4 +123,25 @@ Provide 3-4 distinct scenarios that cover different possible futures. Consider v
                 "status": "error",
                 "error": str(e),
                 "agent_type": self.__class__.__name__
+            }
+
+    def format_output(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Format the output in a structured way."""
+        scenarios = data.get("scenarios", [])
+        
+        # Create a human-readable markdown format
+        markdown_output = "# Scenario Planning\n\n"
+        
+        for i, scenario in enumerate(scenarios, 1):
+            markdown_output += f"## Scenario {i}: {scenario['title']}\n\n"
+            markdown_output += f"**Narrative:** {scenario['narrative']}\n\n"
+            markdown_output += f"**Key Driver:** {scenario['key_driver']}\n\n"
+            markdown_output += f"**Main Implication:** {scenario['main_implication']}\n\n"
+        
+        return {
+            "status": "success",
+            "data": {
+                "raw_sections": data,
+                "formatted_output": markdown_output
+            }
             } 

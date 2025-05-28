@@ -20,15 +20,17 @@ logger = logging.getLogger(__name__)
 class OrchestratorAgent(BaseAgent):
     def __init__(self):
         super().__init__()
-        # Initialize all agents
-        self.problem_explorer = ProblemExplorerAgent()
-        self.best_practices = BestPracticesAgent()
-        self.horizon_scanning = HorizonScanningAgent()
-        self.scenario_planning = ScenarioPlanningAgent()
-        self.research_synthesis = ResearchSynthesisAgent()
-        self.strategic_action = StrategicActionAgent()
-        self.high_impact = HighImpactAgent()
-        self.backcasting = BackcastingAgent()
+        # Initialize agents in the desired order
+        self.agents = {
+            "Problem Explorer": ProblemExplorerAgent(),
+            "Best Practices": BestPracticesAgent(),
+            "Horizon Scanning": HorizonScanningAgent(),
+            "Scenario Planning": ScenarioPlanningAgent(),
+            "Research Synthesis": ResearchSynthesisAgent(),
+            "Strategic Action": StrategicActionAgent(),
+            "High Impact": HighImpactAgent(),
+            "Backcasting": BackcastingAgent()
+        }
         self.last_request_time = 0
         self.min_request_interval = 2.0  # Minimum time between requests in seconds
         self.max_retries = 3
@@ -146,144 +148,29 @@ Provide a coordinated analysis plan and execution strategy."""
                 await asyncio.sleep(delay)
 
     async def process(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Orchestrate the entire analysis workflow with sequential processing to avoid rate limits.
-        """
+        """Process the input data through all agents in sequence."""
+        results = {}
+        
         try:
-            logger.info("\nStarting analysis workflow...")
-            
-            # Validate input data first
-            self.validate_input(input_data)
-            
-            # Phase 1: Initial Analysis
-            logger.info("\nPhase 1: Problem Analysis")
-            problem_frame = await self.rate_limited_process(self.problem_explorer, input_data, "Problem Explorer")
-            if problem_frame.get('status') != 'success':
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Problem Explorer failed: {problem_frame.get('error', 'Unknown error')}"
-                )
-            
-            # Update input data with problem frame
-            input_data['problem_analysis'] = problem_frame
-            
-            # Phase 2: Best Practices and Horizon Scanning
-            logger.info("\nPhase 2: Best Practices and Horizon Scanning")
-            best_practices = await self.rate_limited_process(self.best_practices, input_data, "Best Practices")
-            if best_practices.get('status') != 'success':
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Best Practices failed: {best_practices.get('error', 'Unknown error')}"
-                )
+            # Process each agent in sequence
+            for agent_name, agent in self.agents.items():
+                logger.info(f"\nProcessing {agent_name}...")
                 
-            horizon_scan = await self.rate_limited_process(self.horizon_scanning, input_data, "Horizon Scanning")
-            if horizon_scan.get('status') != 'success':
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Horizon Scanning failed: {horizon_scan.get('error', 'Unknown error')}"
-                )
+                # Process the agent
+                result = await self.rate_limited_process(agent, input_data, agent_name)
+                results[agent_name] = result
+                
+                # Update input data with the current agent's output
+                input_data[agent_name.lower().replace(" ", "_")] = result
+                
+                logger.info(f"{agent_name} completed successfully")
             
-            # Update input data with new results
-            input_data['best_practices'] = best_practices
-            input_data['horizon_scan'] = horizon_scan
-
-            # Phase 3: Scenario Development
-            logger.info("\nPhase 3: Scenario Development")
-            scenarios = await self.rate_limited_process(
-                self.scenario_planning,
-                input_data,
-                "Scenario Planning"
-            )
-            if scenarios.get('status') != 'success':
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Scenario Planning failed: {scenarios.get('error', 'Unknown error')}"
-                )
-            input_data['scenarios'] = scenarios
-
-            # Phase 4: Research Synthesis
-            logger.info("\nPhase 4: Research Synthesis")
-            synthesis = await self.rate_limited_process(
-                self.research_synthesis,
-                input_data,
-                "Research Synthesis"
-            )
-            if synthesis.get('status') != 'success':
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Research Synthesis failed: {synthesis.get('error', 'Unknown error')}"
-                )
-            input_data['synthesis'] = synthesis
-
-            # Phase 5: Action Planning
-            logger.info("\nPhase 5: Action Planning")
-            action_plan = await self.rate_limited_process(
-                self.strategic_action,
-                input_data,
-                "Strategic Action"
-            )
-            if action_plan.get('status') != 'success':
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Strategic Action failed: {action_plan.get('error', 'Unknown error')}"
-                )
-            input_data['action_plan'] = action_plan
-
-            # Phase 6: High-Impact Initiatives
-            logger.info("\nPhase 6: High-Impact Initiatives")
-            initiatives = await self.rate_limited_process(
-                self.high_impact,
-                input_data,
-                "High Impact"
-            )
-            if initiatives.get('status') != 'success':
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"High Impact failed: {initiatives.get('error', 'Unknown error')}"
-                )
-            input_data['initiatives'] = initiatives
-
-            # Phase 7: Backcasting
-            logger.info("\nPhase 7: Backcasting")
-            prioritized_tasks = await self.rate_limited_process(
-                self.backcasting,
-                input_data,
-                "Backcasting"
-            )
-            if prioritized_tasks.get('status') != 'success':
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Backcasting failed: {prioritized_tasks.get('error', 'Unknown error')}"
-                )
-
-            logger.info("\nAnalysis workflow completed successfully!")
+            return results
             
-            # Return comprehensive results
-            return {
-                "status": "success",
-                "data": {
-                    "problem_analysis": problem_frame,
-                    "best_practices": best_practices,
-                    "horizon_scan": horizon_scan,
-                    "scenarios": scenarios,
-                    "synthesis": synthesis,
-                    "action_plan": action_plan,
-                    "initiatives": initiatives,
-                    "prioritized_tasks": prioritized_tasks
-                }
-            }
-
-        except HTTPException as he:
-            logger.error(f"HTTP Exception: {he.detail}")
-            return {
-                "status": "error",
-                "error": he.detail,
-                "agent_type": self.__class__.__name__
-            }
         except Exception as e:
-            logger.error(f"Unexpected error: {str(e)}")
+            logger.error(f"Error in OrchestratorAgent: {str(e)}")
             return {
                 "status": "error",
                 "error": str(e),
-                "agent_type": self.__class__.__name__
+                "agent_type": "Orchestrator"
             } 
