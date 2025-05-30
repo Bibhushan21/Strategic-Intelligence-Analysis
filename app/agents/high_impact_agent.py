@@ -47,8 +47,9 @@ Keep your initiatives focused on high-impact outcomes and measurable results."""
 
     def format_prompt(self, input_data: Dict[str, Any]) -> str:
         strategic_question = input_data.get('strategic_question', 'N/A')
-        action_plan = input_data.get('action_plan', {}).get('data', {}).get('raw_sections', {})
-        best_practices = input_data.get('best_practices', {}).get('data', {}).get('practices', [])
+        action_plan = input_data.get('strategic_action', {}).get('data', {}).get('raw_sections', {})
+        best_practices_output = input_data.get('best_practices', {}).get('data', {})
+        best_practices_list = best_practices_output.get('structured_practices', [])
         
         # Format action plan sections
         short_term = action_plan.get('short_term_actions', [])
@@ -60,7 +61,7 @@ Keep your initiatives focused on high-impact outcomes and measurable results."""
         long_term_text = "\n".join([f"- {action}" for action in long_term]) if long_term else "N/A"
         
         # Format best practices
-        best_practices_text = "\n".join([f"- {p['title']}: {p['description']}" for p in best_practices[:2]]) if best_practices else "N/A"
+        best_practices_text = "\n".join([f"- {p.get('title', 'N/A')}: {p.get('description', 'N/A')}" for p in best_practices_list[:2]]) if best_practices_list else "N/A"
 
         return f"""Identify high-impact initiatives for: {strategic_question}
 

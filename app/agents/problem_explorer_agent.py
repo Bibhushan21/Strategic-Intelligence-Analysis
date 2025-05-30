@@ -142,19 +142,20 @@ Please analyze this strategic challenge using the 5-phase framework."""
 
     def format_output(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Format the output in a structured way."""
-        sections = data.get("structured_data", {})
+        structured_data_from_process = data.get("structured_data", {})
+        raw_response_from_process = data.get("raw_response", "")
         
         # Create a human-readable markdown format
         markdown_output = "# Problem Exploration Analysis\n\n"
         
         # Add acknowledgment
-        if sections.get('acknowledgment'):
-            markdown_output += f"## Understanding\n{sections['acknowledgment']}\n\n"
+        if structured_data_from_process.get('acknowledgment'):
+            markdown_output += f"## Understanding\n{structured_data_from_process['acknowledgment']}\n\n"
         
         # Add each phase
         for phase in ['phase1', 'phase2', 'phase3', 'phase4', 'phase5']:
-            if phase in sections:
-                phase_data = sections[phase]
+            if phase in structured_data_from_process:
+                phase_data = structured_data_from_process[phase]
                 markdown_output += f"## {phase_data['title']}\n\n"
                 for item in phase_data['content']:
                     # Don't add bullet point if item already has one
@@ -165,15 +166,16 @@ Please analyze this strategic challenge using the 5-phase framework."""
                 markdown_output += "\n"
         
         # Add takeaways
-        if sections.get('takeaways'):
+        if structured_data_from_process.get('takeaways'):
             markdown_output += "## Key Takeaways\n\n"
-            for takeaway in sections['takeaways']:
+            for takeaway in structured_data_from_process['takeaways']:
                 markdown_output += f"- {takeaway}\n"
         
         return {
             "status": "success",
             "data": {
-                "raw_sections": data,
+                "structured_output": structured_data_from_process,
+                "raw_response": raw_response_from_process,
                 "formatted_output": markdown_output
             }
         } 

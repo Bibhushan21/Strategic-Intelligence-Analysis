@@ -1,42 +1,67 @@
 from typing import Dict, Any, List
 from .base_agent import BaseAgent
+import json
+import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 class StrategicActionAgent(BaseAgent):
+    def __init__(self):
+        super().__init__()
+        self.timeout = 90  # Increased timeout for this complex agent
+
     def get_system_prompt(self) -> str:
-        return """You are the Strategic Action Agent. Your mission is to develop a comprehensive action plan based on the research synthesis. Focus on:
+        return """You are the Strategic Action Planning Agent. Your role is to convert synthesized insights into structured, time-bound, and prioritized strategic actions. Use the original problem statement and all outputs from the Research Synthesis Agent to build a practical roadmap for implementation across three timeframes.
 
-1. Short-term Actions (0-1 year): List 3-4 immediate actions that can be taken within the next year.
-2. Medium-term Actions (1-3 years): List 3-4 actions for the next 1-3 years.
-3. Long-term Actions (3-5 years): List 2-3 strategic actions for 3-5 years out.
-4. Resource Requirements: List key resources needed (financial, human, technical).
-5. Risk Mitigation: List 2-3 key risks and how to mitigate them.
+🎯 Your Objective
+Translate insights into concrete, high-impact actions across:
 
-Format your response exactly like this:
+Near-Term (0–2 years): Quick wins, urgent needs, low complexity
 
-Short-term Actions (0-1 year):
-- [Action 1]
-- [Action 2]
-- [Action 3]
+Medium-Term (2–5 years): Planned, coordinated, realistic strategies
 
-Medium-term Actions (1-3 years):
-- [Action 1]
-- [Action 2]
-- [Action 3]
+Long-Term (5–10 years): Visionary, systemic change with broad alignment
 
-Long-term Actions (3-5 years):
-- [Action 1]
-- [Action 2]
+🧠 Input to Analyze
+Original Problem Statement
 
-Resource Requirements:
-- [Resource 1]
-- [Resource 2]
-- [Resource 3]
+Contextual constraints (if provided)
 
-Risk Mitigation:
-- [Risk 1]: [Mitigation strategy]
-- [Risk 2]: [Mitigation strategy]
+Synthesized findings from the Research Synthesis Agent, including:
 
-Keep your action plan specific, measurable, and aligned with the strategic objectives."""
+Key Insights
+
+Opportunity Spaces
+
+Risk & Resilience
+
+Innovation Pathways
+
+Quick Wins vs Long-Term Strategies
+
+🛠️ Instructions for Each Strategic Idea
+Provide a title and 1–2 sentence summary of the idea.
+
+Break it into 5 specific action items (clear, realistic, and time-horizon aligned).
+
+Assign priority (High / Medium / Low) for each action based on:
+
+Urgency
+
+Potential impact
+
+Feasibility
+
+✅ Guidelines
+Keep all actions solution-oriented, operationally defined, and sequenced.
+
+Ensure each action aligns with the insights from the Research Synthesis Agent.
+
+Focus on real-world execution, not abstract suggestions.
+
+Use simple, direct language suitable for decision-makers and implementers.
+"""
 
     def _convert_list_to_string_for_prompt(self, items: List[str]) -> str:
         if not items:
@@ -45,126 +70,205 @@ Keep your action plan specific, measurable, and aligned with the strategic objec
 
     def format_prompt(self, input_data: Dict[str, Any]) -> str:
         strategic_question = input_data.get('strategic_question', 'N/A')
-        synthesis = input_data.get('synthesis', {}).get('data', {}).get('raw_sections', {})
-        best_practices = input_data.get('best_practices', {}).get('data', {}).get('practices', [])
+        contextual_constraints = input_data.get('prompt', 'None provided')
+
+        synthesis_data = input_data.get('research_synthesis', {}).get('data', {}).get('structured_synthesis', {})
         
-        # Format synthesis insights
-        insights = synthesis.get('key_insights', [])
-        implications = synthesis.get('strategic_implications', [])
-        recommendations = synthesis.get('recommendations', [])
+        synthesis_sections_text = "\n\nResearch Synthesis Agent Output:\n"
         
-        insights_text = "\n".join([f"- {insight}" for insight in insights]) if insights else "N/A"
-        implications_text = "\n".join([f"- {implication}" for implication in implications]) if implications else "N/A"
-        recommendations_text = "\n".join([f"- {recommendation}" for recommendation in recommendations]) if recommendations else "N/A"
-        
-        # Format best practices
-        best_practices_text = "\n".join([f"- {p['title']}: {p['description']}" for p in best_practices[:2]]) if best_practices else "N/A"
+        section_titles_map = {
+            "key_insights": "📌 Key Insights",
+            "opportunity_spaces": "🚀 Opportunity Spaces",
+            "risk_and_resilience": "⚠️ Risk & Resilience",
+            "innovation_pathways": "💡 Innovation Pathways",
+            "quick_wins_vs_long_term": "📆 Quick Wins vs Long-Term Strategies"
+        }
 
-        return f"""Develop a strategic action plan for: {strategic_question}
+        for key, title in section_titles_map.items():
+            items = synthesis_data.get(key, [])
+            if items:
+                synthesis_sections_text += f"\n--- {title} ---\n"
+                for item in items:
+                    if isinstance(item, dict):
+                         synthesis_sections_text += f"- {item.get('content', json.dumps(item))}\n"
+                    else:
+                         synthesis_sections_text += f"- {str(item)}\n"
+            else:
+                synthesis_sections_text += f"\n--- {title} ---\nNo specific points provided by Research Synthesis Agent for this section.\n"
 
-Key Insights from Research:
-{insights_text}
+        return f"""Original Problem Statement: {strategic_question}
 
-Strategic Implications:
-{implications_text}
+Contextual Constraints (if any): {contextual_constraints}
+{synthesis_sections_text}
 
-Key Recommendations:
-{recommendations_text}
-
-Relevant Best Practices:
-{best_practices_text}
-
-Additional Instructions: {input_data.get('prompt', 'N/A')}
-
-Create a detailed action plan that addresses these insights and recommendations."""
+Based on all the above information (Original Problem, Constraints, and the detailed Research Synthesis output), please generate strategic ideas and their specific action items according to the three time horizons (Near-Term, Medium-Term, Long-Term) and prioritization criteria outlined in your system instructions.
+Focus on creating a practical and actionable roadmap.
+"""
 
     async def process(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         try:
             prompt = self.format_prompt(input_data)
             response = await self.invoke_llm(prompt)
             
-            # Parse the response into sections
-            sections = {
-                "short_term_actions": [],
-                "medium_term_actions": [],
-                "long_term_actions": [],
-                "resource_requirements": [],
-                "risk_mitigation": []
+            logger.info(f"Raw LLM Response for StrategicActionAgent:\n{response}")
+            
+            parsed_action_plan = {
+                "near_term_ideas": [],
+                "medium_term_ideas": [],
+                "long_term_ideas": []
             }
             
-            current_section = None
-            
-            for line in response.split('\n'):
-                line = line.strip()
-                if not line:
-                    continue
+            current_time_horizon_key = None
+            current_strategic_idea = None
+            action_item_buffer = [] # For collecting action item lines
+            # Priority is expected per action, so it's part of action_item_buffer logic
+
+            lines = response.split('\n')
+
+            def save_current_strategic_idea():
+                nonlocal current_strategic_idea, current_time_horizon_key, action_item_buffer
+                if current_strategic_idea and current_strategic_idea.get('idea_title') and action_item_buffer:
+                    # Finalize the last action item from buffer before saving idea
+                    if len(action_item_buffer) > 0 and isinstance(action_item_buffer[-1], dict) and not action_item_buffer[-1].get('priority'):
+                        # This implies an action was added but priority might be on next line or missed.
+                        # For now, we assume priority is captured with action. If not, it will be None.
+                        pass # No specific action if priority parsing is part of action text parsing
+                    current_strategic_idea['action_items'] = [item for item in action_item_buffer if isinstance(item, dict)]
                 
-                # Check for section headers
-                if "Short-term Actions" in line:
-                    current_section = "short_term_actions"
-                    continue
-                elif "Medium-term Actions" in line:
-                    current_section = "medium_term_actions"
-                    continue
-                elif "Long-term Actions" in line:
-                    current_section = "long_term_actions"
-                    continue
-                elif "Resource Requirements" in line:
-                    current_section = "resource_requirements"
-                    continue
-                elif "Risk Mitigation" in line:
-                    current_section = "risk_mitigation"
-                    continue
-                
-                # Add content to current section
-                if current_section and (line.startswith('- ') or line.startswith('* ')):
-                    sections[current_section].append(line[2:].strip())
-                elif current_section:
-                    # Handle multi-line content
-                    if sections[current_section]:
-                        sections[current_section][-1] += " " + line
+                if current_strategic_idea and current_strategic_idea.get('idea_title') and current_strategic_idea.get('action_items'):
+                    if current_time_horizon_key:
+                        parsed_action_plan[current_time_horizon_key].append(current_strategic_idea)
                     else:
-                        sections[current_section].append(line)
+                        logger.warn(f"Strategic idea '{current_strategic_idea.get('idea_title')}' found without a time horizon.")
+                current_strategic_idea = None
+                action_item_buffer = []
             
-            # Ensure no empty sections
-            for section in sections:
-                if not sections[section]:
-                    sections[section] = ["No specific actions identified"]
+            for i, line in enumerate(lines):
+                stripped_line = line.strip()
+                if not stripped_line:
+                    continue
+
+                # 1. Time Horizon Detection
+                if re.match(r"Near-Term\s*\(0\S*2\s*years\):?", stripped_line, re.IGNORECASE):
+                    if current_strategic_idea: save_current_strategic_idea()
+                    current_time_horizon_key = "near_term_ideas"
+                    logger.debug(f"Switched to Near-Term horizon at line {i}")
+                    continue
+                elif re.match(r"Medium-Term\s*\(2\S*5\s*years\):?", stripped_line, re.IGNORECASE):
+                    if current_strategic_idea: save_current_strategic_idea()
+                    current_time_horizon_key = "medium_term_ideas"
+                    logger.debug(f"Switched to Medium-Term horizon at line {i}")
+                    continue
+                elif re.match(r"Long-Term\s*\(5\S*10\s*years\):?", stripped_line, re.IGNORECASE):
+                    if current_strategic_idea: save_current_strategic_idea()
+                    current_time_horizon_key = "long_term_ideas"
+                    logger.debug(f"Switched to Long-Term horizon at line {i}")
+                    continue
+                
+                if not current_time_horizon_key: # Skip if not under a time horizon
+                    continue
+
+                # 2. Strategic Idea Detection (Title and Summary)
+                # Assuming LLM might use "Strategic Idea: Title" or just "Title:"
+                title_match = re.match(r"(?:Strategic Idea(?: Title)?:|Title:)\s*(.*)", stripped_line, re.IGNORECASE)
+                if title_match:
+                    if current_strategic_idea: save_current_strategic_idea() # Save previous idea
+                    current_strategic_idea = {"idea_title": title_match.group(1).strip(), "idea_summary": "", "action_items": []}
+                    action_item_buffer = [] # Reset for new idea
+                    # Check if summary is on the next line or few lines
+                    summary_buffer = []
+                    for j in range(1, min(3, len(lines) - 1 - i)): # Look ahead 2 lines for summary
+                        next_line_stripped = lines[i+j].strip()
+                        if re.match(r"(?:\d+\.|-|\*|Action Item \d+:)", next_line_stripped, re.IGNORECASE) or \
+                           re.match(r"(?:Strategic Idea(?: Title)?:|Title:)", next_line_stripped, re.IGNORECASE) or \
+                           re.match(r"Priority:", next_line_stripped, re.IGNORECASE): \
+                            break # Stop if we hit start of actions or new idea/section
+                        if next_line_stripped : summary_buffer.append(next_line_stripped)
+                    if summary_buffer:
+                        current_strategic_idea["idea_summary"] = " ".join(summary_buffer)
+                    continue # Processed title and potential summary
+
+                # 3. Action Item Detection (within a strategic idea)
+                if current_strategic_idea:
+                    # Regex to capture action item text and its priority on the same or subsequent lines
+                    # Example: "1. Action text (Priority: High)" or "- Action text\n  Priority: Medium"
+                    action_match = re.match(r"(?:\d+\.|-|\*)\s*(.*?)(?:\(Priority:\s*(High|Medium|Low)\s*\))?", stripped_line, re.IGNORECASE)
+                    
+                    if action_match:
+                        action_text = action_match.group(1).strip()
+                        priority_from_action_line = action_match.group(2)
+                        
+                        current_action = {"action": action_text, "priority": None}
+                        if priority_from_action_line:
+                            current_action["priority"] = priority_from_action_line.strip()
+                        
+                        action_item_buffer.append(current_action)
+                        # Check next line for priority if not found on current line
+                        if not priority_from_action_line and (i + 1 < len(lines)):
+                            next_line_priority_match = re.match(r"Priority:\s*(High|Medium|Low)", lines[i+1].strip(), re.IGNORECASE)
+                            if next_line_priority_match and isinstance(action_item_buffer[-1], dict):
+                                action_item_buffer[-1]["priority"] = next_line_priority_match.group(1).strip()
+                                # We might want to advance 'i' here or mark next line as consumed, but loop will skip it if empty
+                        continue # Done with this action line
+                    elif action_item_buffer and isinstance(action_item_buffer[-1], dict) and not action_item_buffer[-1]["priority"]:
+                        # Check if current line is a solo priority for the last action
+                        priority_only_match = re.match(r"Priority:\s*(High|Medium|Low)", stripped_line, re.IGNORECASE)
+                        if priority_only_match:
+                            action_item_buffer[-1]["priority"] = priority_only_match.group(1).strip()
+                            continue # Done with this priority line
+
+            if current_strategic_idea: # Save any last idea under processing
+                save_current_strategic_idea()
             
-            return self.format_output(sections)
+            logger.info(f"Parsed Strategic Action Plan Data:\n{json.dumps(parsed_action_plan, indent=2)}")
+            
+            return self.format_output(parsed_action_plan)
             
         except Exception as e:
+            logger.error(f"Error in StrategicActionAgent.process: {str(e)}", exc_info=True)
             return {
                 "status": "error",
                 "error": str(e),
                 "agent_type": self.__class__.__name__
             }
 
-    def format_output(self, sections: Dict[str, Any]) -> Dict[str, Any]:
-        """Format the output in a structured way."""
-        # Create a human-readable markdown format
-        markdown_output = f"""# Strategic Action Plan
+    def format_output(self, parsed_action_plan: Dict[str, Any]) -> Dict[str, Any]:
+        markdown_output = "# Strategic Action Plan\n\n"
+        time_horizon_map = {
+            "near_term_ideas": "## Near-Term (0–2 years)",
+            "medium_term_ideas": "## Medium-Term (2–5 years)",
+            "long_term_ideas": "## Long-Term (5–10 years)"
+        }
 
-## Short-term Actions (0-1 year)
-{chr(10).join(f"- {action}" for action in sections['short_term_actions'])}
+        any_ideas_found = False
+        for key, title_markdown in time_horizon_map.items():
+            ideas = parsed_action_plan.get(key, [])
+            if ideas:
+                any_ideas_found = True
+                markdown_output += f"{title_markdown}\n\n"
+                for i, idea in enumerate(ideas):
+                    markdown_output += f"### Strategic Idea {i+1}: {idea.get('idea_title', 'N/A')}\n"
+                    markdown_output += f"**Summary:** {idea.get('idea_summary', 'N/A')}\n\n"
+                    markdown_output += "**Action Items:**\n"
+                    action_items = idea.get('action_items', [])
+                    if action_items:
+                        for j, item in enumerate(action_items):
+                            markdown_output += f"{j+1}. {item.get('action', 'N/A')} -- **Priority:** {item.get('priority', 'N/A')}\n"
+                    else:
+                        markdown_output += "- No specific action items identified for this idea.\n"
+                    markdown_output += "\n"
+            # else:
+            #     markdown_output += f"{title_markdown}\n- No strategic ideas identified for this period.\n\n"
 
-## Medium-term Actions (1-3 years)
-{chr(10).join(f"- {action}" for action in sections['medium_term_actions'])}
-
-## Long-term Actions (3-5 years)
-{chr(10).join(f"- {action}" for action in sections['long_term_actions'])}
-
-## Resource Requirements
-{chr(10).join(f"- {resource}" for resource in sections['resource_requirements'])}
-
-## Risk Mitigation
-{chr(10).join(f"- {risk}" for risk in sections['risk_mitigation'])}
-"""
+        if not any_ideas_found:
+            markdown_output += "No strategic ideas were parsed or generated. Please review raw LLM output if available."
+            # Consider adding raw LLM output here for debugging if process method passes it.
 
         return {
             "status": "success",
             "data": {
-                "raw_sections": sections,
+                "structured_action_plan": parsed_action_plan,
+                "raw_sections": parsed_action_plan, # For some backward compatibility / simpler access if needed
                 "formatted_output": markdown_output
             }
         } 

@@ -7,27 +7,26 @@ logger = logging.getLogger(__name__)
 
 class HorizonScanningAgent(BaseAgent):
     def get_system_prompt(self) -> str:
-        return """You are the Strategic Horizon Scanning Agent. Identify the top 5 most critical trends and uncertainties.
+        return """You are the Strategic Horizon Scanning Agent. Identify up to 3 critical Weak Signals and up to 3 Key Uncertainties.
 
 Format your response exactly like this:
 
 ## Weak Signals:
 **[Number]. [Title]**\n
    - **Domain:** [Domain]
-    **Description:** [3 sentence]
+    **Description:** [2 sentence]
     **Impact:** [1-10]
     **Time:** [Near/Medium/Long]\n
 
-
-\n##Key Uncertainties:
+##Key Uncertainties:
 ** [Number]. [Title]**\n
    - **Domain:** [Domain]
-    **Description:** [3 sentence]
+    **Description:** [2 sentence]
     **Impact:** [1-10]
     **Time:** [Near/Medium/Long]\n
 
+## Change Drivers:
 
-## Change Drivers:\n
 **Tech:** [1 key driver]\n
 **Market:** [1 key driver]\n
 **Society:** [1 key driver]\n
@@ -43,11 +42,33 @@ Format your response exactly like this:
         time_frame = input_data.get('time_frame', 'N/A')
         region = input_data.get('region', 'N/A')
         
-        return f"""Analyze: {strategic_question}
-Time: {time_frame}
-Region: {region}
+        problem_explorer_data = input_data.get('problem_explorer', {}).get('data', {}).get('structured_output', {})
+        problem_summary = "Not available."
+        if problem_explorer_data:
+            # Try to get a concise problem definition from Phase 1 or acknowledgment
+            phase1_content_list = problem_explorer_data.get('phase1', {}).get('content', [])
+            if isinstance(phase1_content_list, list) and phase1_content_list:
+                # Take the first item of phase1 content, split into words, take first 30, rejoin.
+                first_item_words = str(phase1_content_list[0]).split()
+                problem_summary = " ".join(first_item_words[:30])
+                if len(first_item_words) > 30:
+                    problem_summary += "..."
+            elif problem_explorer_data.get('acknowledgment'):
+                 problem_summary = str(problem_explorer_data.get('acknowledgment', '')).strip()
+                 if len(problem_summary.split()) > 40: # Keep acknowledgment summary brief too
+                     ack_words = problem_summary.split()
+                     problem_summary = " ".join(ack_words[:40]) + "..."
+            if not problem_summary.strip() or problem_summary == "Not available.": # Fallback if phase1 and ack are empty
+                problem_summary = "General context based on strategic question."
 
-Keep responses extremely brief and focused."""
+        return f"""Given the strategic question: \"{strategic_question}\"
+And the core problem context: \"{problem_summary}\"
+For the time frame \"{time_frame}\" and region \"{region}\":
+
+Identify up to 3 critical Weak Signals, up to 3 Key Uncertainties, and the main Change Drivers (one for each relevant STEEPLED category).
+Focus on the most impactful and relevant items for the problem context.
+For each Weak Signal and Key Uncertainty, provide a title, domain, a 1-2 sentence description, impact rating, and time frame.
+Adhere strictly to the output format sections: ## Weak Signals:, ## Key Uncertainties:, ## Change Drivers: as specified in system instructions."""
 
     async def process(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         try:

@@ -45,20 +45,27 @@ Keep responses concise and focused on actionable insights. Ensure all sections a
         strategic_question = input_data.get('strategic_question', 'N/A')
         time_frame = input_data.get('time_frame', 'N/A')
         region = input_data.get('region', 'N/A')
-        problem_analysis = input_data.get('problem_analysis', {}).get('data', {}).get('structured_data', {})
+        # Get the structured output from ProblemExplorerAgent
+        problem_explorer_output = input_data.get('problem_explorer', {}).get('data', {}).get('structured_output', {})
         
-        # Extract relevant information from problem analysis
         problem_context = ""
-        if problem_analysis:
-            if problem_analysis.get('phase1', {}).get('content'):
-                problem_context += "\n".join(problem_analysis['phase1']['content'])
+        if problem_explorer_output:
+            # Extract content from Phase 1: Define the Problem
+            phase1_content = problem_explorer_output.get('phase1', {}).get('content', [])
+            if phase1_content:
+                problem_context += "\n".join(phase1_content)
+            
+            # Optionally, add acknowledgment or other relevant parts
+            acknowledgment = problem_explorer_output.get('acknowledgment', '')
+            if acknowledgment:
+                problem_context = f"{acknowledgment}\n{problem_context}" # Prepend acknowledgment
         
         return f"""Strategic Question: {strategic_question}
 Time Frame: {time_frame}
 Region/Scope: {region}
 
 Problem Context:
-{problem_context}
+{problem_context if problem_context else 'Problem context not available from Problem Explorer.'}
 
 Please provide 3 best practices and a next practice recommendation."""
 
@@ -70,8 +77,12 @@ Please provide 3 best practices and a next practice recommendation."""
             # Log the raw response for debugging
             logger.info(f"Raw LLM Response:\n{response}")
             
+            # TODO: Implement parsing of 'response' into a list of structured practice dictionaries
+            parsed_practices_list = [] 
+            
             return self.format_output({
-                "raw_response": response
+                "raw_response": response,
+                "parsed_practices": parsed_practices_list # Pass potentially parsed data
             })
             
         except Exception as e:
@@ -85,6 +96,8 @@ Please provide 3 best practices and a next practice recommendation."""
     def format_output(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Format the output in a structured way."""
         raw_response = data.get("raw_response", "")
+        # Get the list of practices that process() would have parsed (currently a placeholder)
+        structured_practices_list = data.get("parsed_practices", [])
         
         # Create a human-readable markdown format that matches the raw output
         markdown_output = "# Best Practices Analysis\n\n"
@@ -104,7 +117,9 @@ Please provide 3 best practices and a next practice recommendation."""
         return {
             "status": "success",
             "data": {
-                "raw_sections": data,
+                "structured_practices": structured_practices_list, # Key for downstream
+                "raw_sections": {"raw_response": raw_response}, # Keep old raw_sections structure for compatibility if needed, or deprecate
+                "raw_response": raw_response, # Direct access to raw response
                 "formatted_output": markdown_output
             }
         }
