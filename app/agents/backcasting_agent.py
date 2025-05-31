@@ -68,9 +68,6 @@ Please prioritize these initiatives across time horizons."""
             prompt = self.format_prompt(input_data)
             response = await self.invoke_llm(prompt)
             
-            # Log the raw response for debugging
-            logger.info(f"Raw LLM Response:\n{response}")
-            
             # Parse the response into structured format
             sections = {
                 'near_term': [],
@@ -113,9 +110,6 @@ Please prioritize these initiatives across time horizons."""
             # Add the last task if exists
             if current_task and current_section:
                 sections[current_section].append(current_task)
-            
-            # Log the structured output
-            logger.info(f"Structured Output:\n{sections}")
             
             return self.format_output({
                 "raw_response": response,

@@ -1,0 +1,74 @@
+import os
+from sqlalchemy import create_engine, text
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import QueuePool
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Database configuration
+DATABASE_CONFIG = {
+    "host": "localhost",
+    "port": 5432,
+    "database": "strategic_intelligence_app",
+    "user": "postgres",
+    "password": "postgre321"
+}
+
+# Database URL for SQLAlchemy
+DATABASE_URL = f"postgresql://{DATABASE_CONFIG['user']}:{DATABASE_CONFIG['password']}@{DATABASE_CONFIG['host']}:{DATABASE_CONFIG['port']}/{DATABASE_CONFIG['database']}"
+
+# SQLAlchemy engine with connection pooling
+engine = create_engine(
+    DATABASE_URL,
+    poolclass=QueuePool,
+    pool_size=10,
+    max_overflow=20,
+    pool_pre_ping=True,  # Verify connections before use
+    echo=False  # Set to True for SQL query logging
+)
+
+# Session factory
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Base class for models
+Base = declarative_base()
+
+def get_db_session():
+    """
+    Get a database session.
+    Use this function to get a session for database operations.
+    """
+    session = SessionLocal()
+    try:
+        return session
+    except Exception as e:
+        session.close()
+        logger.error(f"Database session error: {str(e)}")
+        raise
+
+def close_db_session(session):
+    """
+    Close a database session properly.
+    """
+    try:
+        session.close()
+    except Exception as e:
+        logger.error(f"Error closing database session: {str(e)}")
+
+def test_connection():
+    """
+    Test database connection.
+    Returns True if successful, False otherwise.
+    """
+    try:
+        session = get_db_session()
+        # Simple query to test connection - using text() for SQLAlchemy 2.0
+        session.execute(text("SELECT 1"))
+        close_db_session(session)
+        logger.info("Database connection successful!")
+        return True
+    except Exception as e:
+        logger.error(f"Database connection failed: {str(e)}")
+        return False 

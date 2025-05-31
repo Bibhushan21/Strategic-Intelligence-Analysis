@@ -186,8 +186,6 @@ Ensure all requested fields for each scenario type are present and distinct. Adh
             prompt = self.format_prompt(input_data)
             response = await self.invoke_llm(prompt)
             
-            logger.info(f"Raw LLM Response for ScenarioPlanningAgent:\n{response}")
-            
             parsed_scenarios = self._parse_multi_framework_scenarios(response)
             
             # Log the structured output for verification

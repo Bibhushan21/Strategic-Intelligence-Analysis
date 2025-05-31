@@ -78,9 +78,6 @@ Adhere strictly to the output format sections: ## Weak Signals:, ## Key Uncertai
                 timeout=15
             )
             
-            # Log the raw response for debugging
-            logger.info(f"Raw LLM Response:\n{response}")
-            
             return self.format_output({
                 "raw_response": response
             })

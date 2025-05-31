@@ -74,9 +74,6 @@ Please provide 3 best practices and a next practice recommendation."""
             prompt = self.format_prompt(input_data)
             response = await self.invoke_llm(prompt)
             
-            # Log the raw response for debugging
-            logger.info(f"Raw LLM Response:\n{response}")
-            
             # TODO: Implement parsing of 'response' into a list of structured practice dictionaries
             parsed_practices_list = [] 
             

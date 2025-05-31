@@ -65,9 +65,6 @@ Please analyze this strategic challenge using the 5-phase framework."""
             prompt = self.format_prompt(input_data)
             response = await self.invoke_llm(prompt)
             
-            # Log the raw response for debugging
-            logger.info(f"Raw LLM Response:\n{response}")
-            
             # Parse the response into structured format
             sections = {
                 'acknowledgment': '',
@@ -123,9 +120,6 @@ Please analyze this strategic challenge using the 5-phase framework."""
                             sections[current_section]['content'].append(line)
                         else:
                             sections[current_section]['content'].append(f"- {line}")
-            
-            # Log the structured output
-            logger.info(f"Structured Output:\n{sections}")
             
             return self.format_output({
                 "raw_response": response,

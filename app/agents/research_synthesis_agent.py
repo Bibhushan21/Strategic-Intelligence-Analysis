@@ -162,8 +162,6 @@ Ensure all insights are grounded in the provided research and scenarios.
             prompt = self.format_prompt(input_data)
             response = await self.invoke_llm(prompt)
            
-            logger.info(f"Raw LLM Response for ResearchSynthesisAgent:\n{response}")
-           
             # New parsing logic for the 5 sections
             parsed_data = {
                 "key_insights": [],
@@ -227,9 +225,6 @@ Ensure all insights are grounded in the provided research and scenarios.
                 # Clean up trailing empty strings if any from paragraph preservation
                 while parsed_data[current_section_key] and parsed_data[current_section_key][-1] == "":
                     parsed_data[current_section_key].pop()
-           
-            # Log the structured output for verification
-            logger.info(f"Parsed Research Synthesis Data:\n{json.dumps(parsed_data, indent=2)}")
            
             return self.format_output(parsed_data) # Pass the new parsed_data structure
            

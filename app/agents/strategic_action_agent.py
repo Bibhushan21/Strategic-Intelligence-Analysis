@@ -110,8 +110,6 @@ Focus on creating a practical and actionable roadmap.
             prompt = self.format_prompt(input_data)
             response = await self.invoke_llm(prompt)
             
-            logger.info(f"Raw LLM Response for StrategicActionAgent:\n{response}")
-            
             parsed_action_plan = {
                 "near_term_ideas": [],
                 "medium_term_ideas": [],
@@ -219,8 +217,6 @@ Focus on creating a practical and actionable roadmap.
 
             if current_strategic_idea: # Save any last idea under processing
                 save_current_strategic_idea()
-            
-            logger.info(f"Parsed Strategic Action Plan Data:\n{json.dumps(parsed_action_plan, indent=2)}")
             
             return self.format_output(parsed_action_plan)
             
