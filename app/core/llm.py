@@ -13,5 +13,5 @@ def get_llm():
         temperature=0.7,
         model="mistral-large-latest",
         api_key=api_key,
-        timeout=15  # 15 seconds timeout
+        timeout=100  # Increased LLM call timeout to 100 seconds
     ) 

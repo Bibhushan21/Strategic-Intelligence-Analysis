@@ -2,6 +2,25 @@
 const agentOutputs = document.getElementById('agentOutputs');
 const analysisForm = document.getElementById('analysisForm');
 
+// Mobile menu toggle functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    if (mobileMenuButton && mobileMenu) {
+        mobileMenuButton.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!mobileMenuButton.contains(event.target) && !mobileMenu.contains(event.target)) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+    }
+});
+
 // Create agent output section
 function createAgentOutputSection(agentName) {
     const section = document.createElement('div');
@@ -56,8 +75,16 @@ function updateAgentOutput(agentName, output) {
         // Log raw output to console
         console.log(`Raw output for ${agentName}:`, output);
 
+        // Pre-process the output to handle single newlines
+        // Convert single newlines to double-space + newline (markdown line break format)
+        // But avoid converting newlines that are already part of double newlines
+        let processedOutput = output
+            .replace(/\n\n/g, '|||DOUBLE_NEWLINE|||')  // Temporarily mark double newlines
+            .replace(/\n/g, '  \n')                     // Convert single newlines to markdown line breaks
+            .replace(/\|\|\|DOUBLE_NEWLINE\|\|\|/g, '\n\n'); // Restore double newlines
+
         // Convert markdown to HTML
-        const html = marked.parse(output);
+        const html = marked.parse(processedOutput);
         if (!html) {
             throw new Error('Markdown parsing failed');
         }
@@ -178,6 +205,12 @@ analysisForm.addEventListener('submit', async (e) => {
         agents.forEach(agent => {
             const section = createAgentOutputSection(agent);
             agentOutputs.appendChild(section);
+        });
+        
+        // Auto-scroll to the analysis results section
+        agentOutputs.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
         });
         
         // Process the response stream

@@ -11,17 +11,17 @@ class BestPracticesAgent(BaseAgent):
 For each best practice, provide the following information in this exact format:
 
 ### Best Practice [Number]: [Title]
-**Time Frame:** [When was it implemented]
-**Organization:** [Who implemented it]
-**Challenge:** [What was the challenge context]
-**Problem:** [What they were trying to solve]
+**Time Frame:** [When was it implemented]\n
+**Organization:** [Who implemented it]\n
+**Challenge:** [What was the challenge context]\n
+**Problem:** [What they were trying to solve]\n
 **Solution:** [Brief summary of their approach]\n
 **Implementation Steps:**
 1. [Step 1]
 2. [Step 2]
 3. [Step 3]
-**Results:** [Key outcomes or impact]
-**Categorical Tags:** [Tag 1], [Tag 2], [Tag 3], [Tag 4], [Tag 5]
+**Results:** [Key outcomes or impact]\n
+**Categorical Tags:** [Tag 1], [Tag 2], [Tag 3], [Tag 4], [Tag 5]\n
 **Source:** [Where this information comes from]
 
 After providing all best practices, include:

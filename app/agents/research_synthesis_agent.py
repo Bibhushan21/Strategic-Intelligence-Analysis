@@ -2,12 +2,17 @@ from typing import Dict, Any, List
 from .base_agent import BaseAgent
 import logging
 import json
+import re
 
 
 logger = logging.getLogger(__name__)
 
 
 class ResearchSynthesisAgent(BaseAgent):
+    def __init__(self):
+        super().__init__()
+        self.timeout = 120  # Increased timeout
+
     def get_system_prompt(self) -> str:
         return """You are the Research Synthesis Agent. Your job is to analyze the full body of research—including the original challenge statement and all outputs from the following agents:
 
@@ -131,7 +136,7 @@ Prioritize strategic clarity, impact, and practical use
 
         # Format best practices
         best_practices_text = "\n".join([f"- {p.get('title','N/A')}: {p.get('description','N/A')}" for p in best_practices_list[:2]]) if best_practices_list else "N/A"
-       
+
         return f"""Synthesize the following research findings for the strategic question: {input_data.get('strategic_question', 'N/A')}
 
 Problem Definition Context:
@@ -211,7 +216,7 @@ Ensure all insights are grounded in the provided research and scenarios.
                 
                 if matched_header:
                     continue
-
+               
                 if current_section_key and stripped_line: # Add non-header lines to current section's buffer
                     buffer.append(stripped_line)
                 elif current_section_key and not stripped_line and buffer: # Keep empty lines if they are part of a paragraph in buffer
@@ -222,7 +227,7 @@ Ensure all insights are grounded in the provided research and scenarios.
                 # Clean up trailing empty strings if any from paragraph preservation
                 while parsed_data[current_section_key] and parsed_data[current_section_key][-1] == "":
                     parsed_data[current_section_key].pop()
-
+           
             # Log the structured output for verification
             logger.info(f"Parsed Research Synthesis Data:\n{json.dumps(parsed_data, indent=2)}")
            
@@ -259,7 +264,7 @@ Ensure all insights are grounded in the provided research and scenarios.
                             markdown_output += f"{item}\n"
                         else:
                             markdown_output += f"- {item}\n"
-                    markdown_output += "\n"
+                markdown_output += "\n"
             
             if not any(parsed_data.get(key) for key in section_titles_map): # Fallback if all sections are empty
                 markdown_output += "No structured insights were synthesized. Please review the raw LLM response if available."

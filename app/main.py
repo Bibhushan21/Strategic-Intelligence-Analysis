@@ -28,7 +28,7 @@ class AnalysisRequest(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("analysis.html", {"request": request})
+    return templates.TemplateResponse("index.html", {"request": request})
 
 async def stream_agent_outputs(orchestrator: OrchestratorAgent, input_data: Dict[str, Any]):
     """Stream agent outputs as they become available."""

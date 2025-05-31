@@ -197,4 +197,84 @@
     to {
         transform: rotate(360deg);
     }
+}
+
+/* Prose content styling for agent outputs */
+.prose h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: #1f2937;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 0.5rem;
+}
+
+.prose h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+    color: #374151;
+}
+
+.prose h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: #4b5563;
+}
+
+.prose h4 {
+    font-size: 1.125rem;
+    font-weight: 500;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+    color: #6b7280;
+}
+
+.prose p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+    color: #374151;
+}
+
+.prose strong {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.prose ul, .prose ol {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.prose li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+    color: #374151;
+}
+
+.prose li strong {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.prose pre {
+    background-color: #f3f4f6;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+}
+
+.prose blockquote {
+    border-left: 4px solid #e5e7eb;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+    color: #6b7280;
 } 

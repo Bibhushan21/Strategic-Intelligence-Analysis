@@ -7,6 +7,10 @@ import re # For parsing
 logger = logging.getLogger(__name__)
 
 class ScenarioPlanningAgent(BaseAgent):
+    def __init__(self):
+        super().__init__()
+        self.timeout = 120  # Increased timeout
+
     def get_system_prompt(self) -> str:
         return """You are the Scenario Planning Agent. Your task is to analyze a given problem statement and generate 8 well-structured future scenarios using two strategic foresight frameworks:
 
@@ -157,7 +161,7 @@ Ensure all requested fields for each scenario type are present and distinct. Adh
                         # If there was content on the same line as "description:"
                         if description_buffer: # Save previous description line if any
                              current_scenario['description'] = "".join(description_buffer).strip()
-                        description_buffer = [description_marker.group(1).strip() + "\\n"] if description_marker.group(1).strip() else ["\\n"]
+                        description_buffer = [description_marker.group(1).strip() + "\n"] if description_marker.group(1).strip() else ["\n"]
                     is_new_field = True # Counts as a new field, stops appending to previous description
                 elif is_new_field and description_buffer: # A new field started, finalize previous description
                     if current_scenario and 'description' not in current_scenario: # Avoid overwriting if desc marker had content
@@ -165,7 +169,7 @@ Ensure all requested fields for each scenario type are present and distinct. Adh
                     description_buffer = []
                 elif not is_new_field and current_scenario: # No new field, and we are in a scenario
                     if description_buffer or (current_scenario and 'description' in current_scenario and not description_buffer): # continue description
-                        description_buffer.append(line + "\\n") # Add raw line with newline for multiline
+                        description_buffer.append(line + "\n") # Add raw line with newline for multiline
                 
                 if is_new_field and len(description_buffer) > 0 and not description_marker : # if a non-description field started, save previous buffer
                     if current_scenario and 'description' not in current_scenario:
@@ -182,12 +186,12 @@ Ensure all requested fields for each scenario type are present and distinct. Adh
             prompt = self.format_prompt(input_data)
             response = await self.invoke_llm(prompt)
             
-            logger.info(f"Raw LLM Response for ScenarioPlanningAgent:\\n{response}")
+            logger.info(f"Raw LLM Response for ScenarioPlanningAgent:\n{response}")
             
             parsed_scenarios = self._parse_multi_framework_scenarios(response)
             
             # Log the structured output for verification
-            # logger.info(f"Structured Scenario Output:\\n{json.dumps(parsed_scenarios, indent=2)}")
+            # logger.info(f"Structured Scenario Output:\n{json.dumps(parsed_scenarios, indent=2)}")
             
             return self.format_output({
                 "raw_response": response, # Keep raw response if needed
@@ -208,32 +212,32 @@ Ensure all requested fields for each scenario type are present and distinct. Adh
         })
         raw_response = data.get("raw_response", "") # Get raw_response for fallback or partial display
 
-        markdown_output = "# Scenario Planning Analysis\\n\\n"
+        markdown_output = "# Scenario Planning Analysis\n\n"
 
-        markdown_output += "## 🌐 GBN Framework Scenarios\\n\\n"
+        markdown_output += "## 🌐 GBN Framework Scenarios\n\n"
         if structured_scenarios["gbn_scenarios"]:
             for i, scenario in enumerate(structured_scenarios["gbn_scenarios"], 1):
-                markdown_output += f"### GBN Scenario {i}: {scenario.get('title', 'N/A')}\\n\\n"
-                markdown_output += f"**Matrix Position:** {scenario.get('matrix_position', 'N/A')}\\n\\n"
-                markdown_output += f"**Description:**\\n{scenario.get('description', 'N/A')}\\n\\n---\\n\\n"
+                markdown_output += f"### GBN Scenario {i}: {scenario.get('title', 'N/A')}\n\n"
+                markdown_output += f"**Matrix Position:** {scenario.get('matrix_position', 'N/A')}\n\n"
+                markdown_output += f"**Description:**\n{scenario.get('description', 'N/A')}\n\n---\n\n"
         else:
-            markdown_output += "No GBN scenarios were parsed or generated.\\n\\n"
+            markdown_output += "No GBN scenarios were parsed or generated.\n\n"
         
-        markdown_output += "## 🔁 Change Progression Model Scenarios\\n\\n"
+        markdown_output += "## 🔁 Change Progression Model Scenarios\n\n"
         if structured_scenarios["change_progression_scenarios"]:
             for i, scenario in enumerate(structured_scenarios["change_progression_scenarios"], 1):
-                markdown_output += f"### Change Progression Scenario {i}: {scenario.get('title', 'N/A')} ({scenario.get('level', 'N/A')})\\n\\n"
-                markdown_output += f"**Level:** {scenario.get('level', 'N/A')}\\n\\n"
-                markdown_output += f"**Description:**\\n{scenario.get('description', 'N/A')}\\n\\n---\\n\\n"
+                markdown_output += f"### Change Progression Scenario {i}: {scenario.get('title', 'N/A')} ({scenario.get('level', 'N/A')})\n\n"
+                markdown_output += f"**Level:** {scenario.get('level', 'N/A')}\n\n"
+                markdown_output += f"**Description:**\n{scenario.get('description', 'N/A')}\n\n---\n\n"
         else:
-            markdown_output += "No Change Progression scenarios were parsed or generated.\\n\\n"
+            markdown_output += "No Change Progression scenarios were parsed or generated.\n\n"
 
         # Fallback for markdown if parsing somehow failed badly but we have a raw response
         if not structured_scenarios["gbn_scenarios"] and not structured_scenarios["change_progression_scenarios"] and raw_response:
             logger.warn("Scenario parsing resulted in empty structured data; using raw response for markdown.")
-            markdown_output = "# Scenario Planning Analysis (Raw Output Fallback)\\n\\n" + raw_response
+            markdown_output = "# Scenario Planning Analysis (Raw Output Fallback)\n\n" + raw_response
 
-
+        
         return {
             "status": "success",
             "data": {
@@ -246,4 +250,4 @@ Ensure all requested fields for each scenario type are present and distinct. Adh
                 "formatted_output": markdown_output,
                 "raw_response_llm": raw_response # Explicitly save the raw LLM output
             }
-        }
+            } 

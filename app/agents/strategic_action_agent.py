@@ -147,7 +147,7 @@ Focus on creating a practical and actionable roadmap.
                 stripped_line = line.strip()
                 if not stripped_line:
                     continue
-
+                
                 # 1. Time Horizon Detection
                 if re.match(r"Near-Term\s*\(0\S*2\s*years\):?", stripped_line, re.IGNORECASE):
                     if current_strategic_idea: save_current_strategic_idea()
@@ -167,7 +167,7 @@ Focus on creating a practical and actionable roadmap.
                 
                 if not current_time_horizon_key: # Skip if not under a time horizon
                     continue
-
+                
                 # 2. Strategic Idea Detection (Title and Summary)
                 # Assuming LLM might use "Strategic Idea: Title" or just "Title:"
                 title_match = re.match(r"(?:Strategic Idea(?: Title)?:|Title:)\s*(.*)", stripped_line, re.IGNORECASE)

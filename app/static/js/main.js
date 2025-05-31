@@ -17,49 +17,49 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="bg-white p-4 rounded-lg shadow" data-section="problem-analysis">
                     <h3 class="text-lg font-semibold mb-2">Problem Analysis</h3>
                     <div class="loading-indicator">Processing...</div>
-                    <pre class="whitespace-pre-wrap hidden"></pre>
+                    <div class="whitespace-pre-wrap hidden"></div>
                 </div>
                 
                 <div class="bg-white p-4 rounded-lg shadow" data-section="best-practices">
                     <h3 class="text-lg font-semibold mb-2">Best Practices</h3>
                     <div class="loading-indicator">Waiting...</div>
-                    <pre class="whitespace-pre-wrap hidden"></pre>
+                    <div class="whitespace-pre-wrap hidden"></div>
                 </div>
                 
                 <div class="bg-white p-4 rounded-lg shadow" data-section="horizon-scan">
                     <h3 class="text-lg font-semibold mb-2">Horizon Scan</h3>
                     <div class="loading-indicator">Waiting...</div>
-                    <pre class="whitespace-pre-wrap hidden"></pre>
+                    <div class="whitespace-pre-wrap hidden"></div>
                 </div>
                 
                 <div class="bg-white p-4 rounded-lg shadow" data-section="scenarios">
                     <h3 class="text-lg font-semibold mb-2">Scenarios</h3>
                     <div class="loading-indicator">Waiting...</div>
-                    <pre class="whitespace-pre-wrap hidden"></pre>
+                    <div class="whitespace-pre-wrap hidden"></div>
                 </div>
                 
                 <div class="bg-white p-4 rounded-lg shadow" data-section="synthesis">
                     <h3 class="text-lg font-semibold mb-2">Synthesis</h3>
                     <div class="loading-indicator">Waiting...</div>
-                    <pre class="whitespace-pre-wrap hidden"></pre>
+                    <div class="whitespace-pre-wrap hidden"></div>
                 </div>
                 
                 <div class="bg-white p-4 rounded-lg shadow" data-section="action-plan">
                     <h3 class="text-lg font-semibold mb-2">Action Plan</h3>
                     <div class="loading-indicator">Waiting...</div>
-                    <pre class="whitespace-pre-wrap hidden"></pre>
+                    <div class="whitespace-pre-wrap hidden"></div>
                 </div>
                 
                 <div class="bg-white p-4 rounded-lg shadow" data-section="initiatives">
                     <h3 class="text-lg font-semibold mb-2">High-Impact Initiatives</h3>
                     <div class="loading-indicator">Waiting...</div>
-                    <pre class="whitespace-pre-wrap hidden"></pre>
+                    <div class="whitespace-pre-wrap hidden"></div>
                 </div>
                 
                 <div class="bg-white p-4 rounded-lg shadow" data-section="prioritized-tasks">
                     <h3 class="text-lg font-semibold mb-2">Prioritized Tasks</h3>
                     <div class="loading-indicator">Waiting...</div>
-                    <pre class="whitespace-pre-wrap hidden"></pre>
+                    <div class="whitespace-pre-wrap hidden"></div>
                 </div>
             </div>
         `;
@@ -86,35 +86,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Helper function to format content
                 const formatContent = (content) => {
-                    if (!content) return 'N/A';
+                    if (content === null || typeof content === 'undefined') return '<p>N/A</p>';
                     
                     if (typeof content === 'string') {
-                        return content;
+                        // 1. Escape HTML characters to prevent XSS and conflicts
+                        let escapedContent = content.replace(/&/g, '&amp;')
+                                                  .replace(/</g, '&lt;')
+                                                  .replace(/>/g, '&gt;')
+                                                  .replace(/"/g, '&quot;')
+                                                  .replace(/'/g, '&#039;');
+
+                        // 2. Replace ## headings with <h3>
+                        // Regex: ^##\s+(.+?)\s*$(gm)
+                        // ^     - matches the beginning of a line
+                        // ##    - matches the literal characters "##"
+                        // \s+   - matches one or more whitespace characters (space after ##)
+                        // (.+?) - captures the heading text (non-greedy)
+                        // \s*$  - matches any trailing whitespace until the end of the line
+                        // gm    - global and multiline flags
+                        escapedContent = escapedContent.replace(/^##\s+(.+?)\s*$/gm, '<h3>$1</h3>');
+
+                        // 3. Replace **bold** text with <strong>
+                        // Regex: \*\*(.+?)\*\*(g)
+                        // \*\*  - matches literal "**"
+                        // (.+?)  - captures the text to be bolded (non-greedy)
+                        // g      - global flag
+                        escapedContent = escapedContent.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+                        // 4. Replace newline characters with <br>
+                        escapedContent = escapedContent.replace(/\n/g, '<br>');
+                        
+                        return escapedContent;
                     }
                     
-                    if (Array.isArray(content)) {
-                        return content.map(item => {
-                            if (typeof item === 'object') {
-                                return Object.entries(item)
-                                    .map(([key, value]) => `${key}: ${value}`)
-                                    .join('\n');
-                            }
-                            return item;
-                        }).join('\n\n');
+                    // For non-string content (objects, arrays), pretty-print as JSON in a <pre> tag
+                    try {
+                        return '<pre>' + JSON.stringify(content, null, 2) + '</pre>';
+                    } catch (e) {
+                        // Fallback for complex objects that can't be stringified (e.g. circular refs)
+                        return '<pre>' + String(content) + '</pre>';
                     }
-                    
-                    if (typeof content === 'object') {
-                        return Object.entries(content)
-                            .map(([key, value]) => {
-                                if (Array.isArray(value)) {
-                                    return `${key}:\n${value.map(v => `- ${v}`).join('\n')}`;
-                                }
-                                return `${key}: ${value}`;
-                            })
-                            .join('\n\n');
-                    }
-                    
-                    return String(content);
                 };
 
                 // Update each section with proper formatting
@@ -163,7 +174,7 @@ function updateSection(sectionName, content, status = 'completed') {
     const section = document.querySelector(`[data-section="${sectionName}"]`);
     if (section) {
         const loadingIndicator = section.querySelector('.loading-indicator');
-        const contentElement = section.querySelector('pre');
+        const contentElement = section.querySelector('div.whitespace-pre-wrap');
         
         if (loadingIndicator) {
             loadingIndicator.textContent = status === 'processing' ? 'Processing...' : 
@@ -173,7 +184,7 @@ function updateSection(sectionName, content, status = 'completed') {
         }
         
         if (contentElement) {
-            contentElement.textContent = content;
+            contentElement.innerHTML = content;
             contentElement.classList.remove('hidden');
         }
     }
