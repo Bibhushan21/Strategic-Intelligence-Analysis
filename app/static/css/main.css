@@ -193,6 +193,54 @@
     margin: 1rem auto;
 }
 
+/* Collapsible Section Styles */
+.collapsible-header {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.collapsible-header:hover {
+    transform: translateY(-1px);
+    opacity: 0.95 !important;
+}
+
+.collapsible-header:active {
+    transform: translateY(0);
+}
+
+.collapsible-content {
+    overflow: hidden;
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.collapse-arrow {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.collapse-arrow:hover {
+    transform: scale(1.1);
+}
+
+/* Enhanced hover effects for agent sections */
+.relative.bg-gradient-to-br:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Status indicator improvements */
+.status-indicator {
+    transition: all 0.3s ease;
+}
+
+.status-indicator:hover {
+    transform: scale(1.05);
+}
+
+/* Progress bar enhancements */
+.bg-white.h-full.rounded-full {
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 @keyframes spin {
     to {
         transform: rotate(360deg);

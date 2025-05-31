@@ -2,6 +2,63 @@
 const agentOutputs = document.getElementById('agentOutputs');
 const analysisForm = document.getElementById('analysisForm');
 
+// Track expanded state of agent sections
+const expandedSections = new Set();
+
+// Toggle agent section collapse/expand
+function toggleAgentSection(agentName) {
+    const content = document.getElementById(`${agentName}Content`);
+    const arrow = document.getElementById(`${agentName}CollapseArrow`);
+    
+    if (!content || !arrow) return;
+    
+    const isExpanded = expandedSections.has(agentName);
+    
+    if (isExpanded) {
+        // Collapse
+        content.style.maxHeight = '0px';
+        arrow.style.transform = 'rotate(0deg)';
+        expandedSections.delete(agentName);
+    } else {
+        // Expand
+        content.style.maxHeight = content.scrollHeight + 'px';
+        arrow.style.transform = 'rotate(180deg)';
+        expandedSections.add(agentName);
+        
+        // Auto-scroll to the section header after a short delay
+        setTimeout(() => {
+            const header = content.previousElementSibling;
+            if (header) {
+                header.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start',
+                    inline: 'nearest'
+                });
+            }
+        }, 300);
+    }
+}
+
+// Auto-expand section when agent completes (if it's the first completion)
+function autoExpandOnCompletion(agentName) {
+    // Only auto-expand if no sections are currently expanded
+    if (expandedSections.size === 0) {
+        setTimeout(() => {
+            toggleAgentSection(agentName);
+        }, 500); // Small delay for visual effect
+    }
+}
+
+// Recalculate height for expanded sections (useful when content changes)
+function recalculateExpandedHeight(agentName) {
+    if (expandedSections.has(agentName)) {
+        const content = document.getElementById(`${agentName}Content`);
+        if (content) {
+            content.style.maxHeight = content.scrollHeight + 'px';
+        }
+    }
+}
+
 // Mobile menu toggle functionality
 document.addEventListener('DOMContentLoaded', function() {
     const mobileMenuButton = document.getElementById('mobile-menu-button');
@@ -49,6 +106,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 activeContent.classList.remove('hidden');
                 activeContent.classList.add('active');
             }
+            
+            // Recalculate height if section is expanded
+            recalculateExpandedHeight(agentName);
         }
     });
 });
@@ -68,8 +128,9 @@ function createAgentOutputSection(agentName) {
             <div class="absolute bottom-0 left-0 w-24 h-24 ${agentConfig.accentColor} rounded-full -translate-x-12 translate-y-12"></div>
         </div>
         
-        <!-- Header Section -->
-        <div class="relative z-10 bg-gradient-to-r ${agentConfig.gradientFrom} ${agentConfig.gradientTo} p-6 border-b border-white/20">
+        <!-- Collapsible Header Section -->
+        <div class="collapsible-header cursor-pointer relative z-10 bg-gradient-to-r ${agentConfig.gradientFrom} ${agentConfig.gradientTo} p-6 border-b border-white/20 hover:opacity-90 transition-opacity duration-200" 
+             onclick="toggleAgentSection('${agentName}')">
             <div class="flex items-center justify-between">
                 <!-- Agent Title with Icon -->
                 <div class="flex items-center">
@@ -82,10 +143,20 @@ function createAgentOutputSection(agentName) {
                     </div>
                 </div>
                 
-                <!-- Status Indicator -->
-                <div id="${agentName}StatusIndicator" class="status-indicator flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
-                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    <span class="text-sm text-white font-medium">Processing...</span>
+                <!-- Right side with Status and Collapse Arrow -->
+                <div class="flex items-center space-x-4">
+                    <!-- Status Indicator -->
+                    <div id="${agentName}StatusIndicator" class="status-indicator flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
+                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        <span class="text-sm text-white font-medium">Processing...</span>
+                    </div>
+                    
+                    <!-- Collapse/Expand Arrow -->
+                    <div class="collapse-arrow transition-transform duration-300 transform" id="${agentName}CollapseArrow">
+                        <svg class="w-6 h-6 text-white drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
                 </div>
             </div>
             
@@ -95,63 +166,65 @@ function createAgentOutputSection(agentName) {
             </div>
         </div>
         
-        <!-- Content Section -->
-        <div class="relative z-10 p-6">
-            <!-- Tabs for Content Views -->
-            <div class="flex space-x-1 mb-6 bg-gray-100 rounded-xl p-1">
-                <button class="tab-button active flex-1 text-sm font-medium py-2 px-4 rounded-lg transition-all duration-200 bg-white shadow-sm text-gray-700" 
-                        data-tab="formatted" data-agent="${agentName}">
-                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Formatted
-                </button>
-                <button class="tab-button flex-1 text-sm font-medium py-2 px-4 rounded-lg transition-all duration-200 text-gray-500 hover:text-gray-700" 
-                        data-tab="raw" data-agent="${agentName}">
-                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-                    </svg>
-                    Raw Output
-                </button>
-            </div>
-            
-            <!-- Content Container -->
-            <div class="content-container">
-                <!-- Formatted Content -->
-                <div class="tab-content active" data-content="formatted" data-agent="${agentName}">
-                    <div class="prose max-w-none bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 shadow-inner min-h-32" id="${agentName}Output">
-                        <!-- Loading Animation -->
-                        <div class="flex items-center justify-center py-12">
-                            <div class="relative">
-                                <div class="w-12 h-12 border-4 border-gray-200 rounded-full"></div>
-                                <div class="absolute top-0 left-0 w-12 h-12 border-4 ${agentConfig.borderColor} border-t-transparent rounded-full animate-spin"></div>
+        <!-- Collapsible Content Section -->
+        <div class="collapsible-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out" id="${agentName}Content">
+            <div class="relative z-10 p-6">
+                <!-- Tabs for Content Views -->
+                <div class="flex space-x-1 mb-6 bg-gray-100 rounded-xl p-1">
+                    <button class="tab-button active flex-1 text-sm font-medium py-2 px-4 rounded-lg transition-all duration-200 bg-white shadow-sm text-gray-700" 
+                            data-tab="formatted" data-agent="${agentName}">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Formatted
+                    </button>
+                    <button class="tab-button flex-1 text-sm font-medium py-2 px-4 rounded-lg transition-all duration-200 text-gray-500 hover:text-gray-700" 
+                            data-tab="raw" data-agent="${agentName}">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                        </svg>
+                        Raw Output
+                    </button>
+                </div>
+                
+                <!-- Content Container -->
+                <div class="content-container">
+                    <!-- Formatted Content -->
+                    <div class="tab-content active" data-content="formatted" data-agent="${agentName}">
+                        <div class="prose max-w-none bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 shadow-inner min-h-32" id="${agentName}Output">
+                            <!-- Loading Animation -->
+                            <div class="flex items-center justify-center py-12">
+                                <div class="relative">
+                                    <div class="w-12 h-12 border-4 border-gray-200 rounded-full"></div>
+                                    <div class="absolute top-0 left-0 w-12 h-12 border-4 ${agentConfig.borderColor} border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                                <span class="ml-4 text-gray-600 font-medium">Analyzing...</span>
                             </div>
-                            <span class="ml-4 text-gray-600 font-medium">Analyzing...</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Raw Content -->
+                    <div class="tab-content hidden" data-content="raw" data-agent="${agentName}">
+                        <div class="bg-gray-900 rounded-2xl p-6 border border-gray-700 shadow-inner">
+                            <pre class="text-green-400 text-sm font-mono overflow-x-auto whitespace-pre-wrap" id="${agentName}RawOutput">
+                                <div class="text-gray-500">Raw output will appear here...</div>
+                            </pre>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Raw Content -->
-                <div class="tab-content hidden" data-content="raw" data-agent="${agentName}">
-                    <div class="bg-gray-900 rounded-2xl p-6 border border-gray-700 shadow-inner">
-                        <pre class="text-green-400 text-sm font-mono overflow-x-auto whitespace-pre-wrap" id="${agentName}RawOutput">
-                            <div class="text-gray-500">Raw output will appear here...</div>
-                        </pre>
-                    </div>
-                </div>
             </div>
-        </div>
-        
-        <!-- Footer with Timestamp -->
-        <div class="relative z-10 px-6 pb-4">
-            <div class="flex items-center justify-between text-xs text-gray-500">
-                <span id="${agentName}Timestamp" class="flex items-center">
-                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    Started processing...
-                </span>
-                <span id="${agentName}Duration" class="opacity-0">Duration: --</span>
+            
+            <!-- Footer with Timestamp -->
+            <div class="relative z-10 px-6 pb-4">
+                <div class="flex items-center justify-between text-xs text-gray-500">
+                    <span id="${agentName}Timestamp" class="flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Started processing...
+                    </span>
+                    <span id="${agentName}Duration" class="opacity-0">Duration: --</span>
+                </div>
             </div>
         </div>
     `;
@@ -357,6 +430,12 @@ function updateAgentOutput(agentName, output) {
                 section.classList.remove('animate-pulse');
             }, 1000);
         }
+
+        // Auto-expand this section if it's the first to complete
+        autoExpandOnCompletion(agentName);
+
+        // Recalculate height if this section is expanded
+        recalculateExpandedHeight(agentName);
 
     } catch (error) {
         console.error(`Error updating output for ${agentName}:`, error);
