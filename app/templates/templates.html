@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Templates Library - Strategic Intelligence App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/static/css/main.css?v=1.0.1" rel="stylesheet">
+</head>
+<body class="min-h-screen relative overflow-x-hidden bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+    <!-- Floating Background Orbs -->
+    <div class="floating-orb orb-1"></div>
+    <div class="floating-orb orb-2"></div>
+    <div class="floating-orb orb-3"></div>
+    
+    <!-- Floating Particles -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <nav class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <!-- Logo and Brand -->
+                <div class="flex items-center">
+                    <img src="/static/Multiverz Logo.png" alt="Multiverz Logo" class="h-10 mr-3">
+                    <span class="text-xl font-semibold text-gray-700">Challenge.one</span>
+                </div>
+                
+                <!-- Navigation Menu -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="/" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Home</a>
+                    <a href="/history" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">History</a>
+                    <a href="/dashboard" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Dashboard</a>
+                    <a href="/performance" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Performance</a>
+                    <a href="#" class="text-indigo-600 font-medium">Templates</a>
+                    <a href="#about" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">About</a>
+                    <a href="#contact" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Contact</a>
+                    <a href="#help" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Help</a>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Menu (Hidden by default) -->
+            <div id="mobile-menu" class="md:hidden hidden mt-4 pb-4 border-t border-gray-200">
+                <div class="flex flex-col space-y-3 pt-4">
+                    <a href="/" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Home</a>
+                    <a href="/history" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">History</a>
+                    <a href="/dashboard" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Dashboard</a>
+                    <a href="/performance" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Performance</a>
+                    <a href="#" class="text-indigo-600 font-medium">Templates</a>
+                    <a href="#about" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">About</a>
+                    <a href="#contact" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Contact</a>
+                    <a href="#help" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Help</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Page Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Smart Templates Library</h1>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">Choose from pre-built strategic analysis frameworks to jumpstart your intelligence gathering</p>
+        </div>
+
+        <!-- Search and Filter Controls -->
+        <div class="max-w-6xl mx-auto mb-8">
+            <div class="bg-gradient-to-br from-white to-blue-50 rounded-3xl shadow-2xl p-6 border border-gray-100">
+                <div class="flex flex-wrap items-center gap-4">
+                    <!-- Search Bar -->
+                    <div class="flex-1 min-w-64">
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="searchInput" 
+                                placeholder="Search templates..." 
+                                class="w-full pl-10 pr-4 py-3 rounded-xl border-0 bg-white/80 shadow-inner focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all duration-300"
+                            >
+                            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Category Filter -->
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm font-medium text-gray-700">Category:</label>
+                        <select id="categoryFilter" class="rounded-xl border-0 bg-white/80 shadow-inner focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all duration-300 px-4 py-3 text-gray-700">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Refresh Button -->
+                    <button id="refreshTemplates" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium px-6 py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="max-w-6xl mx-auto text-center py-12">
+            <div class="relative inline-block">
+                <div class="w-12 h-12 border-4 border-gray-200 rounded-full"></div>
+                <div class="absolute top-0 left-0 w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <p class="mt-4 text-gray-600 font-medium">Loading template library...</p>
+        </div>
+
+        <!-- Templates Content -->
+        <div id="templatesContent" class="max-w-6xl mx-auto hidden">
+            
+            <!-- Category Statistics -->
+            <div id="categoryStats" class="mb-8">
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- Category cards will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Templates Grid -->
+            <div id="templatesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Template cards will be inserted here -->
+            </div>
+
+            <!-- Load More Button -->
+            <div id="loadMoreSection" class="text-center">
+                <button id="loadMoreBtn" class="bg-gray-500 text-white font-medium px-8 py-3 rounded-xl hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-300 hidden">
+                    Load More Templates
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Template Preview Modal -->
+        <div id="templateModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                <!-- Modal Header -->
+                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 id="modalTitle" class="text-2xl font-bold mb-2"></h3>
+                            <p id="modalCategory" class="text-indigo-100"></p>
+                        </div>
+                        <button id="closeModal" class="text-white hover:text-gray-200 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal Content -->
+                <div class="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+                    <!-- Description -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">Description</h4>
+                        <p id="modalDescription" class="text-gray-600 leading-relaxed"></p>
+                    </div>
+
+                    <!-- Strategic Question -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">Strategic Question</h4>
+                        <div id="modalQuestion" class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200 text-gray-700 italic"></div>
+                    </div>
+
+                    <!-- Default Parameters -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-2">Time Frame</h4>
+                            <p id="modalTimeFrame" class="text-gray-600 bg-gray-50 p-3 rounded-lg"></p>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-2">Region Focus</h4>
+                            <p id="modalRegion" class="text-gray-600 bg-gray-50 p-3 rounded-lg"></p>
+                        </div>
+                    </div>
+
+                    <!-- Additional Instructions -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">Additional Instructions</h4>
+                        <p id="modalInstructions" class="text-gray-600 bg-yellow-50 p-4 rounded-xl border border-yellow-200"></p>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">Tags</h4>
+                        <div id="modalTags" class="flex flex-wrap gap-2">
+                            <!-- Tags will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Usage Stats -->
+                    <div class="flex items-center justify-between text-sm text-gray-500 mb-6 p-4 bg-gray-50 rounded-xl">
+                        <span>Usage Count: <span id="modalUsageCount" class="font-medium">0</span></span>
+                        <span>Created by: <span id="modalCreatedBy" class="font-medium">System</span></span>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-t border-gray-200">
+                    <button id="modalCancel" class="px-6 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors">
+                        Cancel
+                    </button>
+                    <button id="modalUseTemplate" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-2 rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300">
+                        Use This Template
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/templates.js" defer></script>
+    <script src="/static/js/main.js" defer></script>
+</body>
+</html> 

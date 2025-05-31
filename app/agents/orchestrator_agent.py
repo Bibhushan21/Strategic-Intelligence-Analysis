@@ -349,7 +349,7 @@ Provide a coordinated analysis plan and execution strategy."""
                     
                 delay = self.base_delay * (2 ** retries)
                 await asyncio.sleep(delay)
-                
+
         # Fallback - should not be reached
         fallback_result = {
             "status": "error",
@@ -417,7 +417,7 @@ Provide a coordinated analysis plan and execution strategy."""
             sp_task = self.rate_limited_process(self.agents[agent_sp_name], input_for_stage2, agent_sp_name)
             
             stage2_results_list = await asyncio.gather(bp_task, hs_task, sp_task, return_exceptions=True)
-            
+                
             # Process results from asyncio.gather
             parallel_agent_names = [agent_bp_name, agent_hs_name, agent_sp_name]
             for i, result_or_exc in enumerate(stage2_results_list):

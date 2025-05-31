@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis History - Strategic Intelligence App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/static/css/main.css?v=1.0.1" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body class="min-h-screen relative overflow-x-hidden bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+    <!-- Floating Background Orbs -->
+    <div class="floating-orb orb-1"></div>
+    <div class="floating-orb orb-2"></div>
+    <div class="floating-orb orb-3"></div>
+    
+    <!-- Floating Particles -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <nav class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <!-- Logo and Brand -->
+                <div class="flex items-center">
+                    <img src="/static/Multiverz Logo.png" alt="Multiverz Logo" class="h-10 mr-3">
+                    <span class="text-xl font-semibold text-gray-700">Challenge.one</span>
+                </div>
+                
+                <!-- Navigation Menu -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="/" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Home</a>
+                    <a href="#" class="text-indigo-600 font-medium">History</a>
+                    <a href="/dashboard" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Dashboard</a>
+                    <a href="/performance" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Performance</a>
+                    <a href="/templates" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Templates</a>
+                    <a href="#about" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">About</a>
+                    <a href="#contact" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Contact</a>
+                    <a href="#help" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Help</a>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Menu (Hidden by default) -->
+            <div id="mobile-menu" class="md:hidden hidden mt-4 pb-4 border-t border-gray-200">
+                <div class="flex flex-col space-y-3 pt-4">
+                    <a href="/" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Home</a>
+                    <a href="#" class="text-indigo-600 font-medium">History</a>
+                    <a href="/dashboard" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Dashboard</a>
+                    <a href="/performance" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Performance</a>
+                    <a href="/templates" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Templates</a>
+                    <a href="#about" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">About</a>
+                    <a href="#contact" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Contact</a>
+                    <a href="#help" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Help</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Page Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Analysis History</h1>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">Browse and search through your strategic intelligence analyses</p>
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div class="max-w-6xl mx-auto bg-gradient-to-br from-white to-blue-50 rounded-3xl shadow-2xl p-6 mb-8 border border-gray-100">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Search Box -->
+                <div class="lg:col-span-2">
+                    <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Search by question or keywords..." 
+                               class="w-full rounded-xl border-0 bg-white/80 shadow-inner focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all duration-300 p-3 pl-10 text-gray-700">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div>
+                    <label for="statusFilter" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select id="statusFilter" class="w-full rounded-xl border-0 bg-white/80 shadow-inner focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all duration-300 p-3 text-gray-700">
+                        <option value="">All Statuses</option>
+                        <option value="completed">Completed</option>
+                        <option value="processing">Processing</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                </div>
+
+                <!-- Region Filter -->
+                <div>
+                    <label for="regionFilter" class="block text-sm font-medium text-gray-700 mb-2">Region</label>
+                    <select id="regionFilter" class="w-full rounded-xl border-0 bg-white/80 shadow-inner focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all duration-300 p-3 text-gray-700">
+                        <option value="">All Regions</option>
+                        <option value="global">Global</option>
+                        <option value="north_america">North America</option>
+                        <option value="europe">Europe</option>
+                        <option value="asia">Asia</option>
+                        <option value="africa">Africa</option>
+                        <option value="latin_america">Latin America</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-between items-center mt-6">
+                <div class="flex space-x-3">
+                    <button id="applyFilters" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium px-6 py-2 rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300">
+                        Apply Filters
+                    </button>
+                    <button id="clearFilters" class="bg-gray-500 text-white font-medium px-6 py-2 rounded-xl hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-300">
+                        Clear
+                    </button>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <span id="resultCount">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="max-w-6xl mx-auto">
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-12">
+                <div class="relative inline-block">
+                    <div class="w-12 h-12 border-4 border-gray-200 rounded-full"></div>
+                    <div class="absolute top-0 left-0 w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                <p class="mt-4 text-gray-600 font-medium">Loading analysis history...</p>
+            </div>
+
+            <!-- History Grid -->
+            <div id="historyGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+                <!-- Session cards will be inserted here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center py-16 hidden">
+                <div class="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v11a2 2 0 002 2h2m0-13h10a2 2 0 012 2v11a2 2 0 01-2 2H9m0-13V4a2 2 0 012-2h2a2 2 0 012 2v1"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">No analyses found</h3>
+                <p class="text-gray-500 mb-6">Try adjusting your search criteria or create a new analysis.</p>
+                <a href="/" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium px-8 py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300">
+                    Start New Analysis
+                </a>
+            </div>
+
+            <!-- Load More Button -->
+            <div id="loadMoreSection" class="text-center mt-8 hidden">
+                <button id="loadMoreBtn" class="bg-white border border-gray-300 text-gray-700 font-medium px-8 py-3 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300">
+                    Load More
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session Detail Modal -->
+    <div id="sessionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">Analysis Details</h2>
+                    <button id="closeModal" class="text-white hover:text-gray-200 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Modal Content -->
+            <div id="modalContent" class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/history.js" defer></script>
+    <script src="/static/js/main.js" defer></script>
+</body>
+</html> 

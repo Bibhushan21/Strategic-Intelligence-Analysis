@@ -77,6 +77,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Check for template auto-population
+    checkAndPopulateFromTemplate();
+    
     // Tab functionality for agent outputs
     document.addEventListener('click', function(event) {
         if (event.target.classList.contains('tab-button') || event.target.closest('.tab-button')) {
@@ -112,6 +115,150 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Template auto-population functionality
+function checkAndPopulateFromTemplate() {
+    // Check URL parameters for template usage
+    const urlParams = new URLSearchParams(window.location.search);
+    const isFromTemplate = urlParams.get('template') === 'true';
+    
+    // Check sessionStorage for template data
+    const templateData = sessionStorage.getItem('selectedTemplate');
+    
+    if (isFromTemplate && templateData) {
+        try {
+            const template = JSON.parse(templateData);
+            console.log('Auto-populating form with template:', template.template_name);
+            
+            // Populate form fields
+            populateFormFromTemplate(template);
+            
+            // Show success message
+            showTemplateSelectedMessage(template.template_name);
+            
+            // Clear the template data and URL parameter
+            sessionStorage.removeItem('selectedTemplate');
+            
+            // Remove template parameter from URL without refreshing
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+            
+        } catch (error) {
+            console.error('Error parsing template data:', error);
+            sessionStorage.removeItem('selectedTemplate');
+        }
+    }
+}
+
+function populateFormFromTemplate(templateData) {
+    // Populate strategic question
+    const questionField = document.getElementById('strategic_question');
+    if (questionField && templateData.strategic_question) {
+        questionField.value = templateData.strategic_question;
+        questionField.focus();
+        questionField.blur(); // Trigger any validation
+    }
+    
+    // Populate time frame
+    const timeFrameField = document.getElementById('time_frame');
+    if (timeFrameField && templateData.time_frame) {
+        // Map template time frame to form options
+        const timeFrameMapping = {
+            'Short Term (1-2 years)': 'short_term',
+            'Next 12 months': 'short_term',
+            'Next 6 months': 'short_term',
+            'Current and next 6 months': 'short_term',
+            'Medium Term (3-5 years)': 'medium_term',
+            'Next 12-18 months': 'medium_term',
+            'Current and next 3 years': 'medium_term',
+            'Long Term (5+ years)': 'long_term',
+            'Next 2-5 years': 'long_term',
+            'Next 6-18 months': 'medium_term'
+        };
+        
+        const mappedTimeFrame = timeFrameMapping[templateData.time_frame] || 'medium_term';
+        timeFrameField.value = mappedTimeFrame;
+    }
+    
+    // Populate region
+    const regionField = document.getElementById('region');
+    if (regionField && templateData.region) {
+        // Map template region to form options
+        const regionMapping = {
+            'Global': 'global',
+            'North America': 'north_america',
+            'Europe': 'europe',
+            'Asia': 'asia',
+            'Africa': 'africa',
+            'Latin America': 'latin_america',
+            'Regional': 'global', // Default to global for generic "Regional"
+            'Target market region': 'global',
+            'Organizational scope': 'global',
+            'Specified region': 'global'
+        };
+        
+        const mappedRegion = regionMapping[templateData.region] || 'global';
+        regionField.value = mappedRegion;
+    }
+    
+    // Populate additional instructions
+    const promptField = document.getElementById('prompt');
+    if (promptField && templateData.additional_instructions) {
+        promptField.value = templateData.additional_instructions;
+    }
+    
+    // Add visual feedback - highlight populated fields briefly
+    highlightPopulatedFields();
+}
+
+function highlightPopulatedFields() {
+    const fields = ['strategic_question', 'time_frame', 'region', 'prompt'];
+    
+    fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field && field.value) {
+            // Add highlight effect
+            field.style.transition = 'all 0.5s ease';
+            field.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.3)';
+            field.style.borderColor = '#6366f1';
+            
+            // Remove highlight after animation
+            setTimeout(() => {
+                field.style.boxShadow = '';
+                field.style.borderColor = '';
+            }, 2000);
+        }
+    });
+}
+
+function showTemplateSelectedMessage(templateName) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span class="font-medium">Template "${templateName}" applied successfully!</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Animate out and remove
+    setTimeout(() => {
+        notification.style.transform = 'translateX(full)';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
 
 // Create agent output section
 function createAgentOutputSection(agentName) {

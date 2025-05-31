@@ -30,6 +30,323 @@ class AnalysisRequest(BaseModel):
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+@app.get("/history", response_class=HTMLResponse)
+async def history(request: Request):
+    return templates.TemplateResponse("history.html", {"request": request})
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    return templates.TemplateResponse("dashboard.html", {"request": request})
+
+@app.get("/performance", response_class=HTMLResponse)
+async def performance(request: Request):
+    return templates.TemplateResponse("performance.html", {"request": request})
+
+@app.get("/templates", response_class=HTMLResponse)
+async def templates_page(request: Request):
+    return templates.TemplateResponse("templates.html", {"request": request})
+
+@app.get("/api/analysis-history")
+async def get_analysis_history(
+    limit: int = 50,
+    offset: int = 0,
+    status: Optional[str] = None,
+    region: Optional[str] = None,
+    search: Optional[str] = None
+):
+    try:
+        # Add database imports for this endpoint
+        import sys
+        import os
+        from pathlib import Path
+        
+        # Get the project root directory
+        current_file = Path(__file__).resolve()
+        project_root = current_file.parent.parent
+        data_path = project_root / 'data'
+        
+        # Add data directory to Python path
+        sys.path.insert(0, str(data_path))
+        
+        try:
+            from database_service import DatabaseService
+            
+            # Get analysis sessions with filters
+            sessions = DatabaseService.get_analysis_sessions(
+                limit=limit,
+                offset=offset,
+                status_filter=status,
+                region_filter=region,
+                search_query=search
+            )
+            
+            # Get total count with same filters
+            total_count = DatabaseService.get_analysis_sessions_count(
+                status_filter=status,
+                region_filter=region,
+                search_query=search
+            )
+            
+            return {
+                "status": "success",
+                "data": {
+                    "sessions": sessions,
+                    "pagination": {
+                        "limit": limit,
+                        "offset": offset,
+                        "total": total_count,
+                        "has_more": len(sessions) == limit and (offset + limit) < total_count
+                    }
+                }
+            }
+            
+        except ImportError:
+            return {
+                "status": "error",
+                "message": "Database not available",
+                "data": []
+            }
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch analysis history: {str(e)}")
+
+@app.get("/api/dashboard-stats")
+async def get_dashboard_stats(days_back: int = 30):
+    try:
+        # Add database imports for this endpoint
+        import sys
+        import os
+        from pathlib import Path
+        
+        # Get the project root directory
+        current_file = Path(__file__).resolve()
+        project_root = current_file.parent.parent
+        data_path = project_root / 'data'
+        
+        # Add data directory to Python path
+        sys.path.insert(0, str(data_path))
+        
+        try:
+            from database_service import DatabaseService
+            
+            # Get dashboard statistics
+            stats = DatabaseService.get_dashboard_stats(days_back=days_back)
+            
+            return {
+                "status": "success",
+                "data": stats
+            }
+            
+        except ImportError:
+            return {
+                "status": "error",
+                "message": "Database not available",
+                "data": {}
+            }
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch dashboard stats: {str(e)}")
+
+@app.get("/api/performance-analytics")
+async def get_performance_analytics(days_back: int = 30):
+    try:
+        # Add database imports for this endpoint
+        import sys
+        import os
+        from pathlib import Path
+        
+        # Get the project root directory
+        current_file = Path(__file__).resolve()
+        project_root = current_file.parent.parent
+        data_path = project_root / 'data'
+        
+        # Add data directory to Python path
+        sys.path.insert(0, str(data_path))
+        
+        try:
+            from database_service import DatabaseService
+            
+            # Get performance analytics
+            analytics = DatabaseService.get_performance_analytics(days_back=days_back)
+            
+            return {
+                "status": "success",
+                "data": analytics
+            }
+            
+        except ImportError:
+            return {
+                "status": "error",
+                "message": "Database not available",
+                "data": {}
+            }
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch performance analytics: {str(e)}")
+
+@app.get("/api/templates")
+async def get_templates(
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0
+):
+    """Get analysis templates with filtering"""
+    try:
+        # Add database imports for this endpoint
+        import sys
+        import os
+        from pathlib import Path
+        
+        # Get the project root directory
+        current_file = Path(__file__).resolve()
+        project_root = current_file.parent.parent
+        data_path = project_root / 'data'
+        
+        # Add data directory to Python path
+        sys.path.insert(0, str(data_path))
+        
+        try:
+            from database_service import DatabaseService
+            
+            templates_list = DatabaseService.get_templates(
+                category=category,
+                search_query=search,
+                limit=limit,
+                offset=offset
+            )
+            
+            return {
+                "status": "success",
+                "data": {
+                    "templates": templates_list,
+                    "pagination": {
+                        "limit": limit,
+                        "offset": offset,
+                        "has_more": len(templates_list) == limit
+                    }
+                }
+            }
+            
+        except ImportError:
+            return {
+                "status": "error",
+                "message": "Database not available",
+                "data": {"templates": [], "pagination": {"limit": limit, "offset": offset, "has_more": False}}
+            }
+            
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.get("/api/templates/categories")
+async def get_template_categories():
+    """Get all template categories with counts"""
+    try:
+        # Add database imports for this endpoint
+        import sys
+        import os
+        from pathlib import Path
+        
+        # Get the project root directory
+        current_file = Path(__file__).resolve()
+        project_root = current_file.parent.parent
+        data_path = project_root / 'data'
+        
+        # Add data directory to Python path
+        sys.path.insert(0, str(data_path))
+        
+        try:
+            from database_service import DatabaseService
+            
+            categories = DatabaseService.get_template_categories()
+            return {
+                "status": "success",
+                "data": {"categories": categories}
+            }
+            
+        except ImportError:
+            return {
+                "status": "error",
+                "message": "Database not available",
+                "data": {"categories": []}
+            }
+            
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.get("/api/templates/{template_id}")
+async def get_template(template_id: int):
+    """Get a specific template by ID"""
+    try:
+        # Add database imports for this endpoint
+        import sys
+        import os
+        from pathlib import Path
+        
+        # Get the project root directory
+        current_file = Path(__file__).resolve()
+        project_root = current_file.parent.parent
+        data_path = project_root / 'data'
+        
+        # Add data directory to Python path
+        sys.path.insert(0, str(data_path))
+        
+        try:
+            from database_service import DatabaseService
+            
+            template = DatabaseService.get_template_by_id(template_id)
+            if not template:
+                return {"status": "error", "message": "Template not found"}
+            
+            return {
+                "status": "success",
+                "data": {"template": template}
+            }
+            
+        except ImportError:
+            return {
+                "status": "error",
+                "message": "Database not available"
+            }
+            
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.post("/api/templates/{template_id}/use")
+async def use_template(template_id: int):
+    """Increment template usage count"""
+    try:
+        # Add database imports for this endpoint
+        import sys
+        import os
+        from pathlib import Path
+        
+        # Get the project root directory
+        current_file = Path(__file__).resolve()
+        project_root = current_file.parent.parent
+        data_path = project_root / 'data'
+        
+        # Add data directory to Python path
+        sys.path.insert(0, str(data_path))
+        
+        try:
+            from database_service import DatabaseService
+            
+            success = DatabaseService.increment_template_usage(template_id)
+            if success:
+                return {"status": "success", "message": "Template usage recorded"}
+            else:
+                return {"status": "error", "message": "Failed to record template usage"}
+                
+        except ImportError:
+            return {
+                "status": "error",
+                "message": "Database not available"
+            }
+            
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 async def stream_agent_outputs_realtime(orchestrator: OrchestratorAgent, input_data: Dict[str, Any]):
     """Stream agent outputs in real-time with database integration."""
     try:

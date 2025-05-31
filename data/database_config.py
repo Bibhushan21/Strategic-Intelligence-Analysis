@@ -3,6 +3,8 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
+import psycopg2
+from contextlib import contextmanager
 import logging
 
 logger = logging.getLogger(__name__)
@@ -56,6 +58,31 @@ def close_db_session(session):
         session.close()
     except Exception as e:
         logger.error(f"Error closing database session: {str(e)}")
+
+@contextmanager
+def get_db_connection():
+    """
+    Get a raw database connection using psycopg2.
+    Use this function for raw SQL operations.
+    """
+    conn = None
+    try:
+        conn = psycopg2.connect(
+            host=DATABASE_CONFIG['host'],
+            port=DATABASE_CONFIG['port'],
+            database=DATABASE_CONFIG['database'],
+            user=DATABASE_CONFIG['user'],
+            password=DATABASE_CONFIG['password']
+        )
+        yield conn
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        logger.error(f"Database connection error: {str(e)}")
+        raise
+    finally:
+        if conn:
+            conn.close()
 
 def test_connection():
     """
