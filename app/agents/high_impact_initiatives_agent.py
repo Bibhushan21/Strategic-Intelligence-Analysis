@@ -19,7 +19,6 @@ Your analysis should help prioritize initiatives that offer the highest strategi
 Strategic Question: {input_data.get('strategic_question', 'N/A')}
 Time Frame: {input_data.get('time_frame', 'N/A')}
 Region: {input_data.get('region', 'N/A')}
-Scope: {', '.join(input_data.get('scope', []))}
 Additional Instructions: {input_data.get('prompt', 'N/A')}
 
 Previous Analysis:
