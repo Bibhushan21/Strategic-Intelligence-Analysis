@@ -1,15 +1,29 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, StreamingResponse
-from fastapi.templating import Jinja2Templates
-from fastapi import Request
-from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
-from app.agents.orchestrator_agent import OrchestratorAgent
-import uvicorn
-import json
 import asyncio
-from pathlib import Path
+import json
+import logging
+import os
+import time
+from datetime import datetime
+from typing import Dict, List, Optional, Any
+
+from fastapi import FastAPI, HTTPException, Request, Form, BackgroundTasks
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+from reportlab.lib.units import inch
+from reportlab.lib.colors import HexColor
+from reportlab.lib import colors
+import io
+import re
+import uvicorn
+
+from data.database_service import DatabaseService
+from app.agents.orchestrator_agent import OrchestratorAgent
 
 app = FastAPI(title="Strategic Intelligence App")
 
@@ -25,6 +39,12 @@ class AnalysisRequest(BaseModel):
     time_frame: str
     region: str
     prompt: Optional[str] = None
+
+class PDFRequest(BaseModel):
+    analysis_data: Dict[str, Any]
+    strategic_question: str
+    time_frame: str
+    region: str
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
@@ -480,6 +500,583 @@ async def analyze(request: AnalysisRequest):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/generate-pdf")
+async def generate_pdf(request: PDFRequest):
+    """Generate PDF report from analysis data"""
+    try:
+        # Create a BytesIO buffer to hold the PDF
+        buffer = io.BytesIO()
+        
+        # Create the PDF document
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=72,
+            leftMargin=72,
+            topMargin=72,
+            bottomMargin=72
+        )
+        
+        # Get the default stylesheet
+        styles = getSampleStyleSheet()
+        
+        # Custom styles for better formatting
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Title'],
+            fontSize=28,
+            spaceAfter=30,
+            spaceBefore=20,
+            alignment=TA_CENTER,
+            textColor=colors.HexColor('#1f2937'),
+            fontName='Helvetica-Bold'
+        )
+        
+        agent_heading_style = ParagraphStyle(
+            'AgentHeading',
+            parent=styles['Heading1'],
+            fontSize=18,
+            spaceAfter=16,
+            spaceBefore=24,
+            textColor=colors.HexColor('#3730a3'),
+            fontName='Helvetica-Bold',
+            borderWidth=1,
+            borderColor=colors.HexColor('#e5e7eb'),
+            borderPadding=8,
+            backColor=colors.HexColor('#f8fafc')
+        )
+        
+        section_heading_style = ParagraphStyle(
+            'SectionHeading',
+            parent=styles['Heading2'],
+            fontSize=14,
+            spaceAfter=12,
+            spaceBefore=16,
+            textColor=colors.HexColor('#1e40af'),
+            fontName='Helvetica-Bold'
+        )
+        
+        subsection_heading_style = ParagraphStyle(
+            'SubsectionHeading',
+            parent=styles['Heading3'],
+            fontSize=12,
+            spaceAfter=8,
+            spaceBefore=12,
+            textColor=colors.HexColor('#3730a3'),
+            fontName='Helvetica-Bold'
+        )
+        
+        body_style = ParagraphStyle(
+            'CustomBody',
+            parent=styles['Normal'],
+            fontSize=10,
+            spaceAfter=8,
+            spaceBefore=4,
+            alignment=TA_JUSTIFY,
+            textColor=colors.HexColor('#374151'),
+            leading=14
+        )
+        
+        bullet_style = ParagraphStyle(
+            'BulletStyle',
+            parent=styles['Normal'],
+            fontSize=10,
+            spaceAfter=4,
+            spaceBefore=2,
+            leftIndent=20,
+            bulletIndent=10,
+            textColor=colors.HexColor('#374151'),
+            leading=13
+        )
+        
+        summary_style = ParagraphStyle(
+            'SummaryStyle',
+            parent=styles['Normal'],
+            fontSize=11,
+            spaceAfter=6,
+            alignment=TA_JUSTIFY,
+            textColor=colors.HexColor('#4b5563'),
+            leading=14
+        )
+        
+        # Build the story (content)
+        story = []
+        
+        # Title page
+        story.append(Paragraph("Strategic Intelligence Analysis Report", title_style))
+        story.append(Spacer(1, 0.5*inch))
+        
+        # Executive summary section
+        story.append(Paragraph("Executive Summary", section_heading_style))
+        
+        # Analysis details
+        analysis_details = [
+            f"<b>Strategic Question:</b> {request.strategic_question}",
+            f"<b>Time Frame:</b> {request.time_frame.replace('_', ' ').title()}",
+            f"<b>Region:</b> {request.region.replace('_', ' ').title()}",
+            f"<b>Generated:</b> {datetime.now().strftime('%B %d, %Y at %H:%M')}"
+        ]
+        
+        for detail in analysis_details:
+            story.append(Paragraph(detail, summary_style))
+            
+        story.append(Spacer(1, 0.4*inch))
+        story.append(PageBreak())
+        
+        # Process each agent's output
+        agent_order = [
+            'Problem Explorer',
+            'Best Practices', 
+            'Horizon Scanning',
+            'Scenario Planning',
+            'Research Synthesis',
+            'Strategic Action',
+            'High Impact',
+            'Backcasting'
+        ]
+        
+        for i, agent_name in enumerate(agent_order, 1):
+            agent_key = agent_name.lower().replace(' ', '_')
+            
+            if agent_key in request.analysis_data:
+                agent_data = request.analysis_data[agent_key]
+                
+                # Add agent section header
+                story.append(Paragraph(f"{i}. {agent_name}", agent_heading_style))
+                story.append(Spacer(1, 0.15*inch))
+                
+                # Process the agent's data
+                content = extract_agent_content(agent_data)
+                
+                if content:
+                    # Parse and format the content
+                    formatted_paragraphs = parse_agent_content_for_pdf(content)
+                    
+                    for paragraph_data in formatted_paragraphs:
+                        if paragraph_data['type'] == 'heading':
+                            story.append(Paragraph(paragraph_data['content'], section_heading_style))
+                        elif paragraph_data['type'] == 'subheading':
+                            story.append(Paragraph(paragraph_data['content'], subsection_heading_style))
+                        elif paragraph_data['type'] == 'bullet':
+                            story.append(Paragraph(f"• {paragraph_data['content']}", bullet_style))
+                        elif paragraph_data['type'] == 'numbered':
+                            story.append(Paragraph(f"{paragraph_data['number']}. {paragraph_data['content']}", bullet_style))
+                        elif paragraph_data['type'] == 'bold':
+                            story.append(Paragraph(f"<b>{paragraph_data['content']}</b>", body_style))
+                        else:  # regular paragraph
+                            if paragraph_data['content'].strip():
+                                story.append(Paragraph(paragraph_data['content'], body_style))
+                
+                story.append(Spacer(1, 0.25*inch))
+                
+                # Add page break after every 2 agents (except the last one)
+                if i % 2 == 0 and i < len(agent_order):
+                    story.append(PageBreak())
+        
+        # Build the PDF
+        doc.build(story)
+        
+        # Get the PDF data
+        buffer.seek(0)
+        pdf_data = buffer.getvalue()
+        buffer.close()
+        
+        # Return as download response
+        filename = f"strategic_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_data),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
+
+def extract_agent_content(agent_data):
+    """Extract content from agent data structure"""
+    if isinstance(agent_data, dict):
+        if 'data' in agent_data and isinstance(agent_data['data'], dict):
+            data = agent_data['data']
+            if 'formatted_output' in data:
+                return data['formatted_output']
+            elif 'raw_response' in data:
+                return data['raw_response']
+            else:
+                # Try to concatenate all string values
+                content_parts = []
+                for key, value in data.items():
+                    if isinstance(value, str) and key not in ['raw_response', 'formatted_output']:
+                        content_parts.append(f"**{key.replace('_', ' ').title()}**\n{value}")
+                return '\n\n'.join(content_parts)
+        else:
+            return str(agent_data)
+    else:
+        return str(agent_data)
+
+def parse_agent_content_for_pdf(content: str):
+    """Parse agent content and return structured paragraphs for PDF formatting"""
+    if not content:
+        return []
+    
+    paragraphs = []
+    lines = content.split('\n')
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        # Detect headings (markdown style)
+        if line.startswith('###'):
+            paragraphs.append({
+                'type': 'subheading',
+                'content': clean_text_for_pdf(line.replace('###', '').strip())
+            })
+        elif line.startswith('##'):
+            paragraphs.append({
+                'type': 'heading',
+                'content': clean_text_for_pdf(line.replace('##', '').strip())
+            })
+        elif line.startswith('#'):
+            paragraphs.append({
+                'type': 'heading',
+                'content': clean_text_for_pdf(line.replace('#', '').strip())
+            })
+        # Detect bullet points
+        elif line.startswith('- ') or line.startswith('* ') or line.startswith('• '):
+            content_text = line[2:].strip()
+            formatted_content = format_inline_text(content_text)
+            paragraphs.append({
+                'type': 'bullet',
+                'content': formatted_content
+            })
+        # Detect numbered lists
+        elif re.match(r'^\d+\.\s+', line):
+            match = re.match(r'^(\d+)\.\s+(.+)', line)
+            if match:
+                formatted_content = format_inline_text(match.group(2))
+                paragraphs.append({
+                    'type': 'numbered',
+                    'number': match.group(1),
+                    'content': formatted_content
+                })
+        # Detect bold text (entire line)
+        elif line.startswith('**') and line.endswith('**') and len(line) > 4:
+            paragraphs.append({
+                'type': 'bold',
+                'content': clean_text_for_pdf(line[2:-2])
+            })
+        # Regular paragraph
+        else:
+            # Handle inline formatting FIRST, then clean
+            formatted_content = format_inline_text(line)
+            if formatted_content.strip():
+                paragraphs.append({
+                    'type': 'paragraph',
+                    'content': formatted_content
+                })
+    
+    return paragraphs
+
+def format_inline_text(text: str) -> str:
+    """Format inline text with bold, italic, etc."""
+    if not text:
+        return ""
+    
+    # Convert **bold** to <b>bold</b> (non-greedy matching)
+    text = re.sub(r'\*\*([^*]+?)\*\*', r'<b>\1</b>', text)
+    
+    # Convert *italic* to <i>italic</i> (but not ** patterns)
+    text = re.sub(r'(?<!\*)\*([^*]+?)\*(?!\*)', r'<i>\1</i>', text)
+    
+    # Convert _italic_ to <i>italic</i>
+    text = re.sub(r'_([^_]+?)_', r'<i>\1</i>', text)
+    
+    # Clean up any remaining ** that weren't matched
+    text = text.replace('**', '')
+    
+    return clean_text_for_pdf(text)
+
+def clean_text_for_pdf(text: str) -> str:
+    """Clean and escape text for PDF display"""
+    if not text:
+        return ""
+    
+    # Convert to string and handle None
+    text = str(text) if text is not None else ""
+    
+    # First, preserve our HTML formatting tags
+    text = text.replace('<b>', '|||BOLD_START|||')
+    text = text.replace('</b>', '|||BOLD_END|||')
+    text = text.replace('<i>', '|||ITALIC_START|||')
+    text = text.replace('</i>', '|||ITALIC_END|||')
+    
+    # Escape special characters for ReportLab
+    text = text.replace('&', '&amp;')
+    text = text.replace('<', '&lt;').replace('>', '&gt;')
+    
+    # Restore our formatting tags
+    text = text.replace('|||BOLD_START|||', '<b>')
+    text = text.replace('|||BOLD_END|||', '</b>')
+    text = text.replace('|||ITALIC_START|||', '<i>')
+    text = text.replace('|||ITALIC_END|||', '</i>')
+    
+    return text
+
+# 🚀 SMART TEMPLATE GENERATION & USER HISTORY ENDPOINTS
+
+@app.post("/api/track-query-pattern")
+async def track_query_pattern(request: Request):
+    """Track user query patterns for AI template generation"""
+    try:
+        data = await request.json()
+        
+        result = DatabaseService.track_user_query_pattern(
+            strategic_question=data.get('strategic_question', ''),
+            time_frame=data.get('time_frame', ''),
+            region=data.get('region', ''),
+            additional_instructions=data.get('additional_instructions'),
+            user_id=data.get('user_id', 'anonymous')
+        )
+        
+        return JSONResponse({
+            "success": result,
+            "message": "Query pattern tracked successfully" if result else "Failed to track pattern"
+        })
+        
+    except Exception as e:
+        logging.error(f"Error tracking query pattern: {e}")
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+@app.get("/api/ai-template-suggestions/{user_id}")
+async def get_ai_template_suggestions(user_id: str = 'anonymous', limit: int = 3):
+    """Get AI-powered template suggestions based on user history"""
+    try:
+        suggestions = DatabaseService.generate_ai_template_suggestions(user_id, limit)
+        
+        return JSONResponse({
+            "success": True,
+            "suggestions": suggestions,
+            "count": len(suggestions)
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting AI template suggestions: {e}")
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+@app.post("/api/get-template-recommendations")
+async def get_template_recommendations(request: Request):
+    """Get template recommendations based on current question and user history"""
+    try:
+        data = await request.json()
+        strategic_question = data.get('strategic_question', '')
+        user_id = data.get('user_id', 'anonymous')
+        
+        if not strategic_question:
+            return JSONResponse({"success": False, "error": "Strategic question is required"}, status_code=400)
+        
+        recommendations = DatabaseService.get_template_recommendations_for_user(
+            strategic_question, user_id
+        )
+        
+        return JSONResponse({
+            "success": True,
+            "recommendations": recommendations,
+            "count": len(recommendations)
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting template recommendations: {e}")
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+@app.post("/api/save-analysis-as-template")
+async def save_analysis_as_template(request: Request):
+    """Save a completed analysis as a reusable template"""
+    try:
+        data = await request.json()
+        
+        session_id = data.get('session_id')
+        template_name = data.get('template_name', '').strip()
+        template_description = data.get('template_description', '').strip()
+        category = data.get('category', 'User Generated').strip()
+        user_id = data.get('user_id', 'anonymous')
+        
+        if not all([session_id, template_name, template_description]):
+            return JSONResponse({
+                "success": False, 
+                "error": "Session ID, template name, and description are required"
+            }, status_code=400)
+        
+        template_id = DatabaseService.save_analysis_as_template(
+            session_id=session_id,
+            template_name=template_name,
+            template_description=template_description,
+            category=category,
+            user_id=user_id
+        )
+        
+        if template_id:
+            return JSONResponse({
+                "success": True,
+                "template_id": template_id,
+                "message": f"Template '{template_name}' saved successfully!"
+            })
+        else:
+            return JSONResponse({
+                "success": False,
+                "error": "Failed to save template. Analysis session may not exist."
+            }, status_code=400)
+        
+    except Exception as e:
+        logging.error(f"Error saving analysis as template: {e}")
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+@app.get("/api/popular-query-patterns")
+async def get_popular_query_patterns(limit: int = 10):
+    """Get popular query patterns for auto-template generation"""
+    try:
+        patterns = DatabaseService.get_popular_query_patterns(limit)
+        
+        return JSONResponse({
+            "success": True,
+            "patterns": patterns,
+            "count": len(patterns)
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting popular query patterns: {e}")
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+@app.post("/api/generate-smart-template")
+async def generate_smart_template(request: Request):
+    """Generate a smart template based on AI analysis of user patterns"""
+    try:
+        data = await request.json()
+        user_id = data.get('user_id', 'anonymous')
+        domain = data.get('domain')
+        intent = data.get('intent')
+        
+        # Get user patterns for analysis
+        patterns = DatabaseService.get_popular_query_patterns(20)
+        
+        # Find matching patterns
+        matching_patterns = []
+        for pattern in patterns:
+            if (domain and pattern.get('domain') == domain) or \
+               (intent and pattern.get('intent') == intent):
+                matching_patterns.append(pattern)
+        
+        if not matching_patterns:
+            return JSONResponse({
+                "success": False,
+                "error": "No matching patterns found for smart template generation"
+            }, status_code=404)
+        
+        # Generate smart template based on patterns
+        best_pattern = max(matching_patterns, key=lambda x: x.get('frequency', 0))
+        
+        # Create AI-generated template
+        template_name = f"Smart {best_pattern['domain'].title()} {best_pattern['intent'].replace('_', ' ').title()}"
+        template_description = f"AI-generated template based on popular {best_pattern['domain']} analysis patterns with {best_pattern['intent'].replace('_', ' ')} focus."
+        
+        # Generate strategic question template
+        strategic_question = DatabaseService._generate_smart_question_template(
+            best_pattern['domain'], 
+            best_pattern['intent'], 
+            best_pattern.get('keywords', '')
+        )
+        
+        # Create the template
+        template_id = DatabaseService.create_template(
+            name=template_name,
+            description=template_description,
+            category='AI Generated',
+            strategic_question=strategic_question,
+            default_time_frame=best_pattern.get('time_frame', 'Next 12 months'),
+            default_region=best_pattern.get('region', 'Global'),
+            additional_instructions=f"This template was automatically generated based on analysis of {best_pattern['frequency']} similar queries.",
+            tags=[best_pattern['domain'], best_pattern['intent'], 'ai-generated', 'smart-template'],
+            is_public=True,
+            created_by='ai-system'
+        )
+        
+        return JSONResponse({
+            "success": True,
+            "template_id": template_id,
+            "template_name": template_name,
+            "message": "Smart template generated successfully!",
+            "pattern_data": best_pattern
+        })
+        
+    except Exception as e:
+        logging.error(f"Error generating smart template: {e}")
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+@app.get("/api/user-analytics/{user_id}")
+async def get_user_analytics(user_id: str):
+    """Get user analytics for personalized template suggestions"""
+    try:
+        # Get user query patterns using the existing database service methods
+        from data.database_config import get_db_connection
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Domain distribution
+            cursor.execute("""
+                SELECT extracted_domain, COUNT(*) as count
+                FROM user_query_patterns 
+                WHERE user_id = %s AND created_at >= NOW() - INTERVAL '30 days'
+                GROUP BY extracted_domain
+                ORDER BY count DESC
+            """, (user_id,))
+            
+            domain_stats = [{"domain": row[0], "count": row[1]} for row in cursor.fetchall()]
+            
+            # Intent distribution
+            cursor.execute("""
+                SELECT extracted_intent, COUNT(*) as count
+                FROM user_query_patterns 
+                WHERE user_id = %s AND created_at >= NOW() - INTERVAL '30 days'
+                GROUP BY extracted_intent
+                ORDER BY count DESC
+            """, (user_id,))
+            
+            intent_stats = [{"intent": row[0], "count": row[1]} for row in cursor.fetchall()]
+            
+            # Recent activity
+            cursor.execute("""
+                SELECT strategic_question, extracted_domain, extracted_intent, created_at
+                FROM user_query_patterns 
+                WHERE user_id = %s 
+                ORDER BY created_at DESC
+                LIMIT 10
+            """, (user_id,))
+            
+            recent_activity = []
+            for row in cursor.fetchall():
+                recent_activity.append({
+                    "question": row[0],
+                    "domain": row[1],
+                    "intent": row[2],
+                    "created_at": row[3].isoformat() if row[3] else None
+                })
+        
+        return JSONResponse({
+            "success": True,
+            "analytics": {
+                "domain_distribution": domain_stats,
+                "intent_distribution": intent_stats,
+                "recent_activity": recent_activity,
+                "total_queries": len(recent_activity)
+            }
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting user analytics: {e}")
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True) 

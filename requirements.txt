@@ -4,3 +4,4 @@ python-dotenv==1.0.1
 langchain-core>=0.3.49
 langchain-mistralai==0.2.10
 mistralai==0.0.12
+reportlab==4.0.4

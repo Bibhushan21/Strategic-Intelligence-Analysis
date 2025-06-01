@@ -3,9 +3,13 @@ from sqlalchemy import desc, func, and_, or_
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional, Tuple
 import logging
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from psycopg2 import sql
+import json
 
-from database_config import get_db_session, close_db_session, get_db_connection
-from models import (
+from data.database_config import get_db_session, close_db_session, get_db_connection
+from data.models import (
     AnalysisSession, AgentResult, AnalysisTemplate, 
     SystemLog, AgentPerformance
 )
@@ -1145,4 +1149,479 @@ class DatabaseService:
             logger.error(f"Failed to get analysis sessions count: {str(e)}")
             return 0
         finally:
-            close_db_session(session) 
+            close_db_session(session)
+
+    # User History & Pattern Analytics
+    @staticmethod
+    def track_user_query_pattern(
+        strategic_question: str,
+        time_frame: str,
+        region: str,
+        additional_instructions: Optional[str] = None,
+        user_id: Optional[str] = 'anonymous'
+    ) -> bool:
+        """Track user query patterns for template generation"""
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Create user query patterns table if it doesn't exist
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS user_query_patterns (
+                        id SERIAL PRIMARY KEY,
+                        user_id VARCHAR(100) DEFAULT 'anonymous',
+                        strategic_question TEXT NOT NULL,
+                        time_frame VARCHAR(100),
+                        region VARCHAR(100),
+                        additional_instructions TEXT,
+                        question_keywords TEXT,
+                        extracted_domain VARCHAR(200),
+                        extracted_intent VARCHAR(200),
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # Extract keywords and domain from strategic question
+                keywords = DatabaseService._extract_keywords(strategic_question)
+                domain = DatabaseService._extract_domain(strategic_question)
+                intent = DatabaseService._extract_intent(strategic_question)
+                
+                # Insert pattern record
+                cursor.execute("""
+                    INSERT INTO user_query_patterns 
+                    (user_id, strategic_question, time_frame, region, additional_instructions,
+                     question_keywords, extracted_domain, extracted_intent)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    user_id, strategic_question, time_frame, region, 
+                    additional_instructions, keywords, domain, intent
+                ))
+                
+                conn.commit()
+                return True
+                
+        except Exception as e:
+            print(f"Error tracking user query pattern: {e}")
+            return False
+
+    @staticmethod
+    def get_popular_query_patterns(limit: int = 10) -> List[Dict[str, Any]]:
+        """Get most popular query patterns for template generation"""
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute("""
+                    SELECT 
+                        extracted_domain,
+                        extracted_intent,
+                        time_frame,
+                        region,
+                        COUNT(*) as frequency,
+                        STRING_AGG(DISTINCT question_keywords, ', ') as common_keywords,
+                        AVG(LENGTH(strategic_question)) as avg_question_length
+                    FROM user_query_patterns
+                    WHERE created_at >= NOW() - INTERVAL '30 days'
+                    GROUP BY extracted_domain, extracted_intent, time_frame, region
+                    HAVING COUNT(*) >= 2
+                    ORDER BY frequency DESC
+                    LIMIT %s
+                """, (limit,))
+                
+                patterns = []
+                for row in cursor.fetchall():
+                    patterns.append({
+                        'domain': row[0],
+                        'intent': row[1],
+                        'time_frame': row[2],
+                        'region': row[3],
+                        'frequency': row[4],
+                        'keywords': row[5],
+                        'avg_question_length': row[6]
+                    })
+                
+                return patterns
+                
+        except Exception as e:
+            print(f"Error getting popular query patterns: {e}")
+            return []
+
+    @staticmethod
+    def save_analysis_as_template(
+        session_id: int,
+        template_name: str,
+        template_description: str,
+        category: str,
+        user_id: str = 'anonymous'
+    ) -> Optional[int]:
+        """Save a completed analysis as a reusable template"""
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Get the original analysis session
+                cursor.execute("""
+                    SELECT strategic_question, time_frame, region, additional_instructions
+                    FROM analysis_sessions
+                    WHERE id = %s
+                """, (session_id,))
+                
+                session_data = cursor.fetchone()
+                if not session_data:
+                    return None
+                
+                strategic_question, time_frame, region, additional_instructions = session_data
+                
+                # Generate tags from the strategic question
+                tags = DatabaseService._generate_tags_from_question(strategic_question)
+                
+                # Create the template
+                template_id = DatabaseService.create_template(
+                    name=template_name,
+                    description=template_description,
+                    category=category,
+                    strategic_question=strategic_question,
+                    default_time_frame=time_frame,
+                    default_region=region,
+                    additional_instructions=additional_instructions,
+                    tags=tags,
+                    is_public=True,
+                    created_by=user_id
+                )
+                
+                # Track this as a user-generated template
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS user_generated_templates (
+                        id SERIAL PRIMARY KEY,
+                        template_id INTEGER REFERENCES analysis_templates(id),
+                        source_session_id INTEGER REFERENCES analysis_sessions(id),
+                        user_id VARCHAR(100),
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                cursor.execute("""
+                    INSERT INTO user_generated_templates (template_id, source_session_id, user_id)
+                    VALUES (%s, %s, %s)
+                """, (template_id, session_id, user_id))
+                
+                conn.commit()
+                return template_id
+                
+        except Exception as e:
+            print(f"Error saving analysis as template: {e}")
+            return None
+
+    @staticmethod
+    def generate_ai_template_suggestions(
+        user_id: str = 'anonymous',
+        limit: int = 3
+    ) -> List[Dict[str, Any]]:
+        """Generate AI-powered template suggestions based on user history"""
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Get user's historical patterns
+                cursor.execute("""
+                    SELECT 
+                        strategic_question,
+                        time_frame,
+                        region,
+                        additional_instructions,
+                        question_keywords,
+                        extracted_domain,
+                        extracted_intent
+                    FROM user_query_patterns
+                    WHERE user_id = %s
+                    ORDER BY created_at DESC
+                    LIMIT 20
+                """, (user_id,))
+                
+                user_patterns = cursor.fetchall()
+                
+                if not user_patterns:
+                    # Return popular patterns if no user history
+                    return DatabaseService._get_trending_template_suggestions(limit)
+                
+                # Analyze patterns to generate suggestions
+                suggestions = DatabaseService._analyze_patterns_for_suggestions(user_patterns, limit)
+                
+                return suggestions
+                
+        except Exception as e:
+            print(f"Error generating AI template suggestions: {e}")
+            return []
+
+    @staticmethod
+    def get_template_recommendations_for_user(
+        strategic_question: str,
+        user_id: str = 'anonymous'
+    ) -> List[Dict[str, Any]]:
+        """Get template recommendations based on current question and user history"""
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Extract features from current question
+                keywords = DatabaseService._extract_keywords(strategic_question)
+                domain = DatabaseService._extract_domain(strategic_question)
+                intent = DatabaseService._extract_intent(strategic_question)
+                
+                # Find similar templates based on keywords and domain
+                cursor.execute("""
+                    SELECT 
+                        t.id, t.name, t.description, t.category, t.strategic_question,
+                        t.default_time_frame, t.default_region, t.additional_instructions,
+                        t.tags, t.usage_count,
+                        CASE 
+                            WHEN t.tags ILIKE %s THEN 3
+                            WHEN t.category ILIKE %s THEN 2
+                            WHEN t.strategic_question ILIKE %s THEN 1
+                            ELSE 0
+                        END as relevance_score
+                    FROM analysis_templates t
+                    WHERE t.is_public = true
+                    AND (
+                        t.tags ILIKE %s OR
+                        t.category ILIKE %s OR
+                        t.strategic_question ILIKE %s
+                    )
+                    ORDER BY relevance_score DESC, usage_count DESC
+                    LIMIT 5
+                """, (
+                    f"%{domain}%", f"%{domain}%", f"%{keywords}%",
+                    f"%{domain}%", f"%{domain}%", f"%{keywords}%"
+                ))
+                
+                recommendations = []
+                for row in cursor.fetchall():
+                    recommendations.append({
+                        'id': row[0],
+                        'name': row[1],
+                        'description': row[2],
+                        'category': row[3],
+                        'strategic_question': row[4],
+                        'default_time_frame': row[5],
+                        'default_region': row[6],
+                        'additional_instructions': row[7],
+                        'tags': row[8].split(',') if row[8] else [],
+                        'usage_count': row[9],
+                        'relevance_score': row[10]
+                    })
+                
+                return recommendations
+                
+        except Exception as e:
+            print(f"Error getting template recommendations: {e}")
+            return []
+
+    # Helper methods for AI analysis
+    @staticmethod
+    def _extract_keywords(text: str) -> str:
+        """Extract key terms from strategic question"""
+        if not text:
+            return ""
+        
+        # Simple keyword extraction (in production, use NLP libraries)
+        import re
+        
+        # Remove common question words and extract meaningful terms
+        stop_words = {'what', 'how', 'why', 'when', 'where', 'who', 'which', 'should', 'can', 'will', 'are', 'is', 'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'}
+        
+        words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
+        keywords = [word for word in words if word not in stop_words]
+        
+        return ', '.join(keywords[:10])  # Top 10 keywords
+
+    @staticmethod
+    def _extract_domain(text: str) -> str:
+        """Extract business domain from strategic question"""
+        if not text:
+            return "general"
+        
+        text_lower = text.lower()
+        
+        # Domain mapping based on keywords
+        domain_keywords = {
+            'market': ['market', 'customer', 'competitor', 'competition', 'segment'],
+            'technology': ['technology', 'digital', 'ai', 'automation', 'innovation', 'tech'],
+            'finance': ['financial', 'revenue', 'cost', 'investment', 'budget', 'roi'],
+            'risk': ['risk', 'threat', 'vulnerability', 'security', 'compliance'],
+            'strategy': ['strategy', 'strategic', 'planning', 'direction', 'vision'],
+            'operations': ['operations', 'process', 'efficiency', 'productivity', 'supply'],
+            'geopolitical': ['geopolitical', 'political', 'regulatory', 'government', 'policy']
+        }
+        
+        for domain, keywords in domain_keywords.items():
+            if any(keyword in text_lower for keyword in keywords):
+                return domain
+        
+        return 'general'
+
+    @staticmethod
+    def _extract_intent(text: str) -> str:
+        """Extract analysis intent from strategic question"""
+        if not text:
+            return "analysis"
+        
+        text_lower = text.lower()
+        
+        # Intent mapping based on question patterns
+        if any(word in text_lower for word in ['enter', 'entry', 'expansion', 'expand']):
+            return 'market_entry'
+        elif any(word in text_lower for word in ['competitor', 'competition', 'competitive']):
+            return 'competitive_analysis'
+        elif any(word in text_lower for word in ['risk', 'threat', 'vulnerability']):
+            return 'risk_assessment'
+        elif any(word in text_lower for word in ['opportunity', 'potential', 'growth']):
+            return 'opportunity_analysis'
+        elif any(word in text_lower for word in ['swot', 'strength', 'weakness']):
+            return 'swot_analysis'
+        elif any(word in text_lower for word in ['scenario', 'future', 'forecast']):
+            return 'scenario_planning'
+        else:
+            return 'general_analysis'
+
+    @staticmethod
+    def _generate_tags_from_question(strategic_question: str) -> List[str]:
+        """Generate relevant tags from strategic question"""
+        keywords = DatabaseService._extract_keywords(strategic_question)
+        domain = DatabaseService._extract_domain(strategic_question)
+        intent = DatabaseService._extract_intent(strategic_question)
+        
+        tags = [domain, intent]
+        
+        # Add specific keywords as tags
+        keyword_list = keywords.split(', ')[:5]  # Top 5 keywords
+        tags.extend(keyword_list)
+        
+        return [tag for tag in tags if tag and len(tag) > 2]
+
+    @staticmethod
+    def _get_trending_template_suggestions(limit: int) -> List[Dict[str, Any]]:
+        """Get trending template suggestions when no user history exists"""
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute("""
+                    SELECT name, category, 'Based on popular usage' as reason
+                    FROM analysis_templates
+                    WHERE is_public = true
+                    ORDER BY usage_count DESC, created_at DESC
+                    LIMIT %s
+                """, (limit,))
+                
+                suggestions = []
+                for row in cursor.fetchall():
+                    suggestions.append({
+                        'name': row[0],
+                        'category': row[1],
+                        'reason': row[2],
+                        'confidence': 0.7
+                    })
+                
+                return suggestions
+                
+        except Exception as e:
+            print(f"Error getting trending suggestions: {e}")
+            return []
+
+    @staticmethod
+    def _analyze_patterns_for_suggestions(patterns: List, limit: int) -> List[Dict[str, Any]]:
+        """Analyze user patterns to generate intelligent suggestions"""
+        domain_counts = {}
+        intent_counts = {}
+        
+        for pattern in patterns:
+            domain = pattern[5]  # extracted_domain
+            intent = pattern[6]  # extracted_intent
+            
+            domain_counts[domain] = domain_counts.get(domain, 0) + 1
+            intent_counts[intent] = intent_counts.get(intent, 0) + 1
+        
+        # Generate suggestions based on patterns
+        suggestions = []
+        
+        # Most common domain
+        if domain_counts:
+            top_domain = max(domain_counts, key=domain_counts.get)
+            suggestions.append({
+                'name': f'Advanced {top_domain.title()} Analysis',
+                'category': top_domain.title(),
+                'reason': f'Based on your frequent {top_domain} analyses',
+                'confidence': 0.9
+            })
+        
+        # Most common intent
+        if intent_counts:
+            top_intent = max(intent_counts, key=intent_counts.get)
+            suggestions.append({
+                'name': f'{top_intent.replace("_", " ").title()} Framework',
+                'category': 'Personalized',
+                'reason': f'Based on your {top_intent.replace("_", " ")} focus',
+                'confidence': 0.8
+            })
+        
+        # Trending combination
+        if len(suggestions) < limit:
+            suggestions.append({
+                'name': 'Cross-Domain Strategic Assessment',
+                'category': 'Advanced',
+                'reason': 'Recommended for comprehensive analysis',
+                'confidence': 0.6
+            })
+        
+        return suggestions[:limit]
+
+    @staticmethod
+    def _generate_smart_question_template(domain: str, intent: str, keywords: str) -> str:
+        """Generate a smart strategic question template based on patterns"""
+        
+        # Domain-specific question starters
+        domain_starters = {
+            'market': 'What are the key market opportunities and challenges for',
+            'technology': 'How will emerging technologies impact',
+            'finance': 'What are the financial implications and opportunities of',
+            'risk': 'What are the primary risks and mitigation strategies for',
+            'strategy': 'What strategic approach should we take for',
+            'operations': 'How can we optimize operational efficiency in',
+            'geopolitical': 'What are the geopolitical risks and considerations for',
+            'general': 'What are the strategic considerations for'
+        }
+        
+        # Intent-specific question patterns
+        intent_patterns = {
+            'market_entry': '[market entry/expansion] in [target market/region]? Analyze market size, competitive landscape, regulatory requirements, and entry strategies.',
+            'competitive_analysis': '[competitive positioning] against key players in [industry/market]? Assess competitor strengths, weaknesses, and strategic moves.',
+            'risk_assessment': '[risk management] in [specific area/context]? Identify key risks, assess impact probability, and recommend mitigation strategies.',
+            'opportunity_analysis': '[opportunity identification and evaluation] in [market/sector]? Analyze growth potential, market dynamics, and strategic advantages.',
+            'swot_analysis': '[organizational assessment] of our [business unit/company]? Analyze strengths, weaknesses, opportunities, and threats.',
+            'scenario_planning': '[future scenario planning] for [industry/business] over [timeframe]? Develop multiple scenarios and strategic responses.',
+            'general_analysis': '[strategic analysis] of [business situation/challenge]? Provide comprehensive insights and actionable recommendations.'
+        }
+        
+        # Build the question
+        starter = domain_starters.get(domain, domain_starters['general'])
+        pattern = intent_patterns.get(intent, intent_patterns['general_analysis'])
+        
+        # Extract key terms from keywords for placeholders
+        if keywords:
+            key_terms = keywords.split(', ')[:3]  # Use top 3 keywords
+            placeholder_context = f"[{'/'.join(key_terms)}]"
+        else:
+            placeholder_context = "[specific context]"
+        
+        # Combine and format
+        question = f"{starter} {pattern}"
+        
+        # Replace generic placeholders with more specific ones based on keywords
+        if keywords:
+            if 'market' in keywords.lower():
+                question = question.replace('[target market/region]', '[market/region]')
+                question = question.replace('[market/sector]', '[market/sector]')
+            if 'technology' in keywords.lower() or 'digital' in keywords.lower():
+                question = question.replace('[specific area/context]', '[technology implementation/digital transformation]')
+        
+        return question 
