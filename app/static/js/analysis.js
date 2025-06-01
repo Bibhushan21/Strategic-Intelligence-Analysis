@@ -321,14 +321,14 @@ function createAgentOutputSection(agentName) {
              onclick="toggleAgentSection('${agentName}')">
             <div class="flex items-center justify-between">
                 <!-- Agent Title with Icon -->
-                <div class="flex items-center">
+            <div class="flex items-center">
                     <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mr-4 shadow-lg">
                         ${agentConfig.icon}
-                    </div>
+            </div>
                     <div>
                         <h2 class="text-xl font-bold text-white drop-shadow-sm">${agentName}</h2>
                         <p class="text-white/80 text-sm font-medium">${agentConfig.description}</p>
-                    </div>
+        </div>
                 </div>
                 
                 <!-- Right side with Status and Collapse Arrow -->
