@@ -233,7 +233,7 @@ Ensure all requested fields for each scenario type are present and distinct. Adh
         # Fallback for markdown if parsing somehow failed badly but we have a raw response
         if not structured_scenarios["gbn_scenarios"] and not structured_scenarios["change_progression_scenarios"] and raw_response:
             logger.warn("Scenario parsing resulted in empty structured data; using raw response for markdown.")
-            markdown_output = "# Scenario Planning Analysis (Raw Output Fallback)\n\n" + raw_response
+            markdown_output = "# Scenario Planning Analysis)\n\n" + raw_response
 
         
         return {
@@ -248,4 +248,4 @@ Ensure all requested fields for each scenario type are present and distinct. Adh
                 "formatted_output": markdown_output,
                 "raw_response_llm": raw_response # Explicitly save the raw LLM output
             }
-            } 
+            }

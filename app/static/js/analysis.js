@@ -852,7 +852,93 @@ analysisForm.addEventListener('submit', async (e) => {
                     const outputDiv = document.getElementById(`${agentName}Output`);
                     if (outputDiv) {
                         const agentData = data[agentName];
-                        if (agentData && agentData.data) {
+                        
+                        // Check if this is an error response
+                        if (typeof agentData === 'string' && agentData.startsWith('Error:')) {
+                            // Handle error case
+                            console.error(`Agent ${agentName} failed:`, agentData);
+                            
+                            // Update status to error
+                            const statusIndicator = document.getElementById(`${agentName}StatusIndicator`);
+                            if (statusIndicator) {
+                                statusIndicator.innerHTML = `
+                                    <div class="w-4 h-4 bg-red-400 rounded-full mr-2"></div>
+                                    <span class="text-sm text-white font-medium">Error</span>
+                                `;
+                            }
+                            
+                            // Update output with error message
+                            outputDiv.innerHTML = `
+                                <div class="text-red-500 bg-red-50 rounded-lg p-4 border border-red-200">
+                                    <div class="flex items-center mb-2">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                        </svg>
+                                        <strong class="font-semibold">Agent Processing Failed</strong>
+                                    </div>
+                                    <p class="text-sm">${agentData}</p>
+                                </div>
+                            `;
+                            
+                            // Update timestamp
+                            const timestampSpan = document.getElementById(`${agentName}Timestamp`);
+                            if (timestampSpan) {
+                                const now = new Date();
+                                timestampSpan.innerHTML = `
+                                    <svg class="w-3 h-3 mr-1 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                    Failed at ${now.toLocaleTimeString()}
+                                `;
+                            }
+                            
+                            // Increment completed agents (even for errors)
+                            completedAgents++;
+                            
+                        } else if (agentData && agentData.status === 'error') {
+                            // Handle structured error response
+                            console.error(`Agent ${agentName} error:`, agentData.error);
+                            
+                            // Update status to error
+                            const statusIndicator = document.getElementById(`${agentName}StatusIndicator`);
+                            if (statusIndicator) {
+                                statusIndicator.innerHTML = `
+                                    <div class="w-4 h-4 bg-red-400 rounded-full mr-2"></div>
+                                    <span class="text-sm text-white font-medium">Error</span>
+                                `;
+                            }
+                            
+                            // Update output with error message
+                            outputDiv.innerHTML = `
+                                <div class="text-red-500 bg-red-50 rounded-lg p-4 border border-red-200">
+                                    <div class="flex items-center mb-2">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                        </svg>
+                                        <strong class="font-semibold">Processing Failed</strong>
+                                    </div>
+                                    <p class="text-sm"><strong>Error:</strong> ${agentData.error || 'Unknown error occurred'}</p>
+                                    <p class="text-xs text-gray-600 mt-2">This agent encountered an issue during processing. Other agents may continue normally.</p>
+                                </div>
+                            `;
+                            
+                            // Update timestamp
+                            const timestampSpan = document.getElementById(`${agentName}Timestamp`);
+                            if (timestampSpan) {
+                                const now = new Date();
+                                timestampSpan.innerHTML = `
+                                    <svg class="w-3 h-3 mr-1 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                    Failed at ${now.toLocaleTimeString()}
+                                `;
+                            }
+                            
+                            // Increment completed agents (even for errors)
+                            completedAgents++;
+                            
+                        } else if (agentData && agentData.data) {
+                            // Handle successful response
                             // Store analysis result
                             const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
                             analysisResults[agentKey] = agentData;
@@ -863,14 +949,32 @@ analysisForm.addEventListener('submit', async (e) => {
                             // Increment completed agents
                             completedAgents++;
                             
-                            // Check if all agents are completed
-                            if (completedAgents >= totalAgents) {
-                                analysisCompleted = true;
-                                showDownloadButton();
-                                console.log('All agents completed! PDF download now available.');
-                            }
                         } else {
-                            console.warn(`No data found for agent: ${agentName}`);
+                            console.warn(`No data found for agent: ${agentName}`, agentData);
+                            
+                            // Treat as error if no data
+                            const statusIndicator = document.getElementById(`${agentName}StatusIndicator`);
+                            if (statusIndicator) {
+                                statusIndicator.innerHTML = `
+                                    <div class="w-4 h-4 bg-red-400 rounded-full mr-2"></div>
+                                    <span class="text-sm text-white font-medium">Error</span>
+                                `;
+                            }
+                            
+                            outputDiv.innerHTML = `
+                                <div class="text-red-500 bg-red-50 rounded-lg p-4 border border-red-200">
+                                    <p class="text-sm">No data received from agent</p>
+                                </div>
+                            `;
+                            
+                            completedAgents++;
+                        }
+                        
+                        // Check if all agents are completed (including errors)
+                        if (completedAgents >= totalAgents) {
+                            analysisCompleted = true;
+                            showDownloadButton();
+                            console.log('All agents processed! PDF download now available.');
                         }
                     } else {
                         console.warn(`Output div not found for agent: ${agentName}`);

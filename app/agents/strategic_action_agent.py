@@ -161,7 +161,7 @@ Focus on creating a practical and actionable roadmap.
             logger.info(f"Final output contains {total_ideas} strategic ideas")
             
             return {
-                "agent": "strategic_action_agent",
+                "status": "success",
                 "data": formatted_output["data"],  # Extract the data dict from format_output
                 "metadata": {
                     "prompt_length": len(prompt),
@@ -183,7 +183,8 @@ Focus on creating a practical and actionable roadmap.
             }
             
             return {
-                "agent": "strategic_action_agent",
+                "status": "error",
+                "error": str(e),
                 "data": error_output,
                 "metadata": {
                     "error": str(e),
@@ -331,65 +332,46 @@ Focus on creating a practical and actionable roadmap.
 
             # 3. Action Item Detection (enhanced for markdown format)
             if current_strategic_idea:
-                action_patterns = [
-                    # Match: "1. **Action Name**" 
-                    r"^(\d+\.)\s*\*\*([^*]+)\*\*",
-                    # Match: "1. Action text" or "• Action text" 
-                    r"^(?:\d+\.|-|\*|•)\s*(.+?)(?:\s*--\s*.*priority[:\s]*(high|medium|low).*)?$",
-                    # Match: "**Action:** Text"
-                    r"^\*\*action:\*\*\s*(.+?)(?:\s*--\s*.*priority[:\s]*(high|medium|low).*)?$",
-                    # Match: "- **Action:** Text"
-                    r"^-\s*\*\*action:\*\*\s*(.+?)(?:\s*--\s*.*priority[:\s]*(high|medium|low).*)?$",
-                    # Match: "- **Priority:** High/Medium/Low"
-                    r"^-\s*\*\*priority:\*\*\s*(high|medium|low)",
-                ]
-                
-                action_match = None
-                priority_match = None
-                
-                # Check for priority lines first
-                priority_pattern = r"^-\s*\*\*priority:\*\*\s*(high|medium|low)"
-                priority_match = re.match(priority_pattern, stripped_line, re.IGNORECASE)
-                
-                if priority_match and action_item_buffer and len(action_item_buffer) > 0:
-                    # Update the last action item with this priority
-                    action_item_buffer[-1]['priority'] = priority_match.group(1).title()
-                    logger.debug(f"Updated priority for last action: {priority_match.group(1)}")
+                # Skip header lines like "**Action Items:**" or "**Summary:**"
+                if re.match(r"^\*\*(?:Action Items?|Summary):\*\*\s*$", stripped_line, re.IGNORECASE):
                     continue
                 
-                for pattern in action_patterns:
-                    action_match = re.match(pattern, stripped_line, re.IGNORECASE)
-                    if action_match:
-                        break
+                # Improved pattern to match the actual LLM output format
+                # Format: "1. **Action Name** - Description -- **Priority:** High"
+                action_pattern = r"^(\d+\.)\s*\*\*([^*]+)\*\*\s*-\s*([^-]+?)\s*--\s*\*\*Priority:\*\*\s*(High|Medium|Low)\s*$"
+                action_match = re.match(action_pattern, stripped_line, re.IGNORECASE)
                 
                 if action_match:
-                    action_text = ""
-                    priority = None
+                    action_name = action_match.group(2).strip()
+                    action_description = action_match.group(3).strip()
+                    priority = action_match.group(4).title()
                     
-                    # Safely extract action text based on which pattern matched
-                    if len(action_match.groups()) >= 1:
-                        action_text = action_match.group(1).strip()
-                        
-                        # For the "1. **Action Name**" pattern, use group 2 if it exists
-                        if len(action_match.groups()) >= 2 and action_match.group(2) and action_match.group(2).strip():
-                            action_text = action_match.group(2).strip()
+                    # Combine name and description for full action text
+                    action_text = f"{action_name} - {action_description}"
                     
-                    # Safely extract priority
-                    if len(action_match.groups()) >= 3 and action_match.group(3):
-                        priority_text = action_match.group(3).lower()
-                        if priority_text in ['high', 'medium', 'low']:
-                            priority = priority_text.title()
+                    current_action = {
+                        "action": action_text,
+                        "priority": priority
+                    }
+                    action_item_buffer.append(current_action)
+                    logger.debug(f"Found action: {action_text[:50]}... Priority: {priority}")
+                    continue
+                
+                # Fallback pattern for simpler formats without description
+                simple_pattern = r"^(\d+\.)\s*\*\*([^*]+)\*\*.*?--\s*\*\*Priority:\*\*\s*(High|Medium|Low)"
+                simple_match = re.match(simple_pattern, stripped_line, re.IGNORECASE)
+                
+                if simple_match:
+                    action_text = simple_match.group(2).strip()
+                    priority = simple_match.group(3).title()
                     
-                    # Clean up action text
-                    action_text = re.sub(r"\s*--\s*priority:?\s*(high|medium|low).*$", "", action_text, flags=re.IGNORECASE)
-                    action_text = re.sub(r"timeline:\s*\d+\s*years?", "", action_text, flags=re.IGNORECASE).strip()
-                    action_text = re.sub(r"^\*\*|\*\*$", "", action_text).strip()  # Remove markdown bold
-                    
-                    if action_text and len(action_text) > 3 and not action_text.lower().startswith(('timeline', 'summary', 'action items', 'priority')):
-                        current_action = {"action": action_text, "priority": priority or "Medium"}
-                        action_item_buffer.append(current_action)
-                        logger.debug(f"Found action: {action_text[:50]}...")
-                        continue
+                    current_action = {
+                        "action": action_text,
+                        "priority": priority
+                    }
+                    action_item_buffer.append(current_action)
+                    logger.debug(f"Found action (simple): {action_text[:50]}... Priority: {priority}")
+                    continue
 
         # Save any remaining idea
         if current_strategic_idea:
