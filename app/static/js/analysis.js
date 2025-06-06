@@ -1070,6 +1070,54 @@ analysisForm.addEventListener('submit', async (e) => {
                     }
                 } catch (error) {
                     console.error('Error parsing agent output:', error);
+                    console.log('Problematic line (first 200 chars):', line.substring(0, 200));
+                    
+                    // Try to extract agent name and create a fallback response
+                    const agentNameMatch = line.match(/"([^"]*)":\s*{/);
+                    if (agentNameMatch) {
+                        const agentName = agentNameMatch[1];
+                        if (['Problem Explorer', 'Best Practices', 'Horizon Scanning', 'Scenario Planning', 
+                             'Research Synthesis', 'Strategic Action', 'High Impact', 'Backcasting'].includes(agentName)) {
+                            console.log(`Attempting recovery for agent: ${agentName}`);
+                            
+                            const outputDiv = document.getElementById(`${agentName}Output`);
+                            if (outputDiv) {
+                                // Try to extract partial content from the malformed JSON
+                                let fallbackContent = "Agent completed but response formatting failed.";
+                                
+                                // Look for content patterns in the malformed JSON
+                                const contentMatches = [
+                                    line.match(/"formatted_output":\s*"([^"]{50,})/),
+                                    line.match(/"raw_response":\s*"([^"]{50,})/),
+                                    line.match(/"analysis":\s*"([^"]{50,})/),
+                                    line.match(/"response":\s*"([^"]{50,})/)
+                                ];
+                                
+                                for (const match of contentMatches) {
+                                    if (match && match[1]) {
+                                        fallbackContent = match[1].substring(0, 500) + "...";
+                                        break;
+                                    }
+                                }
+                                
+                                // Store the recovered result
+                                const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
+                                analysisResults[agentKey] = {
+                                    status: 'success',
+                                    data: {
+                                        formatted_output: fallbackContent,
+                                        raw_response: 'Response recovered from malformed JSON'
+                                    }
+                                };
+                                
+                                updateAgentOutput(agentName, fallbackContent);
+                                removeLoadingState(agentName);
+                                completedAgents++;
+                                
+                                console.log(`Successfully recovered content for ${agentName}`);
+                            }
+                        }
+                    }
                 }
             }
         }

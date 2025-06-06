@@ -30,26 +30,67 @@ def safe_json_dumps(data):
     try:
         # First attempt with standard json.dumps
         return json.dumps(data, ensure_ascii=False, separators=(',', ':'))
-    except (TypeError, ValueError) as e:
+    except (TypeError, ValueError, UnicodeDecodeError) as e:
         # If that fails, try to clean the data
         try:
             cleaned_data = clean_data_for_json(data)
             return json.dumps(cleaned_data, ensure_ascii=False, separators=(',', ':'))
-        except Exception:
+        except Exception as nested_e:
+            # Log the error for debugging
+            print(f"JSON serialization error: {str(e)}, nested: {str(nested_e)}")
             # Final fallback - return minimal error structure
-            return json.dumps({"error": "Failed to serialize response"}, ensure_ascii=False, separators=(',', ':'))
+            agent_name = "Unknown"
+            if isinstance(data, dict):
+                # Try to extract agent name from the data structure
+                for key in data.keys():
+                    if key in ["Problem Explorer", "Best Practices", "Horizon Scanning", "Scenario Planning", 
+                              "Research Synthesis", "Strategic Action", "High Impact", "Backcasting"]:
+                        agent_name = key
+                        break
+            return json.dumps({agent_name: {"status": "error", "message": "Failed to serialize response"}}, ensure_ascii=False, separators=(',', ':'))
 
 def clean_data_for_json(data):
     """Recursively clean data to ensure JSON serialization."""
     if isinstance(data, dict):
-        return {k: clean_data_for_json(v) for k, v in data.items()}
+        return {clean_string_for_json(k): clean_data_for_json(v) for k, v in data.items()}
     elif isinstance(data, list):
         return [clean_data_for_json(item) for item in data]
     elif isinstance(data, str):
-        # Remove or escape problematic characters
-        return data.replace('\x00', '').replace('\b', '\\b').replace('\f', '\\f').replace('\r', '\\r').replace('\t', '\\t')
-    else:
+        return clean_string_for_json(data)
+    elif data is None:
+        return None
+    elif isinstance(data, (int, float, bool)):
         return data
+    else:
+        # For any other type, convert to string and clean it
+        return clean_string_for_json(str(data))
+
+def clean_string_for_json(text):
+    """Clean a string to make it JSON-safe."""
+    if not isinstance(text, str):
+        text = str(text)
+    
+    # Remove null bytes and other problematic control characters
+    text = text.replace('\x00', '')
+    
+    # Replace other problematic characters
+    text = text.replace('\b', '\\b')
+    text = text.replace('\f', '\\f')
+    text = text.replace('\r', '\\r')
+    text = text.replace('\t', '\\t')
+    
+    # Remove any remaining control characters (ASCII 0-31 except \n)
+    import re
+    text = re.sub(r'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]', '', text)
+    
+    # Escape unescaped quotes within the string
+    text = text.replace('"', '\\"')
+    
+    # Ensure the string doesn't end with a backslash (which would escape the closing quote)
+    if text.endswith('\\') and not text.endswith('\\\\'):
+        text = text + '\\'
+    
+    return text
 
 app = FastAPI(title="Strategic Intelligence App")
 
