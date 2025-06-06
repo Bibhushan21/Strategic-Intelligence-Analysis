@@ -848,7 +848,7 @@ analysisForm.addEventListener('submit', async (e) => {
                         continue;
                     }
                     
-                    console.log('Processing agent:', agentName); // Debug log
+                    console.log('Processing agent:', agentName, 'with data:', data[agentName]); // Debug log
                     const outputDiv = document.getElementById(`${agentName}Output`);
                     if (outputDiv) {
                         const agentData = data[agentName];
@@ -937,44 +937,99 @@ analysisForm.addEventListener('submit', async (e) => {
                             // Increment completed agents (even for errors)
                             completedAgents++;
                             
-                        } else if (agentData && agentData.data) {
+                        } else if (agentData && agentData.status === 'success' && agentData.data) {
                             // Handle successful response
+                            console.log(`Agent ${agentName} completed successfully`);
+                            
                             // Store analysis result
                             const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
                             analysisResults[agentKey] = agentData;
                             
-                            updateAgentOutput(agentName, agentData.data.formatted_output || agentData.data.raw_response);
+                            // Get the content to display
+                            const content = agentData.data.formatted_output || 
+                                          agentData.data.analysis || 
+                                          agentData.data.response || 
+                                          JSON.stringify(agentData.data, null, 2);
+                            
+                            updateAgentOutput(agentName, content);
+                            removeLoadingState(agentName);
+                            
+                            // Increment completed agents
+                            completedAgents++;
+                            
+                        } else if (agentData && agentData.status === 'success') {
+                            // Handle successful response without nested data
+                            console.log(`Agent ${agentName} completed successfully (direct format)`);
+                            
+                            // Store analysis result
+                            const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
+                            analysisResults[agentKey] = agentData;
+                            
+                            // Get the content to display
+                            const content = agentData.formatted_output || 
+                                          agentData.analysis || 
+                                          agentData.response || 
+                                          JSON.stringify(agentData, null, 2);
+                            
+                            updateAgentOutput(agentName, content);
                             removeLoadingState(agentName);
                             
                             // Increment completed agents
                             completedAgents++;
                             
                         } else {
-                            console.warn(`No data found for agent: ${agentName}`, agentData);
+                            console.warn(`Unexpected data format for agent: ${agentName}`, agentData);
                             
-                            // Treat as error if no data
-                            const statusIndicator = document.getElementById(`${agentName}StatusIndicator`);
-                            if (statusIndicator) {
-                                statusIndicator.innerHTML = `
-                                    <div class="w-4 h-4 bg-red-400 rounded-full mr-2"></div>
-                                    <span class="text-sm text-white font-medium">Error</span>
+                            // Try to handle as successful anyway if we have some data
+                            if (agentData && typeof agentData === 'object') {
+                                console.log(`Attempting to process agent ${agentName} with fallback handling`);
+                                
+                                const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
+                                analysisResults[agentKey] = agentData;
+                                
+                                // Try to extract content
+                                const content = agentData.formatted_output || 
+                                              agentData.analysis || 
+                                              agentData.response ||
+                                              (agentData.data && agentData.data.formatted_output) ||
+                                              (agentData.data && agentData.data.response) ||
+                                              JSON.stringify(agentData, null, 2);
+                                
+                                updateAgentOutput(agentName, content);
+                                removeLoadingState(agentName);
+                                completedAgents++;
+                            } else {
+                                // Treat as error if really no usable data
+                                const statusIndicator = document.getElementById(`${agentName}StatusIndicator`);
+                                if (statusIndicator) {
+                                    statusIndicator.innerHTML = `
+                                        <div class="w-4 h-4 bg-red-400 rounded-full mr-2"></div>
+                                        <span class="text-sm text-white font-medium">Error</span>
+                                    `;
+                                }
+                                
+                                outputDiv.innerHTML = `
+                                    <div class="text-red-500 bg-red-50 rounded-lg p-4 border border-red-200">
+                                        <p class="text-sm">Invalid data format received from agent</p>
+                                    </div>
                                 `;
+                                
+                                completedAgents++;
                             }
-                            
-                            outputDiv.innerHTML = `
-                                <div class="text-red-500 bg-red-50 rounded-lg p-4 border border-red-200">
-                                    <p class="text-sm">No data received from agent</p>
-                                </div>
-                            `;
-                            
-                            completedAgents++;
                         }
                         
                         // Check if all agents are completed (including errors)
+                        console.log(`Completed agents: ${completedAgents}/${totalAgents}`);
                         if (completedAgents >= totalAgents) {
                             analysisCompleted = true;
                             showDownloadButton();
                             console.log('All agents processed! PDF download now available.');
+                            
+                            // Show save as template button
+                            const saveBtn = document.getElementById('saveAsTemplateBtn');
+                            if (saveBtn) {
+                                saveBtn.style.display = 'inline-flex';
+                            }
                         }
                     } else {
                         console.warn(`Output div not found for agent: ${agentName}`);
