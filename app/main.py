@@ -27,6 +27,30 @@ from app.agents.orchestrator_agent import OrchestratorAgent
 
 app = FastAPI(title="Strategic Intelligence App")
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on app startup"""
+    try:
+        # Initialize database tables
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent.parent / 'data'))
+        
+        from data.database_config import engine, test_connection, Base
+        from data.models import (
+            AnalysisSession, AgentResult, AnalysisTemplate,
+            SystemLog, AgentPerformance
+        )
+        
+        print("Initializing database tables on startup...")
+        if test_connection():
+            Base.metadata.create_all(bind=engine)
+            print("Database tables initialized successfully!")
+        else:
+            print("Warning: Could not connect to database during startup")
+    except Exception as e:
+        print(f"Warning: Database initialization failed during startup: {e}")
+
 # Mount static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
