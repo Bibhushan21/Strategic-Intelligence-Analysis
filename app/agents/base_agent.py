@@ -7,6 +7,8 @@ import json
 import logging
 import sys
 from fastapi import HTTPException
+import time
+import random
 
 # Configure basic logging to stdout only
 logging.basicConfig(
@@ -26,9 +28,9 @@ logger = logging.getLogger(__name__)
 class BaseAgent(ABC):
     def __init__(self):
         self.llm = get_llm()
-        self.max_retries = 3
-        self.timeout = 15
-        self.retry_delay = 1
+        self.max_retries = 5  # Increased retries for rate limit handling
+        self.timeout = 120  # Increased timeout
+        self.base_retry_delay = 2  # Base delay for exponential backoff
         self.system_prompt = self.get_system_prompt()
         self.required_fields = ['strategic_question', 'time_frame', 'region']
         self.optional_fields = ['additional_context']
@@ -89,8 +91,19 @@ class BaseAgent(ABC):
             "agent_type": self.__class__.__name__
         }
 
+    def is_rate_limit_error(self, error: Exception) -> bool:
+        """Check if the error is a rate limit (429) error"""
+        error_str = str(error).lower()
+        return (
+            "429" in error_str or 
+            "rate limit" in error_str or 
+            "quota exceeded" in error_str or
+            "service tier capacity exceeded" in error_str or
+            "too many requests" in error_str
+        )
+
     async def invoke_llm(self, prompt: str) -> str:
-        """Invoke the LLM with retry logic and timeout"""
+        """Invoke the LLM with enhanced retry logic for rate limits and timeout"""
         for attempt in range(self.max_retries):
             try:
                 messages = [
@@ -107,14 +120,31 @@ class BaseAgent(ABC):
                 
             except asyncio.TimeoutError:
                 if attempt < self.max_retries - 1:
-                    await asyncio.sleep(self.retry_delay)
+                    delay = self.base_retry_delay * (2 ** attempt) + random.uniform(0, 1)
+                    logger.warning(f"Timeout on attempt {attempt + 1}, retrying in {delay:.2f} seconds...")
+                    await asyncio.sleep(delay)
                     continue
                 raise TimeoutError(f"Agent {self.__class__.__name__} timed out after {self.max_retries} retries")
+            
             except Exception as e:
-                if attempt < self.max_retries - 1:
-                    await asyncio.sleep(self.retry_delay)
-                    continue
-                raise e
+                if self.is_rate_limit_error(e):
+                    if attempt < self.max_retries - 1:
+                        # Exponential backoff with jitter for rate limit errors
+                        delay = self.base_retry_delay * (2 ** attempt) + random.uniform(0, 2)
+                        logger.warning(f"Rate limit hit on attempt {attempt + 1}, retrying in {delay:.2f} seconds...")
+                        await asyncio.sleep(delay)
+                        continue
+                    raise HTTPException(
+                        status_code=429,
+                        detail="Rate limit exceeded. Please try again later."
+                    )
+                else:
+                    if attempt < self.max_retries - 1:
+                        delay = self.base_retry_delay + random.uniform(0, 1)
+                        logger.warning(f"Error on attempt {attempt + 1}: {str(e)}, retrying in {delay:.2f} seconds...")
+                        await asyncio.sleep(delay)
+                        continue
+                    raise e
 
     async def process(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """Process the input data and return the result"""

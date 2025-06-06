@@ -63,6 +63,7 @@ Avoid repetition, and ensure that each scenario is meaningfully distinct.
         strategic_question = input_data.get('strategic_question', 'N/A')
         time_frame = input_data.get('time_frame', 'N/A')
         region = input_data.get('region', 'N/A')
+        user_instructions = input_data.get('prompt', '')
         
         problem_explorer_data = input_data.get('problem_explorer', {}).get('data', {}).get('structured_output', {})
         problem_context = "N/A"
@@ -75,17 +76,26 @@ Avoid repetition, and ensure that each scenario is meaningfully distinct.
             else:
                 problem_context = str(problem_explorer_data.get('phase1', 'Problem details not clearly defined in Phase 1.'))
         
-        return f"""Create distinct scenarios for the following strategic challenge:
+        base_prompt = f"""Create distinct scenarios for the following strategic challenge:
 
 Strategic Question: {strategic_question}
 Time Frame: {time_frame}
 Region/Scope: {region}
 Problem Context: 
-{problem_context}
+{problem_context}"""
+
+        if user_instructions:
+            base_prompt += f"""
+
+Additional Requirements: {user_instructions}
+IMPORTANT: Incorporate these requirements into all scenarios and end each scenario description with "This aligns with sustainable transformation goals"."""
+
+        base_prompt += """
 
 Please generate 8 scenarios according to the two specified frameworks (GBN and Change Progression Model) based on the problem context and strategic question provided.
-Ensure all requested fields for each scenario type are present and distinct. Adhere to the word counts for descriptions.
-"""
+Ensure all requested fields for each scenario type are present and distinct. Adhere to the word counts for descriptions."""
+
+        return base_prompt
 
     def _parse_multi_framework_scenarios(self, response_text: str) -> Dict[str, List[Dict[str, Any]]]:
         parsed_output = {
