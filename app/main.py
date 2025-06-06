@@ -29,12 +29,20 @@ def safe_json_dumps(data):
     """Safely serialize data to JSON, handling problematic characters."""
     try:
         # First attempt with standard json.dumps
-        return json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+        result = json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+        # Validate the result by trying to parse it back
+        json.loads(result)
+        return result
     except (TypeError, ValueError, UnicodeDecodeError) as e:
+        print(f"Initial JSON serialization failed: {str(e)}")
         # If that fails, try to clean the data
         try:
             cleaned_data = clean_data_for_json(data)
-            return json.dumps(cleaned_data, ensure_ascii=False, separators=(',', ':'))
+            result = json.dumps(cleaned_data, ensure_ascii=False, separators=(',', ':'))
+            # Validate the cleaned result
+            json.loads(result)
+            print("Successfully cleaned and serialized data")
+            return result
         except Exception as nested_e:
             # Log the error for debugging
             print(f"JSON serialization error: {str(e)}, nested: {str(nested_e)}")
@@ -47,7 +55,8 @@ def safe_json_dumps(data):
                               "Research Synthesis", "Strategic Action", "High Impact", "Backcasting"]:
                         agent_name = key
                         break
-            return json.dumps({agent_name: {"status": "error", "message": "Failed to serialize response"}}, ensure_ascii=False, separators=(',', ':'))
+            fallback = {agent_name: {"status": "error", "message": "Failed to serialize response"}}
+            return json.dumps(fallback, ensure_ascii=False, separators=(',', ':'))
 
 def clean_data_for_json(data):
     """Recursively clean data to ensure JSON serialization."""
@@ -66,29 +75,43 @@ def clean_data_for_json(data):
         return clean_string_for_json(str(data))
 
 def clean_string_for_json(text):
-    """Clean a string to make it JSON-safe."""
+    """Clean a string to make it JSON-safe with aggressive cleaning."""
     if not isinstance(text, str):
         text = str(text)
     
     # Remove null bytes and other problematic control characters
     text = text.replace('\x00', '')
     
-    # Replace other problematic characters
-    text = text.replace('\b', '\\b')
-    text = text.replace('\f', '\\f')
-    text = text.replace('\r', '\\r')
-    text = text.replace('\t', '\\t')
+    # Replace problematic characters BEFORE escaping quotes
+    text = text.replace('\b', ' ')  # backspace to space
+    text = text.replace('\f', ' ')  # form feed to space  
+    text = text.replace('\r', ' ')  # carriage return to space
+    text = text.replace('\t', '    ')  # tab to 4 spaces
     
     # Remove any remaining control characters (ASCII 0-31 except \n)
     import re
     text = re.sub(r'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]', '', text)
     
-    # Escape unescaped quotes within the string
+    # Handle backslashes FIRST - escape existing backslashes
+    text = text.replace('\\', '\\\\')
+    
+    # Now escape quotes (after handling backslashes)
     text = text.replace('"', '\\"')
     
-    # Ensure the string doesn't end with a backslash (which would escape the closing quote)
-    if text.endswith('\\') and not text.endswith('\\\\'):
-        text = text + '\\'
+    # Handle newlines properly for JSON
+    text = text.replace('\n', '\\n')
+    
+    # Remove any remaining problematic sequences that could break JSON
+    # This is more aggressive - remove any remaining unescaped quotes or backslashes
+    text = re.sub(r'(?<!\\)"', '\\"', text)  # Escape any remaining unescaped quotes
+    
+    # Ensure string doesn't end with odd number of backslashes
+    while text.endswith('\\') and not text.endswith('\\\\'):
+        text = text[:-1] + '\\\\'
+    
+    # Final safety check - limit length to prevent memory issues
+    if len(text) > 50000:  # Limit to 50KB
+        text = text[:50000] + "... (content truncated for JSON safety)"
     
     return text
 

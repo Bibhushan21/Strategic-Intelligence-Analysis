@@ -1087,15 +1087,35 @@ analysisForm.addEventListener('submit', async (e) => {
                                 
                                 // Look for content patterns in the malformed JSON
                                 const contentMatches = [
-                                    line.match(/"formatted_output":\s*"([^"]{50,})/),
-                                    line.match(/"raw_response":\s*"([^"]{50,})/),
-                                    line.match(/"analysis":\s*"([^"]{50,})/),
-                                    line.match(/"response":\s*"([^"]{50,})/)
+                                    // Try to extract formatted_output content
+                                    line.match(/"formatted_output":\s*"([^"]+(?:\\.[^"]*)*)/),
+                                    // Try to extract raw_response content  
+                                    line.match(/"raw_response":\s*"([^"]+(?:\\.[^"]*)*)/),
+                                    // Try to extract analysis content
+                                    line.match(/"analysis":\s*"([^"]+(?:\\.[^"]*)*)/),
+                                    // Try to extract response content
+                                    line.match(/"response":\s*"([^"]+(?:\\.[^"]*)*)/),
+                                    // Try to find any content after common patterns
+                                    line.match(/\\n\\n([^"]+(?:\\.[^"]*)*)/),
+                                    // Try to extract content from raw_sections
+                                    line.match(/"raw_sections":\s*{[^}]*"raw_response":\s*"([^"]+(?:\\.[^"]*)*)/),
                                 ];
                                 
                                 for (const match of contentMatches) {
-                                    if (match && match[1]) {
-                                        fallbackContent = match[1].substring(0, 500) + "...";
+                                    if (match && match[1] && match[1].length > 50) {
+                                        // Clean up escaped characters for display
+                                        let content = match[1];
+                                        content = content.replace(/\\n/g, '\n');
+                                        content = content.replace(/\\"/g, '"');
+                                        content = content.replace(/\\\\/g, '\\');
+                                        
+                                        // Limit content length but keep meaningful amount
+                                        if (content.length > 1000) {
+                                            fallbackContent = content.substring(0, 1000) + "...";
+                                        } else {
+                                            fallbackContent = content;
+                                        }
+                                        console.log(`Extracted ${content.length} chars from malformed JSON for ${agentName}`);
                                         break;
                                     }
                                 }
