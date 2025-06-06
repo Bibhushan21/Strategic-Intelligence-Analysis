@@ -28,9 +28,9 @@ logger = logging.getLogger(__name__)
 class BaseAgent(ABC):
     def __init__(self):
         self.llm = get_llm()
-        self.max_retries = 5  # Increased retries for rate limit handling
-        self.timeout = 120  # Increased timeout
-        self.base_retry_delay = 2  # Base delay for exponential backoff
+        self.max_retries = 3  # Reduced retries for deployment
+        self.timeout = 90  # Reduced timeout for deployment constraints
+        self.base_retry_delay = 1  # Faster retry for deployment
         self.system_prompt = self.get_system_prompt()
         self.required_fields = ['strategic_question', 'time_frame', 'region']
         self.optional_fields = ['additional_context']
@@ -124,7 +124,7 @@ class BaseAgent(ABC):
                     logger.warning(f"Timeout on attempt {attempt + 1}, retrying in {delay:.2f} seconds...")
                     await asyncio.sleep(delay)
                     continue
-                raise TimeoutError(f"Agent {self.__class__.__name__} timed out after {self.max_retries} retries")
+                raise TimeoutError(f"Agent timed out. Please try again with a more focused prompt.")
             
             except Exception as e:
                 if self.is_rate_limit_error(e):

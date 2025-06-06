@@ -104,20 +104,39 @@ def has_problematic_chars(text):
     if not isinstance(text, str):
         return False
     
-    # Check for common problematic patterns
+    # Much more aggressive detection - trigger base64 for any potentially problematic content
     problematic_patterns = [
-        '\n\n',  # Multiple newlines
-        '\\n\\n',  # Escaped newlines
-        '"',  # Unescaped quotes
-        '\\"',  # Escaped quotes in problematic contexts
-        '\\',  # Backslashes
-        '\r',  # Carriage returns
-        '\t',  # Tabs
+        '\n',    # Any newlines
+        '"',     # Any quotes
+        '\\',    # Any backslashes  
+        '\r',    # Carriage returns
+        '\t',    # Tabs
+        "'",     # Single quotes
+        '`',     # Backticks
+        '{',     # Curly braces
+        '}',     # Curly braces
+        '[',     # Square brackets
+        ']',     # Square brackets
     ]
     
-    for pattern in problematic_patterns:
+    # Also check for markdown patterns that often cause issues
+    markdown_patterns = [
+        '**',    # Bold text
+        '##',    # Headers
+        '###',   # Headers
+        '- **',  # List items with bold
+        '---',   # Horizontal rules
+    ]
+    
+    all_patterns = problematic_patterns + markdown_patterns
+    
+    for pattern in all_patterns:
         if pattern in text:
             return True
+    
+    # Also trigger for any string longer than 500 chars (instead of 1000)
+    if len(text) > 500:
+        return True
     
     return False
 

@@ -1119,7 +1119,7 @@ analysisForm.addEventListener('submit', async (e) => {
                                 // Try to extract partial content from the malformed JSON
                                 let fallbackContent = "Agent completed but response formatting failed.";
                                 
-                                // Look for content patterns in the malformed JSON
+                                // Look for content patterns in the malformed JSON with more aggressive extraction
                                 const contentMatches = [
                                     // Try to extract formatted_output content
                                     line.match(/"formatted_output":\s*"([^"]+(?:\\.[^"]*)*)/),
@@ -1133,19 +1133,38 @@ analysisForm.addEventListener('submit', async (e) => {
                                     line.match(/\\n\\n([^"]+(?:\\.[^"]*)*)/),
                                     // Try to extract content from raw_sections
                                     line.match(/"raw_sections":\s*{[^}]*"raw_response":\s*"([^"]+(?:\\.[^"]*)*)/),
+                                    // More aggressive patterns to catch partial JSON
+                                    line.match(/formatted_output":\s*"([^}]+)/),
+                                    line.match(/raw_response":\s*"([^}]+)/),
+                                    // Try to catch base64 encoded content
+                                    line.match(/"formatted_output":\s*"([A-Za-z0-9+/=]{100,})"/),
+                                    // Try to extract longer content spans
+                                    line.match(/"formatted_output":\s*"([^"]*(?:[^\\"]|\\.|"(?!""))*)/),
                                 ];
                                 
                                 for (const match of contentMatches) {
                                     if (match && match[1] && match[1].length > 50) {
                                         // Clean up escaped characters for display
                                         let content = match[1];
+                                        
+                                        // Check if it's base64 - decode if so
+                                        if (/^[A-Za-z0-9+/=]+$/.test(content) && content.length > 100) {
+                                            try {
+                                                content = atob(content);
+                                            } catch (e) {
+                                                // Not base64, continue with original
+                                            }
+                                        }
+                                        
                                         content = content.replace(/\\n/g, '\n');
                                         content = content.replace(/\\"/g, '"');
                                         content = content.replace(/\\\\/g, '\\');
+                                        content = content.replace(/\\r/g, '\r');
+                                        content = content.replace(/\\t/g, '\t');
                                         
-                                        // Limit content length but keep meaningful amount
-                                        if (content.length > 1000) {
-                                            fallbackContent = content.substring(0, 1000) + "...";
+                                        // Keep more content - up to 5000 chars instead of 1000
+                                        if (content.length > 5000) {
+                                            fallbackContent = content.substring(0, 5000) + "\n\n... (content truncated)";
                                         } else {
                                             fallbackContent = content;
                                         }
