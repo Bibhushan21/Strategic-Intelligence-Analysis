@@ -25,6 +25,32 @@ import uvicorn
 from data.database_service import DatabaseService
 from app.agents.orchestrator_agent import OrchestratorAgent
 
+def safe_json_dumps(data):
+    """Safely serialize data to JSON, handling problematic characters."""
+    try:
+        # First attempt with standard json.dumps
+        return json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+    except (TypeError, ValueError) as e:
+        # If that fails, try to clean the data
+        try:
+            cleaned_data = clean_data_for_json(data)
+            return json.dumps(cleaned_data, ensure_ascii=False, separators=(',', ':'))
+        except Exception:
+            # Final fallback - return minimal error structure
+            return json.dumps({"error": "Failed to serialize response"}, ensure_ascii=False, separators=(',', ':'))
+
+def clean_data_for_json(data):
+    """Recursively clean data to ensure JSON serialization."""
+    if isinstance(data, dict):
+        return {k: clean_data_for_json(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [clean_data_for_json(item) for item in data]
+    elif isinstance(data, str):
+        # Remove or escape problematic characters
+        return data.replace('\x00', '').replace('\b', '\\b').replace('\f', '\\f').replace('\r', '\\r').replace('\t', '\\t')
+    else:
+        return data
+
 app = FastAPI(title="Strategic Intelligence App")
 
 @app.on_event("startup")
@@ -421,7 +447,7 @@ async def stream_agent_outputs_realtime(orchestrator: OrchestratorAgent, input_d
         # Stage 1: Problem Explorer
         result = await process_agent("Problem Explorer", cumulative_input_data)
         cumulative_input_data[agent_names_map["Problem Explorer"]] = result
-        yield json.dumps({"Problem Explorer": result}) + "\n"
+        yield safe_json_dumps({"Problem Explorer": result}) + "\n"
         
         # Stage 2: Parallel agents (Best Practices, Horizon Scanning, Scenario Planning)
         parallel_agents = ["Best Practices", "Horizon Scanning", "Scenario Planning"]
@@ -460,42 +486,42 @@ async def stream_agent_outputs_realtime(orchestrator: OrchestratorAgent, input_d
                         cumulative_input_data[agent_key] = result
                         
                         # Yield result with correct agent name
-                        yield json.dumps({completed_agent: result}) + "\n"
+                        yield safe_json_dumps({completed_agent: result}) + "\n"
                         
                         # Remove from remaining agents
                         remaining_agents.remove(completed_agent)
                         
                     except Exception as task_error:
                         # Handle individual task errors
-                        yield json.dumps({completed_agent: f"Error: {str(task_error)}"}) + "\n"
+                        yield safe_json_dumps({completed_agent: f"Error: {str(task_error)}"}) + "\n"
                         remaining_agents.remove(completed_agent)
         
         # Stage 3: Research Synthesis
         result = await process_agent("Research Synthesis", cumulative_input_data)
         cumulative_input_data[agent_names_map["Research Synthesis"]] = result
-        yield json.dumps({"Research Synthesis": result}) + "\n"
+        yield safe_json_dumps({"Research Synthesis": result}) + "\n"
         
         # Stage 4: Strategic Action
         result = await process_agent("Strategic Action", cumulative_input_data)
         cumulative_input_data[agent_names_map["Strategic Action"]] = result
-        yield json.dumps({"Strategic Action": result}) + "\n"
+        yield safe_json_dumps({"Strategic Action": result}) + "\n"
         
         # Stage 5: High Impact
         result = await process_agent("High Impact", cumulative_input_data)
         cumulative_input_data[agent_names_map["High Impact"]] = result
-        yield json.dumps({"High Impact": result}) + "\n"
+        yield safe_json_dumps({"High Impact": result}) + "\n"
         
         # Stage 6: Backcasting
         result = await process_agent("Backcasting", cumulative_input_data)
         cumulative_input_data[agent_names_map["Backcasting"]] = result
-        yield json.dumps({"Backcasting": result}) + "\n"
+        yield safe_json_dumps({"Backcasting": result}) + "\n"
         
         # Update session completion status
         orchestrator._update_session_completion("completed")
         
         # Yield session info
         if orchestrator.current_session_id:
-            yield json.dumps({
+            yield safe_json_dumps({
                 "session_info": {
                     "session_id": orchestrator.current_session_id,
                     "status": "completed"
@@ -505,7 +531,7 @@ async def stream_agent_outputs_realtime(orchestrator: OrchestratorAgent, input_d
     except Exception as e:
         # Update session as failed
         orchestrator._update_session_completion("failed")
-        yield json.dumps({"error": str(e)}) + "\n"
+        yield safe_json_dumps({"error": str(e)}) + "\n"
 
 @app.post("/analyze")
 async def analyze(request: AnalysisRequest):
