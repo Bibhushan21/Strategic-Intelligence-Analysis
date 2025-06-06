@@ -26,7 +26,7 @@ from data.database_service import DatabaseService
 from app.agents.orchestrator_agent import OrchestratorAgent
 
 def safe_json_dumps(data):
-    """Safely serialize data to JSON, handling problematic characters."""
+    """Safely serialize data to JSON, with base64 encoding as fallback."""
     try:
         # First attempt with standard json.dumps
         result = json.dumps(data, ensure_ascii=False, separators=(',', ':'))
@@ -35,28 +35,91 @@ def safe_json_dumps(data):
         return result
     except (TypeError, ValueError, UnicodeDecodeError) as e:
         print(f"Initial JSON serialization failed: {str(e)}")
-        # If that fails, try to clean the data
+        # If that fails, try base64 encoding for string content
         try:
-            cleaned_data = clean_data_for_json(data)
-            result = json.dumps(cleaned_data, ensure_ascii=False, separators=(',', ':'))
-            # Validate the cleaned result
+            encoded_data = encode_strings_for_json(data)
+            result = json.dumps(encoded_data, ensure_ascii=False, separators=(',', ':'))
+            # Validate the encoded result
             json.loads(result)
-            print("Successfully cleaned and serialized data")
+            print("Successfully encoded and serialized data with base64")
             return result
         except Exception as nested_e:
-            # Log the error for debugging
-            print(f"JSON serialization error: {str(e)}, nested: {str(nested_e)}")
-            # Final fallback - return minimal error structure
-            agent_name = "Unknown"
-            if isinstance(data, dict):
-                # Try to extract agent name from the data structure
-                for key in data.keys():
-                    if key in ["Problem Explorer", "Best Practices", "Horizon Scanning", "Scenario Planning", 
-                              "Research Synthesis", "Strategic Action", "High Impact", "Backcasting"]:
-                        agent_name = key
-                        break
-            fallback = {agent_name: {"status": "error", "message": "Failed to serialize response"}}
-            return json.dumps(fallback, ensure_ascii=False, separators=(',', ':'))
+            print(f"Base64 encoding failed: {str(nested_e)}")
+            # Try the old cleaning method as backup
+            try:
+                cleaned_data = clean_data_for_json(data)
+                result = json.dumps(cleaned_data, ensure_ascii=False, separators=(',', ':'))
+                json.loads(result)
+                print("Successfully cleaned and serialized data")
+                return result
+            except Exception as final_e:
+                # Log the error for debugging
+                print(f"All JSON serialization methods failed: {str(final_e)}")
+                # Final fallback - return minimal error structure
+                agent_name = "Unknown"
+                if isinstance(data, dict):
+                    # Try to extract agent name from the data structure
+                    for key in data.keys():
+                        if key in ["Problem Explorer", "Best Practices", "Horizon Scanning", "Scenario Planning", 
+                                  "Research Synthesis", "Strategic Action", "High Impact", "Backcasting"]:
+                            agent_name = key
+                            break
+                fallback = {agent_name: {"status": "error", "message": "Failed to serialize response"}}
+                return json.dumps(fallback, ensure_ascii=False, separators=(',', ':'))
+
+def encode_strings_for_json(data):
+    """Encode strings using base64 to avoid JSON issues."""
+    import base64
+    
+    if isinstance(data, dict):
+        result = {}
+        for k, v in data.items():
+            # Encode the key if it's a string
+            if isinstance(k, str):
+                try:
+                    encoded_key = k  # Keep keys as regular strings for now
+                except:
+                    encoded_key = base64.b64encode(k.encode('utf-8')).decode('ascii')
+            else:
+                encoded_key = k
+            result[encoded_key] = encode_strings_for_json(v)
+        return result
+    elif isinstance(data, list):
+        return [encode_strings_for_json(item) for item in data]
+    elif isinstance(data, str):
+        # For large strings or strings with problematic content, use base64
+        if len(data) > 1000 or has_problematic_chars(data):
+            try:
+                encoded = base64.b64encode(data.encode('utf-8')).decode('ascii')
+                return {"_base64_encoded": True, "content": encoded}
+            except:
+                return clean_string_for_json(data)  # Fall back to cleaning
+        else:
+            return clean_string_for_json(data)  # Use cleaning for shorter strings
+    else:
+        return data
+
+def has_problematic_chars(text):
+    """Check if text has characters that commonly break JSON."""
+    if not isinstance(text, str):
+        return False
+    
+    # Check for common problematic patterns
+    problematic_patterns = [
+        '\n\n',  # Multiple newlines
+        '\\n\\n',  # Escaped newlines
+        '"',  # Unescaped quotes
+        '\\"',  # Escaped quotes in problematic contexts
+        '\\',  # Backslashes
+        '\r',  # Carriage returns
+        '\t',  # Tabs
+    ]
+    
+    for pattern in problematic_patterns:
+        if pattern in text:
+            return True
+    
+    return False
 
 def clean_data_for_json(data):
     """Recursively clean data to ensure JSON serialization."""

@@ -535,6 +535,34 @@ function updateSection(sectionId, content) {
 }
 
 // Function to check if all agents are completed (fallback detection)
+// Function to decode base64 encoded content
+function decodeBase64Content(data) {
+    if (typeof data === 'object' && data !== null && data._base64_encoded === true && data.content) {
+        try {
+            // Decode base64 content
+            const decoded = atob(data.content);
+            // Convert from UTF-8 bytes to string
+            return decodeURIComponent(escape(decoded));
+        } catch (e) {
+            console.warn('Failed to decode base64 content:', e);
+            return data.content; // Return the base64 string as fallback
+        }
+    } else if (typeof data === 'object' && data !== null) {
+        // Recursively check nested objects
+        const result = {};
+        for (const [key, value] of Object.entries(data)) {
+            result[key] = decodeBase64Content(value);
+        }
+        return result;
+    } else if (Array.isArray(data)) {
+        // Recursively check arrays
+        return data.map(item => decodeBase64Content(item));
+    } else {
+        // Return as-is for strings and other types
+        return data;
+    }
+}
+
 function checkAllAgentsCompleted() {
     const agents = [
         'Problem Explorer',
@@ -949,11 +977,14 @@ analysisForm.addEventListener('submit', async (e) => {
                             const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
                             analysisResults[agentKey] = agentData;
                             
-                            // Get the content to display
-                            const content = agentData.data.formatted_output || 
-                                          agentData.data.analysis || 
-                                          agentData.data.response || 
-                                          JSON.stringify(agentData.data, null, 2);
+                            // Get the content to display, handling base64 encoded content
+                            let content = agentData.data.formatted_output || 
+                                        agentData.data.analysis || 
+                                        agentData.data.response || 
+                                        JSON.stringify(agentData.data, null, 2);
+                            
+                            // Decode base64 content if present
+                            content = decodeBase64Content(content);
                             
                             console.log(`Agent ${agentName} content to display:`, content?.substring(0, 200) + '...');
                             
@@ -971,11 +1002,14 @@ analysisForm.addEventListener('submit', async (e) => {
                             const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
                             analysisResults[agentKey] = agentData;
                             
-                            // Get the content to display
-                            const content = agentData.formatted_output || 
-                                          agentData.analysis || 
-                                          agentData.response || 
-                                          JSON.stringify(agentData, null, 2);
+                            // Get the content to display, handling base64 encoded content
+                            let content = agentData.formatted_output || 
+                                        agentData.analysis || 
+                                        agentData.response || 
+                                        JSON.stringify(agentData, null, 2);
+                            
+                            // Decode base64 content if present
+                            content = decodeBase64Content(content);
                             
                             updateAgentOutput(agentName, content);
                             removeLoadingState(agentName);
@@ -1129,6 +1163,9 @@ analysisForm.addEventListener('submit', async (e) => {
                                         raw_response: 'Response recovered from malformed JSON'
                                     }
                                 };
+                                
+                                // Also decode any base64 content in the recovered data
+                                fallbackContent = decodeBase64Content(fallbackContent);
                                 
                                 updateAgentOutput(agentName, fallbackContent);
                                 removeLoadingState(agentName);
