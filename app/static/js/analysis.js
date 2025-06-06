@@ -853,6 +853,9 @@ analysisForm.addEventListener('submit', async (e) => {
                     if (outputDiv) {
                         const agentData = data[agentName];
                         
+                        console.log(`DEBUG: Processing ${agentName} with data type:`, typeof agentData);
+                        console.log(`DEBUG: ${agentName} data structure:`, agentData);
+                        
                         // Check if this is an error response
                         if (typeof agentData === 'string' && agentData.startsWith('Error:')) {
                             // Handle error case
@@ -940,6 +943,7 @@ analysisForm.addEventListener('submit', async (e) => {
                         } else if (agentData && agentData.status === 'success' && agentData.data) {
                             // Handle successful response
                             console.log(`Agent ${agentName} completed successfully`);
+                            console.log(`Agent ${agentName} data:`, agentData.data);
                             
                             // Store analysis result
                             const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
@@ -950,6 +954,8 @@ analysisForm.addEventListener('submit', async (e) => {
                                           agentData.data.analysis || 
                                           agentData.data.response || 
                                           JSON.stringify(agentData.data, null, 2);
+                            
+                            console.log(`Agent ${agentName} content to display:`, content?.substring(0, 200) + '...');
                             
                             updateAgentOutput(agentName, content);
                             removeLoadingState(agentName);
@@ -980,26 +986,53 @@ analysisForm.addEventListener('submit', async (e) => {
                         } else {
                             console.warn(`Unexpected data format for agent: ${agentName}`, agentData);
                             
-                            // Try to handle as successful anyway if we have some data
+                            // AGGRESSIVE FALLBACK: Try to handle ANY object with content
                             if (agentData && typeof agentData === 'object') {
-                                console.log(`Attempting to process agent ${agentName} with fallback handling`);
+                                console.log(`Attempting to process agent ${agentName} with aggressive fallback handling`);
                                 
                                 const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
                                 analysisResults[agentKey] = agentData;
                                 
-                                // Try to extract content
-                                const content = agentData.formatted_output || 
-                                              agentData.analysis || 
-                                              agentData.response ||
-                                              (agentData.data && agentData.data.formatted_output) ||
-                                              (agentData.data && agentData.data.response) ||
-                                              JSON.stringify(agentData, null, 2);
+                                // Try to extract content from ANY possible location
+                                let content = null;
+                                
+                                // Try multiple paths to find content
+                                const contentPaths = [
+                                    agentData.data?.formatted_output,
+                                    agentData.data?.analysis, 
+                                    agentData.data?.response,
+                                    agentData.data?.raw_response,
+                                    agentData.formatted_output,
+                                    agentData.analysis,
+                                    agentData.response,
+                                    agentData.raw_response,
+                                    // Try nested data structures
+                                    agentData.data?.data?.formatted_output,
+                                    agentData.result?.formatted_output
+                                ];
+                                
+                                for (const path of contentPaths) {
+                                    if (path && typeof path === 'string' && path.length > 10) {
+                                        content = path;
+                                        console.log(`Found content via path in ${agentName}:`, path.substring(0, 100));
+                                        break;
+                                    }
+                                }
+                                
+                                // If still no content, use JSON representation
+                                if (!content) {
+                                    content = JSON.stringify(agentData, null, 2);
+                                    console.log(`Using JSON fallback for ${agentName}`);
+                                }
                                 
                                 updateAgentOutput(agentName, content);
                                 removeLoadingState(agentName);
                                 completedAgents++;
+                                
+                                console.log(`✅ Successfully processed ${agentName} with fallback`);
                             } else {
                                 // Treat as error if really no usable data
+                                console.error(`❌ Cannot process ${agentName} - no usable data`);
                                 const statusIndicator = document.getElementById(`${agentName}StatusIndicator`);
                                 if (statusIndicator) {
                                     statusIndicator.innerHTML = `
@@ -1011,6 +1044,7 @@ analysisForm.addEventListener('submit', async (e) => {
                                 outputDiv.innerHTML = `
                                     <div class="text-red-500 bg-red-50 rounded-lg p-4 border border-red-200">
                                         <p class="text-sm">Invalid data format received from agent</p>
+                                        <pre class="text-xs mt-2">${JSON.stringify(agentData, null, 2)}</pre>
                                     </div>
                                 `;
                                 
