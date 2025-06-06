@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Analysis form is handled by analysis.js - no conflicting handlers here
+    console.log('main.js loaded - analysis form handled by analysis.js');
+    return; // Exit early to avoid conflicts
+    
     const form = document.getElementById('analysisForm');
     if (!form) return;
 
