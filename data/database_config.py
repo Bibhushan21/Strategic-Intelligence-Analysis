@@ -11,15 +11,22 @@ logger = logging.getLogger(__name__)
 
 # Database configuration
 DATABASE_CONFIG = {
-    "host": "localhost",
-    "port": 5432,
-    "database": "strategic_intelligence_app",
-    "user": "postgres",
-    "password": "postgre321"
+    "host": os.getenv("DB_HOST", "localhost"),
+    "port": int(os.getenv("DB_PORT", 5432)),
+    "database": os.getenv("DB_NAME", "strategic_intelligence_app"),
+    "user": os.getenv("DB_USER", "postgres"),
+    "password": os.getenv("DB_PASSWORD", "postgre321")
 }
 
 # Database URL for SQLAlchemy
-DATABASE_URL = f"postgresql://{DATABASE_CONFIG['user']}:{DATABASE_CONFIG['password']}@{DATABASE_CONFIG['host']}:{DATABASE_CONFIG['port']}/{DATABASE_CONFIG['database']}"
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    f"postgresql://{DATABASE_CONFIG['user']}:{DATABASE_CONFIG['password']}@{DATABASE_CONFIG['host']}:{DATABASE_CONFIG['port']}/{DATABASE_CONFIG['database']}"
+)
+
+# Handle postgres:// to postgresql:// conversion for compatibility
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # SQLAlchemy engine with connection pooling
 engine = create_engine(
