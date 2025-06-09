@@ -128,12 +128,12 @@ class DashboardManager {
                 datasets: [{
                     label: 'Daily Sessions',
                     data: dailyActivity.map(item => item.count),
-                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                    borderColor: 'rgb(99, 102, 241)',
+                    backgroundColor: 'rgba(22, 102, 151, 0.1)', // Lapis Jewel with transparency
+                    borderColor: 'rgb(22, 102, 151)', // Lapis Jewel
                     borderWidth: 3,
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: 'rgb(99, 102, 241)',
+                    pointBackgroundColor: 'rgb(22, 102, 151)', // Lapis Jewel
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
                     pointRadius: 6
@@ -178,9 +178,9 @@ class DashboardManager {
         }
         
         const colors = {
-            'completed': '#10B981',
-            'processing': '#F59E0B',
-            'failed': '#EF4444'
+            'completed': '#166697', // Lapis Jewel
+            'processing': '#008CED', // Pervenche
+            'failed': '#00264B'  // Oxford Blue
         };
         
         const ctx = this.statusChartCanvas.getContext('2d');
@@ -222,7 +222,7 @@ class DashboardManager {
         }
         
         const colors = [
-            '#8B5CF6', '#06B6D4', '#F59E0B', '#EF4444', '#10B981', '#6B7280'
+            '#166697', '#008CED', '#00264B', '#939393', '#E6F1FF', '#ffffff' // Brand palette colors
         ];
         
         const ctx = this.regionChartCanvas.getContext('2d');
@@ -283,7 +283,7 @@ class DashboardManager {
                 labels: labels.map(tf => this.formatTimeframeName(tf)),
                 datasets: [{
                     data: data,
-                    backgroundColor: ['#3B82F6', '#8B5CF6', '#F59E0B'],
+                    backgroundColor: ['#166697', '#008CED', '#00264B'], // Lapis, Pervenche, Oxford Blue
                     borderWidth: 3,
                     borderColor: '#fff'
                 }]
@@ -320,7 +320,7 @@ class DashboardManager {
             <tr class="hover:bg-gray-50 transition-colors">
                 <td class="py-4 px-4 border-b border-gray-100">
                     <div class="flex items-center">
-                        <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mr-3">
+                        <div class="w-8 h-8 bg-gradient-to-r from-brand-lapis to-brand-pervenche rounded-full flex items-center justify-center mr-3">
                             <span class="text-white text-xs font-bold">${agent.agent_name.charAt(0)}</span>
                         </div>
                         <span class="font-medium text-gray-800">${agent.agent_name}</span>
@@ -349,7 +349,7 @@ class DashboardManager {
             this.recentSessionsList.innerHTML = `
                 <div class="text-center py-8 text-gray-500">
                     <p>No recent sessions found</p>
-                    <a href="/" class="text-indigo-600 hover:text-indigo-800 font-medium mt-2 inline-block">
+                    <a href="/" class="text-brand-lapis hover:text-brand-oxford font-brand-regular font-medium mt-2 inline-block">
                         Start a new analysis →
                     </a>
                 </div>

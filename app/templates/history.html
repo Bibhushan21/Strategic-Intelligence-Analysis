@@ -4,8 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analysis History - Strategic Intelligence App</title>
+    <!-- Google Fonts for Company Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="/static/css/main.css?v=1.0.1" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Company Brand Colors (Palette 1)
+                        'brand-lapis': '#166697',
+                        'brand-kodama': '#E6F1FF', 
+                        'brand-nickel': '#939393',
+                        'brand-oxford': '#00264B',
+                        'brand-pervenche': '#008CED',
+                        'brand-white': '#ffffff'
+                    },
+                    fontFamily: {
+                        'brand-black': ['Roboto', 'sans-serif'],
+                        'brand-slab': ['Roboto Slab', 'serif'], 
+                        'brand-regular': ['Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="/static/css/main.css?v=2.0.0" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body class="min-h-screen relative overflow-x-hidden bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
@@ -27,30 +53,30 @@
         <div class="particle"></div>
     </div>
 
-    <nav class="bg-white shadow-md">
+    <nav class="bg-brand-white shadow-md">
         <div class="container mx-auto px-4 py-3">
             <div class="flex items-center justify-between">
                 <!-- Logo and Brand -->
                 <div class="flex items-center">
                     <img src="/static/Multiverz Logo.png" alt="Multiverz Logo" class="h-10 mr-3">
-                    <span class="text-xl font-semibold text-gray-700">Challenge.one</span>
+                    <span class="text-xl font-brand-black font-black text-brand-oxford">Challenges.one</span>
                 </div>
                 
                 <!-- Navigation Menu -->
                 <div class="hidden md:flex items-center space-x-6">
-                    <a href="/" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Home</a>
-                    <a href="#" class="text-indigo-600 font-medium">History</a>
-                    <a href="/dashboard" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Dashboard</a>
-                    <a href="/performance" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Performance</a>
-                    <a href="/templates" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Templates</a>
-                    <a href="#about" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">About</a>
-                    <a href="#contact" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Contact</a>
-                    <a href="#help" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Help</a>
+                    <a href="/" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Home</a>
+                    <a href="#" class="text-brand-lapis font-brand-regular font-medium">History</a>
+                    <a href="/dashboard" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Dashboard</a>
+                    <a href="/performance" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Performance</a>
+                    <a href="/templates" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Templates</a>
+                    <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">About</a>
+                    <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Contact</a>
+                    <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Help</a>
                 </div>
                 
                 <!-- Mobile Menu Button -->
                 <div class="md:hidden">
-                    <button id="mobile-menu-button" class="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900">
+                    <button id="mobile-menu-button" class="text-brand-nickel hover:text-brand-oxford focus:outline-none focus:text-brand-oxford">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
@@ -59,16 +85,16 @@
             </div>
             
             <!-- Mobile Menu (Hidden by default) -->
-            <div id="mobile-menu" class="md:hidden hidden mt-4 pb-4 border-t border-gray-200">
+            <div id="mobile-menu" class="md:hidden hidden mt-4 pb-4 border-t border-brand-kodama">
                 <div class="flex flex-col space-y-3 pt-4">
-                    <a href="/" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Home</a>
-                    <a href="#" class="text-indigo-600 font-medium">History</a>
-                    <a href="/dashboard" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Dashboard</a>
-                    <a href="/performance" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Performance</a>
-                    <a href="/templates" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Templates</a>
-                    <a href="#about" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">About</a>
-                    <a href="#contact" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Contact</a>
-                    <a href="#help" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Help</a>
+                    <a href="/" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Home</a>
+                    <a href="#" class="text-brand-lapis font-brand-regular font-medium">History</a>
+                    <a href="/dashboard" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Dashboard</a>
+                    <a href="/performance" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Performance</a>
+                    <a href="/templates" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Templates</a>
+                    <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">About</a>
+                    <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Contact</a>
+                    <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Help</a>
                 </div>
             </div>
         </div>
@@ -77,21 +103,21 @@
     <div class="container mx-auto px-4 py-8">
         <!-- Page Header -->
         <div class="text-center mb-10">
-            <h1 class="text-4xl font-bold text-gray-800 mb-4">Analysis History</h1>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto">Browse and search through your strategic intelligence analyses</p>
+            <h1 class="text-4xl font-brand-slab font-bold text-brand-oxford mb-4">Analysis History</h1>
+            <p class="text-lg text-brand-nickel max-w-2xl mx-auto font-brand-regular">Browse and search through your strategic intelligence analyses</p>
         </div>
 
         <!-- Search and Filter Section -->
-        <div class="max-w-6xl mx-auto bg-gradient-to-br from-white to-blue-50 rounded-3xl shadow-2xl p-6 mb-8 border border-gray-100">
+        <div class="max-w-6xl mx-auto bg-gradient-to-br from-brand-white to-brand-kodama rounded-3xl shadow-2xl p-6 mb-8 border border-brand-kodama">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- Search Box -->
                 <div class="lg:col-span-2">
-                    <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                    <label for="searchInput" class="block text-sm font-brand-regular font-medium text-brand-oxford mb-2">Search</label>
                     <div class="relative">
                         <input type="text" id="searchInput" placeholder="Search by question or keywords..." 
-                               class="w-full rounded-xl border-0 bg-white/80 shadow-inner focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all duration-300 p-3 pl-10 text-gray-700">
+                               class="w-full rounded-xl border-0 bg-brand-white/80 shadow-inner focus:ring-2 focus:ring-brand-lapis focus:bg-brand-white transition-all duration-300 p-3 pl-10 text-brand-oxford font-brand-regular">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="h-5 w-5 text-brand-nickel" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </div>
@@ -100,8 +126,8 @@
 
                 <!-- Status Filter -->
                 <div>
-                    <label for="statusFilter" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <select id="statusFilter" class="w-full rounded-xl border-0 bg-white/80 shadow-inner focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all duration-300 p-3 text-gray-700">
+                    <label for="statusFilter" class="block text-sm font-brand-regular font-medium text-brand-oxford mb-2">Status</label>
+                    <select id="statusFilter" class="w-full rounded-xl border-0 bg-brand-white/80 shadow-inner focus:ring-2 focus:ring-brand-lapis focus:bg-brand-white transition-all duration-300 p-3 text-brand-oxford font-brand-regular">
                         <option value="">All Statuses</option>
                         <option value="completed">Completed</option>
                         <option value="processing">Processing</option>
@@ -111,8 +137,8 @@
 
                 <!-- Region Filter -->
                 <div>
-                    <label for="regionFilter" class="block text-sm font-medium text-gray-700 mb-2">Region</label>
-                    <select id="regionFilter" class="w-full rounded-xl border-0 bg-white/80 shadow-inner focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all duration-300 p-3 text-gray-700">
+                    <label for="regionFilter" class="block text-sm font-brand-regular font-medium text-brand-oxford mb-2">Region</label>
+                    <select id="regionFilter" class="w-full rounded-xl border-0 bg-brand-white/80 shadow-inner focus:ring-2 focus:ring-brand-lapis focus:bg-brand-white transition-all duration-300 p-3 text-brand-oxford font-brand-regular">
                         <option value="">All Regions</option>
                         <option value="global">Global</option>
                         <option value="north_america">North America</option>
@@ -127,14 +153,14 @@
             <!-- Action Buttons -->
             <div class="flex justify-between items-center mt-6">
                 <div class="flex space-x-3">
-                    <button id="applyFilters" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium px-6 py-2 rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300">
+                    <button id="applyFilters" class="bg-gradient-to-r from-brand-lapis to-brand-pervenche text-white font-brand-black font-medium px-6 py-2 rounded-xl hover:from-brand-oxford hover:to-brand-lapis focus:outline-none focus:ring-2 focus:ring-brand-lapis/30 transition-all duration-300">
                         Apply Filters
                     </button>
-                    <button id="clearFilters" class="bg-gray-500 text-white font-medium px-6 py-2 rounded-xl hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-300">
+                    <button id="clearFilters" class="bg-gradient-to-r from-brand-oxford to-brand-nickel text-white font-brand-black font-medium px-6 py-2 rounded-xl hover:from-brand-nickel hover:to-brand-oxford focus:outline-none focus:ring-2 focus:ring-brand-oxford/30 transition-all duration-300">
                         Clear
                     </button>
                 </div>
-                <div class="text-sm text-gray-600">
+                <div class="text-sm text-brand-nickel font-brand-regular">
                     <span id="resultCount">Loading...</span>
                 </div>
             </div>
@@ -165,9 +191,9 @@
                 </div>
                 <h3 class="text-xl font-semibold text-gray-600 mb-2">No analyses found</h3>
                 <p class="text-gray-500 mb-6">Try adjusting your search criteria or create a new analysis.</p>
-                <a href="/" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium px-8 py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300">
-                    Start New Analysis
-                </a>
+                                    <a href="/" class="bg-gradient-to-r from-brand-lapis to-brand-pervenche text-white font-brand-black font-medium px-8 py-3 rounded-xl hover:from-brand-oxford hover:to-brand-lapis focus:outline-none focus:ring-2 focus:ring-brand-lapis/30 transition-all duration-300">
+                        Start New Analysis
+                    </a>
             </div>
 
             <!-- Load More Button -->
@@ -183,10 +209,10 @@
     <div id="sessionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
             <!-- Modal Header -->
-            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+            <div class="bg-gradient-to-r from-brand-lapis to-brand-pervenche p-6 text-white">
                 <div class="flex justify-between items-center">
-                    <h2 class="text-2xl font-bold">Analysis Details</h2>
-                    <button id="closeModal" class="text-white hover:text-gray-200 transition-colors">
+                    <h2 class="text-2xl font-brand-black font-bold">Analysis Details</h2>
+                    <button id="closeModal" class="text-white hover:text-brand-kodama transition-colors">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -214,8 +240,8 @@
                 </div>
                 
                 <!-- Description Section -->
-                <div class="lg:col-span-9 lg:border-l-4 lg:border-indigo-600 lg:pl-8">
-                    <p class="text-gray-600 text-justify leading-relaxed">
+                <div class="lg:col-span-9 lg:border-l-4 lg:border-brand-lapis lg:pl-8">
+                    <p class="text-brand-nickel text-justify leading-relaxed font-brand-regular">
                         Strategic Intelligence App is a cutting-edge platform that harnesses the power of artificial intelligence 
                         to deliver comprehensive strategic analysis and decision-making support. Our mission is to empower 
                         organizations and individuals with data-driven insights that transform complex challenges into 
@@ -226,11 +252,11 @@
             
             <!-- Navigation Links -->
             <div class="flex flex-wrap justify-center lg:justify-start items-center gap-8 mb-8">
-                <a href="#about" class="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">About Us</a>
-                <a href="#contact" class="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">Contact Us</a>
-                <a href="#terms" class="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">Terms & Conditions</a>
-                <a href="#privacy" class="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">Privacy Policy</a>
-                <a href="#help" class="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">Help & Support</a>
+                <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">About Us</a>
+                <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Contact Us</a>
+                <a href="#terms" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Terms & Conditions</a>
+                <a href="#privacy" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Privacy Policy</a>
+                <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Help & Support</a>
             </div>
             
             <!-- Divider -->

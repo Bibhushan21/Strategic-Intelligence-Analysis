@@ -4,7 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projects - Strategic Intelligence App</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Google Fonts for Company Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Company Brand Colors (Palette 1)
+                        'brand-lapis': '#166697',
+                        'brand-kodama': '#E6F1FF', 
+                        'brand-nickel': '#939393',
+                        'brand-oxford': '#00264B',
+                        'brand-pervenche': '#008CED',
+                        'brand-white': '#ffffff'
+                    },
+                    fontFamily: {
+                        'brand-black': ['Roboto', 'sans-serif'],
+                        'brand-slab': ['Roboto Slab', 'serif'], 
+                        'brand-regular': ['Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="/static/css/main.css?v=2.0.0" rel="stylesheet">
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">
@@ -18,7 +45,7 @@
                 <p class="text-gray-600 mb-4">{{ project.description }}</p>
                 <div class="flex justify-between items-center">
                     <span class="text-sm text-gray-500">{{ project.created_at }}</span>
-                    <a href="/projects/{{ project.id }}" class="text-blue-600 hover:text-blue-800">View Details</a>
+                    <a href="/projects/{{ project.id }}" class="text-brand-lapis hover:text-brand-oxford font-brand-regular">View Details</a>
                 </div>
             </div>
             {% endfor %}

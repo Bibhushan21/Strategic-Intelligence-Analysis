@@ -260,8 +260,8 @@ function highlightPopulatedFields() {
         if (field && field.value) {
             // Add highlight effect
             field.style.transition = 'all 0.5s ease';
-            field.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.3)';
-            field.style.borderColor = '#6366f1';
+            field.style.boxShadow = '0 0 0 3px rgba(22, 102, 151, 0.3)'; // Lapis Jewel
+            field.style.borderColor = '#166697'; // Lapis Jewel
             
             // Remove highlight after animation
             setTimeout(() => {
@@ -424,88 +424,88 @@ function createAgentOutputSection(agentName) {
 function getAgentConfig(agentName) {
     const configs = {
         'Problem Explorer': {
-            gradientFrom: 'from-purple-600',
-            gradientTo: 'to-indigo-600',
-            bgColor: 'bg-purple-500',
-            accentColor: 'bg-indigo-400',
-            borderColor: 'border-purple-500',
+            gradientFrom: 'from-brand-lapis',
+            gradientTo: 'to-brand-oxford',
+            bgColor: 'bg-brand-lapis',
+            accentColor: 'bg-brand-pervenche',
+            borderColor: 'border-brand-lapis',
             description: 'Breaking down the strategic challenge',
             icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
             </svg>`
         },
         'Best Practices': {
-            gradientFrom: 'from-green-600',
-            gradientTo: 'to-emerald-600',
-            bgColor: 'bg-green-500',
-            accentColor: 'bg-emerald-400',
-            borderColor: 'border-green-500',
+            gradientFrom: 'from-brand-pervenche',
+            gradientTo: 'from-brand-lapis',
+            bgColor: 'bg-brand-pervenche',
+            accentColor: 'bg-brand-oxford',
+            borderColor: 'border-brand-pervenche',
             description: 'Identifying proven solutions and methods',
             icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
             </svg>`
         },
         'Horizon Scanning': {
-            gradientFrom: 'from-blue-600',
-            gradientTo: 'to-cyan-600',
-            bgColor: 'bg-blue-500',
-            accentColor: 'bg-cyan-400',
-            borderColor: 'border-blue-500',
+            gradientFrom: 'from-brand-oxford',
+            gradientTo: 'to-brand-pervenche',
+            bgColor: 'bg-brand-oxford',
+            accentColor: 'bg-brand-lapis',
+            borderColor: 'border-brand-oxford',
             description: 'Scanning for emerging trends and signals',
             icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>`
         },
         'Scenario Planning': {
-            gradientFrom: 'from-orange-600',
-            gradientTo: 'to-red-600',
-            bgColor: 'bg-orange-500',
-            accentColor: 'bg-red-400',
-            borderColor: 'border-orange-500',
+            gradientFrom: 'from-brand-lapis',
+            gradientTo: 'to-brand-pervenche',
+            bgColor: 'bg-brand-lapis',
+            accentColor: 'bg-brand-oxford',
+            borderColor: 'border-brand-nickel',
             description: 'Exploring possible future scenarios',
             icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
             </svg>`
         },
         'Research Synthesis': {
-            gradientFrom: 'from-teal-600',
-            gradientTo: 'to-green-600',
-            bgColor: 'bg-teal-500',
-            accentColor: 'bg-green-400',
-            borderColor: 'border-teal-500',
+            gradientFrom: 'from-brand-pervenche',
+            gradientTo: 'to-brand-oxford',
+            bgColor: 'bg-brand-pervenche',
+            accentColor: 'bg-brand-lapis',
+            borderColor: 'border-brand-lapis',
             description: 'Synthesizing insights and findings',
             icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
             </svg>`
         },
         'Strategic Action': {
-            gradientFrom: 'from-pink-600',
-            gradientTo: 'to-purple-600',
-            bgColor: 'bg-pink-500',
-            accentColor: 'bg-purple-400',
-            borderColor: 'border-pink-500',
+            gradientFrom: 'from-brand-oxford',
+            gradientTo: 'to-brand-pervenche',
+            bgColor: 'bg-brand-oxford',
+            accentColor: 'bg-brand-lapis',
+            borderColor: 'border-brand-pervenche',
             description: 'Developing actionable strategies',
             icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
             </svg>`
         },
         'High Impact': {
-            gradientFrom: 'from-yellow-600',
-            gradientTo: 'to-orange-600',
-            bgColor: 'bg-yellow-500',
-            accentColor: 'bg-orange-400',
-            borderColor: 'border-yellow-500',
+            gradientFrom: 'from-brand-pervenche',
+            gradientTo: 'to-brand-lapis',
+            bgColor: 'bg-brand-pervenche',
+            accentColor: 'bg-brand-oxford',
+            borderColor: 'border-brand-oxford',
             description: 'Identifying high-impact initiatives',
             icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
             </svg>`
         },
         'Backcasting': {
-            gradientFrom: 'from-indigo-600',
-            gradientTo: 'to-blue-600',
-            bgColor: 'bg-indigo-500',
-            accentColor: 'bg-blue-400',
-            borderColor: 'border-indigo-500',
+            gradientFrom: 'from-brand-lapis',
+            gradientTo: 'to-brand-oxford',
+            bgColor: 'bg-brand-lapis',
+            accentColor: 'bg-brand-nickel',
+            borderColor: 'border-brand-nickel',
             description: 'Working backwards from desired future',
             icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -1600,11 +1600,11 @@ function displayAISuggestions(suggestions) {
                 <div class="flex-1">
                     <h4 class="font-semibold text-gray-800 mb-1">${suggestion.name}</h4>
                     <p class="text-sm text-gray-600 mb-2">${suggestion.category}</p>
-                    <p class="text-xs text-purple-600 italic">${suggestion.reason}</p>
+                    <p class="text-xs text-brand-nickel italic font-brand-regular">${suggestion.reason}</p>
                 </div>
                 <div class="ml-4">
                     <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                        <span class="text-purple-600 font-bold text-sm">${Math.round(suggestion.confidence * 100)}%</span>
+                        <span class="text-brand-lapis font-brand-black text-sm">${Math.round(suggestion.confidence * 100)}%</span>
                     </div>
                 </div>
             </div>

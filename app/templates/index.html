@@ -4,8 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Strategic Intelligence App</title>
+    <!-- Google Fonts for Company Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="/static/css/main.css?v=1.0.1" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Company Brand Colors (Palette 1)
+                        'brand-lapis': '#166697',
+                        'brand-kodama': '#E6F1FF', 
+                        'brand-nickel': '#939393',
+                        'brand-oxford': '#00264B',
+                        'brand-pervenche': '#008CED',
+                        'brand-white': '#ffffff'
+                    },
+                    fontFamily: {
+                        'brand-black': ['Roboto', 'sans-serif'],
+                        'brand-slab': ['Roboto Slab', 'serif'], 
+                        'brand-regular': ['Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="/static/css/main.css?v=2.0.0" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="/static/js/analysis.js" defer></script>
     <script src="/static/js/main.js" defer></script>
@@ -29,30 +55,30 @@
         <div class="particle"></div>
     </div>
 
-    <nav class="bg-white shadow-md">
+    <nav class="bg-brand-white shadow-md">
         <div class="container mx-auto px-4 py-3">
             <div class="flex items-center justify-between">
                 <!-- Logo and Brand -->
                 <div class="flex items-center">
                     <img src="/static/Multiverz Logo.png" alt="Multiverz Logo" class="h-10 mr-3">
-                    <span class="text-xl font-semibold text-gray-700">Challenges.one</span>
+                    <span class="text-xl font-brand-black font-black text-brand-oxford">Challenges.one</span>
                 </div>
                 
                 <!-- Navigation Menu -->
                 <div class="hidden md:flex items-center space-x-6">
-                    <a href="#" class="text-indigo-600 font-medium">Home</a>
-                    <a href="/history" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">History</a>
-                    <a href="/dashboard" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Dashboard</a>
-                    <a href="/performance" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Performance</a>
-                    <a href="/templates" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Templates</a>
-                    <a href="#about" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">About</a>
-                    <a href="#contact" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Contact</a>
-                    <a href="#help" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Help</a>
+                    <a href="#" class="text-brand-lapis font-brand-regular font-medium">Home</a>
+                    <a href="/history" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">History</a>
+                    <a href="/dashboard" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Dashboard</a>
+                    <a href="/performance" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Performance</a>
+                    <a href="/templates" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Templates</a>
+                    <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">About</a>
+                    <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Contact</a>
+                    <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Help</a>
                 </div>
                 
                 <!-- Mobile Menu Button -->
                 <div class="md:hidden">
-                    <button id="mobile-menu-button" class="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900">
+                    <button id="mobile-menu-button" class="text-brand-nickel hover:text-brand-oxford focus:outline-none focus:text-brand-oxford">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
@@ -61,62 +87,62 @@
             </div>
             
             <!-- Mobile Menu (Hidden by default) -->
-            <div id="mobile-menu" class="md:hidden hidden mt-4 pb-4 border-t border-gray-200">
+            <div id="mobile-menu" class="md:hidden hidden mt-4 pb-4 border-t border-brand-kodama">
                 <div class="flex flex-col space-y-3 pt-4">
-                    <a href="#" class="text-indigo-600 font-medium">Home</a>
-                    <a href="/history" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">History</a>
-                    <a href="/dashboard" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Dashboard</a>
-                    <a href="/performance" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Performance</a>
-                    <a href="/templates" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Templates</a>
-                    <a href="#about" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">About</a>
-                    <a href="#contact" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Contact</a>
-                    <a href="#help" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Help</a>
+                    <a href="#" class="text-brand-lapis font-brand-regular font-medium">Home</a>
+                    <a href="/history" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">History</a>
+                    <a href="/dashboard" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Dashboard</a>
+                    <a href="/performance" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Performance</a>
+                    <a href="/templates" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Templates</a>
+                    <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">About</a>
+                    <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Contact</a>
+                    <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Help</a>
                 </div>
             </div>
         </div>
     </nav>
 
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-4xl font-bold text-center mb-10 text-gray-800">Strategic Intelligence Analysis</h1>
+        <h1 class="text-4xl font-brand-slab font-bold text-center mb-10 text-brand-oxford">Strategic Intelligence Analysis</h1>
         
-        <form id="analysisForm" class="max-w-4xl mx-auto bg-gradient-to-br from-white to-blue-50 rounded-3xl shadow-2xl p-8 mb-10 space-y-8 border border-gray-100 relative overflow-hidden">
+        <form id="analysisForm" class="max-w-4xl mx-auto bg-gradient-to-br from-brand-white to-brand-kodama rounded-3xl shadow-2xl p-8 mb-10 space-y-8 border border-brand-kodama relative overflow-hidden">
             <!-- Background Pattern -->
             <div class="absolute inset-0 opacity-5">
-                <div class="absolute top-0 left-0 w-32 h-32 bg-indigo-500 rounded-full -translate-x-16 -translate-y-16"></div>
-                <div class="absolute bottom-0 right-0 w-48 h-48 bg-blue-500 rounded-full translate-x-24 translate-y-24"></div>
-                <div class="absolute top-1/2 right-1/4 w-24 h-24 bg-purple-500 rounded-full"></div>
+                <div class="absolute top-0 left-0 w-32 h-32 bg-brand-lapis rounded-full -translate-x-16 -translate-y-16"></div>
+                <div class="absolute bottom-0 right-0 w-48 h-48 bg-brand-pervenche rounded-full translate-x-24 translate-y-24"></div>
+                <div class="absolute top-1/2 right-1/4 w-24 h-24 bg-brand-oxford rounded-full"></div>
             </div>
 
             <!-- Form Content -->
             <div class="relative z-10">
                 <!-- Strategic Question Section -->
-                <div class="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+                <div class="bg-brand-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-brand-white/50">
                     <div class="flex items-center mb-4">
-                        <div class="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mr-3">
+                        <div class="w-10 h-10 bg-gradient-to-r from-brand-lapis to-brand-pervenche rounded-full flex items-center justify-center mr-3">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
-                        <label for="strategic_question" class="text-lg font-semibold text-gray-800">Strategic Question</label>
+                        <label for="strategic_question" class="text-lg font-brand-slab font-semibold text-brand-oxford">Strategic Question</label>
                     </div>
                     <textarea id="strategic_question" name="strategic_question" rows="4" 
-                        class="w-full rounded-xl border-0 bg-white/80 shadow-inner focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all duration-300 p-4 text-gray-700 placeholder-gray-500" 
+                        class="w-full rounded-xl border-0 bg-brand-white/80 shadow-inner focus:ring-2 focus:ring-brand-lapis focus:bg-brand-white transition-all duration-300 p-4 text-brand-oxford placeholder-brand-nickel font-brand-regular" 
                         placeholder="e.g., How can we expand into the Asian market while maintaining our sustainability goals?" required></textarea>
                 </div>
 
                 <!-- Time Frame and Region -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+                    <div class="bg-brand-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-brand-white/50">
                         <div class="flex items-center mb-4">
-                            <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-center mr-3">
+                            <div class="w-10 h-10 bg-gradient-to-r from-brand-pervenche to-brand-lapis rounded-full flex items-center justify-center mr-3">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                             </div>
-                            <label for="time_frame" class="text-lg font-semibold text-gray-800">Time Frame</label>
+                            <label for="time_frame" class="text-lg font-brand-slab font-semibold text-brand-oxford">Time Frame</label>
             </div>
                 <select id="time_frame" name="time_frame" required
-                            class="w-full rounded-xl border-0 bg-white/80 shadow-inner focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all duration-300 p-4 text-gray-700">
+                            class="w-full rounded-xl border-0 bg-brand-white/80 shadow-inner focus:ring-2 focus:ring-brand-pervenche focus:bg-brand-white transition-all duration-300 p-4 text-brand-oxford font-brand-regular">
                             <option value="" disabled selected>Select time frame</option>
                     <option value="short_term">Short Term (1-2 years)</option>
                     <option value="medium_term">Medium Term (3-5 years)</option>
@@ -124,17 +150,17 @@
                 </select>
             </div>
 
-                    <div class="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+                    <div class="bg-brand-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-brand-white/50">
                         <div class="flex items-center mb-4">
-                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mr-3">
+                            <div class="w-10 h-10 bg-gradient-to-r from-brand-lapis to-brand-oxford rounded-full flex items-center justify-center mr-3">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                             </div>
-                            <label for="region" class="text-lg font-semibold text-gray-800">Region</label>
+                            <label for="region" class="text-lg font-brand-slab font-semibold text-brand-oxford">Region</label>
                         </div>
                 <select id="region" name="region" required
-                            class="w-full rounded-xl border-0 bg-white/80 shadow-inner focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-300 p-4 text-gray-700">
+                            class="w-full rounded-xl border-0 bg-brand-white/80 shadow-inner focus:ring-2 focus:ring-brand-lapis focus:bg-brand-white transition-all duration-300 p-4 text-brand-oxford font-brand-regular">
                             <option value="" disabled selected>Select region</option>
                     <option value="global">Global</option>
                     <option value="north_america">North America</option>
@@ -147,18 +173,18 @@
             </div>
 
                 <!-- Additional Instructions -->
-                <div class="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+                <div class="bg-brand-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-brand-white/50">
                     <div class="flex items-center mb-4">
-                        <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center mr-3">
+                        <div class="w-10 h-10 bg-gradient-to-r from-brand-oxford to-brand-pervenche rounded-full flex items-center justify-center mr-3">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                             </svg>
                         </div>
-                        <label for="prompt" class="text-lg font-semibold text-gray-800">Additional Instructions</label>
-                        <span class="ml-2 text-sm text-gray-500 italic">(Optional)</span>
+                        <label for="prompt" class="text-lg font-brand-slab font-semibold text-brand-oxford">Additional Instructions</label>
+                        <span class="ml-2 text-sm text-brand-nickel italic font-brand-regular">(Optional)</span>
                     </div>
                 <textarea id="prompt" name="prompt" rows="3"
-                        class="w-full rounded-xl border-0 bg-white/80 shadow-inner focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all duration-300 p-4 text-gray-700 placeholder-gray-500" 
+                        class="w-full rounded-xl border-0 bg-brand-white/80 shadow-inner focus:ring-2 focus:ring-brand-oxford focus:bg-brand-white transition-all duration-300 p-4 text-brand-oxford placeholder-brand-nickel font-brand-regular" 
                         placeholder="Any specific aspects, constraints, or focus areas to consider in the analysis..."></textarea>
             </div>
 
@@ -166,7 +192,7 @@
                 <div class="flex justify-center pt-6">
                     <div class="flex flex-wrap justify-center gap-4">
                         <button type="submit" id="startAnalysisBtn"
-                            class="group relative bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold px-8 py-4 rounded-2xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 text-lg">
+                            class="group relative bg-gradient-to-r from-brand-lapis to-brand-pervenche text-white font-brand-black font-bold px-8 py-4 rounded-2xl hover:from-brand-oxford hover:to-brand-lapis focus:outline-none focus:ring-4 focus:ring-brand-lapis/30 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 text-lg">
                             <span class="flex items-center">
                                 <svg class="w-5 h-5 mr-2 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -179,7 +205,7 @@
                         
                         <!-- Download PDF Button -->
                         <button type="button" id="downloadPdfBtn" style="display: none;"
-                            class="group relative bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold px-8 py-4 rounded-2xl hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-4 focus:ring-green-300 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 text-lg">
+                            class="group relative bg-gradient-to-r from-brand-pervenche to-brand-lapis text-white font-brand-black font-bold px-8 py-4 rounded-2xl hover:from-brand-lapis hover:to-brand-oxford focus:outline-none focus:ring-4 focus:ring-brand-pervenche/30 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 text-lg">
                             <span class="flex items-center">
                                 <svg class="w-5 h-5 mr-2 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -192,7 +218,7 @@
 
                         <!-- 💾 Save as Template Button (appears after analysis completion) -->
                         <button type="button" id="saveAsTemplateBtn" style="display: none;"
-                            class="group relative bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold px-8 py-4 rounded-2xl hover:from-amber-700 hover:to-orange-700 focus:outline-none focus:ring-4 focus:ring-amber-300 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 text-lg">
+                            class="group relative bg-gradient-to-r from-brand-oxford to-brand-pervenche text-white font-brand-black font-bold px-8 py-4 rounded-2xl hover:from-brand-pervenche hover:to-brand-lapis focus:outline-none focus:ring-4 focus:ring-brand-oxford/30 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 text-lg">
                             <span class="flex items-center">
                                 <svg class="w-5 h-5 mr-2 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"></path>
@@ -209,34 +235,34 @@
 
         <div id="agentOutputs" class="max-w-4xl mx-auto mt-8 space-y-6"></div>
         <!-- 🚀 AI TEMPLATE SUGGESTIONS SECTION -->
-        <div id="aiSuggestionsSection" class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg border border-purple-200 mb-6">
+        <div id="aiSuggestionsSection" class="bg-gradient-to-r from-brand-kodama to-brand-white rounded-2xl p-6 shadow-lg border border-brand-lapis mb-6">
             <div class="flex items-center mb-4">
-                <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center mr-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-brand-lapis to-brand-pervenche rounded-full flex items-center justify-center mr-3">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
                     </svg>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-800">🤖 AI-Powered Template Suggestions</h3>
-                <button type="button" id="refreshSuggestions" class="ml-auto text-purple-600 hover:text-purple-800 transition-colors duration-200">
+                <h3 class="text-lg font-brand-slab font-semibold text-brand-oxford">🤖 AI-Powered Template Suggestions</h3>
+                <button type="button" id="refreshSuggestions" class="ml-auto text-brand-lapis hover:text-brand-oxford transition-colors duration-200">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
                 </button>
             </div>
             <div id="aiSuggestionsList" class="space-y-3">
-                <div class="text-gray-500 text-center py-4">Loading AI suggestions...</div>
+                <div class="text-brand-nickel text-center py-4 font-brand-regular">Loading AI suggestions...</div>
             </div>
         </div>
 
         <!-- 📝 TEMPLATE RECOMMENDATIONS (Dynamic based on input) -->
-        <div id="templateRecommendations" class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 shadow-lg border border-blue-200 mb-6" style="display: none;">
+        <div id="templateRecommendations" class="bg-gradient-to-r from-brand-kodama to-brand-white rounded-2xl p-6 shadow-lg border border-brand-pervenche mb-6" style="display: none;">
             <div class="flex items-center mb-4">
-                <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mr-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-brand-pervenche to-brand-oxford rounded-full flex items-center justify-center mr-3">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                     </svg>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-800">📋 Recommended Templates</h3>
+                <h3 class="text-lg font-brand-slab font-semibold text-brand-oxford">📋 Recommended Templates</h3>
             </div>
             <div id="recommendationsList" class="space-y-3">
                 <!-- Dynamic recommendations will be inserted here -->
@@ -313,8 +339,8 @@
                 </div>
                 
                 <!-- Description Section -->
-                <div class="lg:col-span-9 lg:border-l-4 lg:border-indigo-600 lg:pl-8">
-                    <p class="text-gray-600 text-justify leading-relaxed">
+                <div class="lg:col-span-9 lg:border-l-4 lg:border-brand-lapis lg:pl-8">
+                    <p class="text-brand-nickel text-justify leading-relaxed font-brand-regular">
                         Strategic Intelligence App is a cutting-edge platform that harnesses the power of artificial intelligence 
                         to deliver comprehensive strategic analysis and decision-making support. Our mission is to empower 
                         organizations and individuals with data-driven insights that transform complex challenges into 
@@ -325,11 +351,11 @@
             
             <!-- Navigation Links -->
             <div class="flex flex-wrap justify-center lg:justify-start items-center gap-8 mb-8">
-                <a href="#about" class="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">About Us</a>
-                <a href="#contact" class="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">Contact Us</a>
-                <a href="#terms" class="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">Terms & Conditions</a>
-                <a href="#privacy" class="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">Privacy Policy</a>
-                <a href="#help" class="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">Help & Support</a>
+                <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">About Us</a>
+                <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Contact Us</a>
+                <a href="#terms" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Terms & Conditions</a>
+                <a href="#privacy" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Privacy Policy</a>
+                <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Help & Support</a>
             </div>
             
             <!-- Divider -->

@@ -209,7 +209,7 @@ class HistoryManager {
                 <!-- Footer -->
                 <div class="flex justify-between items-center text-xs text-gray-500 pt-4 border-t border-gray-100">
                     <span>${this.formatDate(session.created_at)}</span>
-                    <span class="text-indigo-600 hover:text-indigo-800 font-medium">
+                                            <span class="text-brand-lapis hover:text-brand-oxford font-brand-regular font-medium">
                         View Details →
                     </span>
                 </div>

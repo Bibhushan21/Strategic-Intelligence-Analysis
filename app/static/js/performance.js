@@ -156,7 +156,7 @@ class PerformanceAnalytics {
                         </div>
                     </div>
                     <div class="mt-6">
-                        <a href="/" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 inline-flex items-center">
+                        <a href="/" class="bg-gradient-to-r from-brand-lapis to-brand-pervenche text-white px-6 py-3 rounded-xl hover:from-brand-oxford hover:to-brand-lapis transition-all duration-300 inline-flex items-center font-brand-black">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                             </svg>
@@ -257,7 +257,7 @@ class PerformanceAnalytics {
             return;
         }
         
-        const colors = ['#8B5CF6', '#06B6D4', '#F59E0B', '#EF4444', '#10B981', '#6B7280', '#EC4899', '#14B8A6'];
+        const colors = ['#166697', '#008CED', '#00264B', '#939393', '#E6F1FF', '#ffffff']; // Brand palette colors
         
         const datasets = agentsList.map((agent, index) => {
             const data = performanceTrends.map(day => {
@@ -347,19 +347,19 @@ class PerformanceAnalytics {
                     {
                         label: 'Min Time',
                         data: processingAnalysis.map(agent => agent.min_time),
-                        backgroundColor: '#10B981',
+                        backgroundColor: '#166697', // Lapis Jewel
                         borderRadius: 4
                     },
                     {
                         label: 'Avg Time',
                         data: processingAnalysis.map(agent => agent.avg_time),
-                        backgroundColor: '#3B82F6',
+                        backgroundColor: '#008CED', // Pervenche
                         borderRadius: 4
                     },
                     {
                         label: 'Max Time',
                         data: processingAnalysis.map(agent => agent.max_time),
-                        backgroundColor: '#EF4444',
+                        backgroundColor: '#00264B', // Oxford Blue
                         borderRadius: 4
                     }
                 ]
@@ -410,9 +410,9 @@ class PerformanceAnalytics {
                     label: 'Performance Score',
                     data: agentComparisons.map(agent => agent.performance_score),
                     backgroundColor: agentComparisons.map(agent => {
-                        if (agent.performance_score >= 90) return '#10B981';
-                        if (agent.performance_score >= 70) return '#F59E0B';
-                        return '#EF4444';
+                        if (agent.performance_score >= 90) return '#166697'; // Lapis Jewel for excellent
+                        if (agent.performance_score >= 70) return '#008CED'; // Pervenche for good  
+                        return '#00264B'; // Oxford Blue for needs improvement
                     }),
                     borderRadius: 8,
                     borderSkipped: false
@@ -484,7 +484,7 @@ class PerformanceAnalytics {
             <tr class="hover:bg-gray-50 transition-colors">
                 <td class="py-4 px-4 border-b border-gray-100">
                     <div class="flex items-center">
-                        <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mr-3">
+                        <div class="w-8 h-8 bg-gradient-to-r from-brand-lapis to-brand-pervenche rounded-full flex items-center justify-center mr-3">
                             <span class="text-white text-xs font-bold">${agent.agent_name.charAt(0)}</span>
                         </div>
                         <span class="font-medium text-gray-800">${agent.agent_name}</span>

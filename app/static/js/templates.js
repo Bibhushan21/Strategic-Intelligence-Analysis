@@ -198,7 +198,7 @@ class TemplatesManager {
         this.categoryStats.innerHTML = this.categories.map(category => `
             <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl p-4 border border-gray-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-300 cursor-pointer category-card" data-category="${category.name}">
                 <div class="text-center">
-                    <div class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <div class="w-12 h-12 bg-gradient-to-r from-brand-lapis to-brand-pervenche rounded-full flex items-center justify-center mx-auto mb-3">
                         <span class="text-white font-bold text-lg">${category.count}</span>
                     </div>
                     <h3 class="font-semibold text-gray-800 text-sm">${category.name}</h3>
@@ -273,10 +273,10 @@ class TemplatesManager {
                     
                     <!-- Action Buttons -->
                     <div class="flex space-x-3">
-                        <button class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium py-2 px-4 rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 use-template-btn">
+                        <button class="flex-1 bg-gradient-to-r from-brand-lapis to-brand-pervenche text-white font-brand-black font-medium py-2 px-4 rounded-xl hover:from-brand-oxford hover:to-brand-lapis focus:outline-none focus:ring-2 focus:ring-brand-lapis/30 transition-all duration-300 use-template-btn">
                             Use Template
                         </button>
-                        <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:border-indigo-300 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 preview-template-btn">
+                        <button class="px-4 py-2 border border-brand-kodama text-brand-oxford rounded-xl hover:border-brand-lapis hover:text-brand-lapis focus:outline-none focus:ring-2 focus:ring-brand-lapis/30 transition-all duration-300 preview-template-btn font-brand-regular">
                             Preview
                         </button>
                     </div>

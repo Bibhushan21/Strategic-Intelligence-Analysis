@@ -4,8 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Performance Analytics - Strategic Intelligence App</title>
+    <!-- Google Fonts for Company Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="/static/css/main.css?v=1.0.1" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Company Brand Colors (Palette 1)
+                        'brand-lapis': '#166697',
+                        'brand-kodama': '#E6F1FF', 
+                        'brand-nickel': '#939393',
+                        'brand-oxford': '#00264B',
+                        'brand-pervenche': '#008CED',
+                        'brand-white': '#ffffff'
+                    },
+                    fontFamily: {
+                        'brand-black': ['Roboto', 'sans-serif'],
+                        'brand-slab': ['Roboto Slab', 'serif'], 
+                        'brand-regular': ['Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="/static/css/main.css?v=2.0.0" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="min-h-screen relative overflow-x-hidden bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
@@ -27,30 +53,30 @@
         <div class="particle"></div>
     </div>
 
-    <nav class="bg-white shadow-md">
+    <nav class="bg-brand-white shadow-md">
         <div class="container mx-auto px-4 py-3">
             <div class="flex items-center justify-between">
                 <!-- Logo and Brand -->
                 <div class="flex items-center">
                     <img src="/static/Multiverz Logo.png" alt="Multiverz Logo" class="h-10 mr-3">
-                    <span class="text-xl font-semibold text-gray-700">Challenge.one</span>
+                    <span class="text-xl font-brand-black font-black text-brand-oxford">Challenges.one</span>
                 </div>
                 
                 <!-- Navigation Menu -->
                 <div class="hidden md:flex items-center space-x-6">
-                    <a href="/" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Home</a>
-                    <a href="/history" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">History</a>
-                    <a href="/dashboard" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Dashboard</a>
-                    <a href="#" class="text-indigo-600 font-medium">Performance</a>
-                    <a href="/templates" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Templates</a>
-                    <a href="#about" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">About</a>
-                    <a href="#contact" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Contact</a>
-                    <a href="#help" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Help</a>
+                    <a href="/" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Home</a>
+                    <a href="/history" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">History</a>
+                    <a href="/dashboard" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Dashboard</a>
+                    <a href="#" class="text-brand-lapis font-brand-regular font-medium">Performance</a>
+                    <a href="/templates" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Templates</a>
+                    <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">About</a>
+                    <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Contact</a>
+                    <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Help</a>
                 </div>
                 
                 <!-- Mobile Menu Button -->
                 <div class="md:hidden">
-                    <button id="mobile-menu-button" class="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900">
+                    <button id="mobile-menu-button" class="text-brand-nickel hover:text-brand-oxford focus:outline-none focus:text-brand-oxford">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
@@ -59,16 +85,16 @@
             </div>
             
             <!-- Mobile Menu (Hidden by default) -->
-            <div id="mobile-menu" class="md:hidden hidden mt-4 pb-4 border-t border-gray-200">
+            <div id="mobile-menu" class="md:hidden hidden mt-4 pb-4 border-t border-brand-kodama">
                 <div class="flex flex-col space-y-3 pt-4">
-                    <a href="/" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Home</a>
-                    <a href="/history" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">History</a>
-                    <a href="/dashboard" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Dashboard</a>
-                    <a href="#" class="text-indigo-600 font-medium">Performance</a>
-                    <a href="/templates" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Templates</a>
-                    <a href="#about" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">About</a>
-                    <a href="#contact" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Contact</a>
-                    <a href="#help" class="text-gray-600 hover:text-indigo-600 font-medium transition duration-150 ease-in-out">Help</a>
+                    <a href="/" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Home</a>
+                    <a href="/history" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">History</a>
+                    <a href="/dashboard" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Dashboard</a>
+                    <a href="#" class="text-brand-lapis font-brand-regular font-medium">Performance</a>
+                    <a href="/templates" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Templates</a>
+                    <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">About</a>
+                    <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Contact</a>
+                    <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Help</a>
                 </div>
             </div>
         </div>
@@ -77,30 +103,30 @@
     <div class="container mx-auto px-4 py-8">
         <!-- Page Header -->
         <div class="text-center mb-10">
-            <h1 class="text-4xl font-bold text-gray-800 mb-4">Performance Analytics</h1>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto">Deep insights into agent performance, optimization opportunities, and system health</p>
+            <h1 class="text-4xl font-brand-slab font-bold text-brand-oxford mb-4">Performance Analytics</h1>
+            <p class="text-lg text-brand-nickel max-w-2xl mx-auto font-brand-regular">Deep insights into agent performance, optimization opportunities, and system health</p>
         </div>
 
         <!-- Control Panel -->
         <div class="max-w-6xl mx-auto mb-8">
-            <div class="bg-gradient-to-br from-white to-blue-50 rounded-3xl shadow-2xl p-6 border border-gray-100">
+            <div class="bg-gradient-to-br from-brand-white to-brand-kodama rounded-3xl shadow-2xl p-6 border border-brand-kodama">
                 <div class="flex flex-wrap items-center justify-between gap-4">
                     <div class="flex items-center space-x-4">
-                        <label class="text-sm font-medium text-gray-700">Analysis Period:</label>
-                        <select id="timePeriodSelect" class="rounded-xl border-0 bg-white/80 shadow-inner focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all duration-300 px-4 py-2 text-gray-700">
+                        <label class="text-sm font-brand-regular font-medium text-brand-oxford">Analysis Period:</label>
+                        <select id="timePeriodSelect" class="rounded-xl border-0 bg-brand-white/80 shadow-inner focus:ring-2 focus:ring-brand-lapis focus:bg-brand-white transition-all duration-300 px-4 py-2 text-brand-oxford font-brand-regular">
                             <option value="7">Last 7 days</option>
                             <option value="30" selected>Last 30 days</option>
                             <option value="90">Last 90 days</option>
                         </select>
                     </div>
                     <div class="flex items-center space-x-3">
-                        <button id="refreshAnalytics" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium px-6 py-2 rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300">
+                        <button id="refreshAnalytics" class="bg-gradient-to-r from-brand-lapis to-brand-pervenche text-white font-brand-black font-medium px-6 py-2 rounded-xl hover:from-brand-oxford hover:to-brand-lapis focus:outline-none focus:ring-2 focus:ring-brand-lapis/30 transition-all duration-300">
                             <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                             </svg>
                             Refresh
                         </button>
-                        <button id="exportReport" class="bg-gray-500 text-white font-medium px-6 py-2 rounded-xl hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-300">
+                        <button id="exportReport" class="bg-gradient-to-r from-brand-oxford to-brand-nickel text-white font-brand-black font-medium px-6 py-2 rounded-xl hover:from-brand-nickel hover:to-brand-oxford focus:outline-none focus:ring-2 focus:ring-brand-oxford/30 transition-all duration-300">
                             <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
@@ -114,10 +140,10 @@
         <!-- Loading State -->
         <div id="loadingState" class="max-w-6xl mx-auto text-center py-12">
             <div class="relative inline-block">
-                <div class="w-12 h-12 border-4 border-gray-200 rounded-full"></div>
-                <div class="absolute top-0 left-0 w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                <div class="w-12 h-12 border-4 border-brand-kodama rounded-full"></div>
+                <div class="absolute top-0 left-0 w-12 h-12 border-4 border-brand-lapis border-t-transparent rounded-full animate-spin"></div>
             </div>
-            <p class="mt-4 text-gray-600 font-medium">Loading performance analytics...</p>
+            <p class="mt-4 text-brand-nickel font-brand-regular font-medium">Loading performance analytics...</p>
         </div>
 
         <!-- Analytics Content -->
@@ -125,12 +151,12 @@
             
             <!-- Recommendations Alert Section -->
             <div id="recommendationsSection" class="mb-8 hidden">
-                <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400 rounded-xl p-6 shadow-lg">
+                <div class="bg-gradient-to-r from-brand-kodama to-brand-white border-l-4 border-brand-pervenche rounded-xl p-6 shadow-lg">
                     <div class="flex items-center mb-4">
-                        <svg class="w-6 h-6 text-yellow-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-6 h-6 text-brand-lapis mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                         </svg>
-                        <h3 class="text-lg font-bold text-yellow-800">Performance Recommendations</h3>
+                        <h3 class="text-lg font-brand-slab font-bold text-brand-oxford">Performance Recommendations</h3>
                     </div>
                     <div id="recommendationsList" class="space-y-3">
                         <!-- Recommendations will be inserted here -->
@@ -141,12 +167,12 @@
             <!-- Performance Score Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <!-- System Health Score -->
-                <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-3xl p-6 text-white shadow-xl">
+                <div class="bg-gradient-to-br from-brand-pervenche to-brand-lapis rounded-3xl p-6 text-white shadow-xl">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-green-100 text-sm font-medium">System Health</p>
-                            <p id="systemHealthScore" class="text-3xl font-bold">-</p>
-                            <p class="text-green-100 text-sm">Overall performance</p>
+                            <p class="text-brand-kodama text-sm font-brand-regular font-medium">System Health</p>
+                            <p id="systemHealthScore" class="text-3xl font-brand-black font-bold">-</p>
+                            <p class="text-brand-kodama text-sm font-brand-regular">Overall performance</p>
                         </div>
                         <div class="bg-white/20 rounded-full p-3">
                             <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
@@ -157,12 +183,12 @@
                 </div>
 
                 <!-- Performance Benchmark -->
-                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl p-6 text-white shadow-xl">
+                <div class="bg-gradient-to-br from-brand-lapis to-brand-oxford rounded-3xl p-6 text-white shadow-xl">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-blue-100 text-sm font-medium">Benchmark</p>
-                            <p id="benchmarkTime" class="text-3xl font-bold">-s</p>
-                            <p class="text-blue-100 text-sm">System average</p>
+                            <p class="text-brand-kodama text-sm font-brand-regular font-medium">Benchmark</p>
+                            <p id="benchmarkTime" class="text-3xl font-brand-black font-bold">-s</p>
+                            <p class="text-brand-kodama text-sm font-brand-regular">System average</p>
                         </div>
                         <div class="bg-white/20 rounded-full p-3">
                             <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
@@ -173,12 +199,12 @@
                 </div>
 
                 <!-- Active Issues -->
-                <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-3xl p-6 text-white shadow-xl">
+                <div class="bg-gradient-to-br from-brand-oxford to-brand-pervenche rounded-3xl p-6 text-white shadow-xl">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-red-100 text-sm font-medium">Active Issues</p>
-                            <p id="activeIssues" class="text-3xl font-bold">-</p>
-                            <p class="text-red-100 text-sm">Need attention</p>
+                            <p class="text-brand-kodama text-sm font-brand-regular font-medium">Active Issues</p>
+                            <p id="activeIssues" class="text-3xl font-brand-black font-bold">-</p>
+                            <p class="text-brand-kodama text-sm font-brand-regular">Need attention</p>
                         </div>
                         <div class="bg-white/20 rounded-full p-3">
                             <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
@@ -190,12 +216,12 @@
             </div>
 
             <!-- Performance Trends Chart -->
-            <div class="bg-white rounded-3xl shadow-xl p-6 mb-8">
+            <div class="bg-brand-white rounded-3xl shadow-xl p-6 mb-8 border border-brand-kodama">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold text-gray-800">Performance Trends</h3>
+                    <h3 class="text-xl font-brand-slab font-bold text-brand-oxford">Performance Trends</h3>
                     <div class="flex space-x-2">
-                        <button id="trendsViewTime" class="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-medium transition-colors">Processing Time</button>
-                        <button id="trendsViewSuccess" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium transition-colors hover:bg-gray-200">Success Rate</button>
+                        <button id="trendsViewTime" class="px-4 py-2 bg-brand-lapis/20 text-brand-lapis rounded-lg font-brand-regular font-medium transition-colors">Processing Time</button>
+                        <button id="trendsViewSuccess" class="px-4 py-2 bg-brand-kodama text-brand-oxford rounded-lg font-brand-regular font-medium transition-colors hover:bg-brand-lapis/20">Success Rate</button>
                     </div>
                 </div>
                 <div class="h-80">
@@ -269,8 +295,8 @@
                 </div>
                 
                 <!-- Description Section -->
-                <div class="lg:col-span-9 lg:border-l-4 lg:border-indigo-600 lg:pl-8">
-                    <p class="text-gray-600 text-justify leading-relaxed">
+                <div class="lg:col-span-9 lg:border-l-4 lg:border-brand-lapis lg:pl-8">
+                    <p class="text-brand-nickel text-justify leading-relaxed font-brand-regular">
                         Strategic Intelligence App is a cutting-edge platform that harnesses the power of artificial intelligence 
                         to deliver comprehensive strategic analysis and decision-making support. Our mission is to empower 
                         organizations and individuals with data-driven insights that transform complex challenges into 
@@ -281,11 +307,11 @@
             
             <!-- Navigation Links -->
             <div class="flex flex-wrap justify-center lg:justify-start items-center gap-8 mb-8">
-                <a href="#about" class="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">About Us</a>
-                <a href="#contact" class="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">Contact Us</a>
-                <a href="#terms" class="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">Terms & Conditions</a>
-                <a href="#privacy" class="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">Privacy Policy</a>
-                <a href="#help" class="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">Help & Support</a>
+                <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">About Us</a>
+                <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Contact Us</a>
+                <a href="#terms" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Terms & Conditions</a>
+                <a href="#privacy" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Privacy Policy</a>
+                <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Help & Support</a>
             </div>
             
             <!-- Divider -->
