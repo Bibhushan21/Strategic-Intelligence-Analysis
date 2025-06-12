@@ -568,6 +568,71 @@ function decodeBase64Content(data) {
     }
 }
 
+// JSON validation and safe parsing functions
+function isValidJSONStructure(str) {
+    const trimmed = str.trim();
+    return (trimmed.startsWith('{') && trimmed.endsWith('}')) || 
+           (trimmed.startsWith('[') && trimmed.endsWith(']'));
+}
+
+function safeJSONParse(jsonString) {
+    try {
+        return { success: true, data: JSON.parse(jsonString) };
+    } catch (error) {
+        console.log('JSON parse failed:', error.message);
+        
+        // Try to repair common JSON issues
+        let repairedJSON = jsonString;
+        
+        // 1. Fix unescaped quotes in content (common in Markdown)
+        repairedJSON = repairedJSON.replace(/([^\\])"([^"]*[^\\])"([^:])/g, '$1\\"$2\\"$3');
+        
+        // 2. Fix unescaped newlines in strings
+        repairedJSON = repairedJSON.replace(/([^\\])\n/g, '$1\\n');
+        
+        // 3. Fix unterminated strings by finding last quote position
+        const lastQuotePos = repairedJSON.lastIndexOf('"');
+        if (lastQuotePos > 0 && !repairedJSON.substring(lastQuotePos + 1).includes('"')) {
+            // If we're missing a closing quote, try to add it before the last brace
+            const lastBracePos = repairedJSON.lastIndexOf('}');
+            if (lastBracePos > lastQuotePos) {
+                repairedJSON = repairedJSON.substring(0, lastBracePos) + '"' + repairedJSON.substring(lastBracePos);
+            }
+        }
+        
+        // 4. Try parsing the repaired version
+        try {
+            return { success: true, data: JSON.parse(repairedJSON) };
+        } catch (repairError) {
+            console.log('JSON repair also failed:', repairError.message);
+            
+            // Last resort: try to extract the agent name and create a minimal valid structure
+            const agentNameMatch = jsonString.match(/["']([^"']*Agent|Problem Explorer|Best Practices|Horizon Scanning|Scenario Planning|Research Synthesis|Strategic Action|High Impact|Backcasting)["']/);
+            
+            if (agentNameMatch) {
+                const agentName = agentNameMatch[1];
+                console.log('Creating fallback structure for:', agentName);
+                
+                return {
+                    success: true,
+                    data: {
+                        [agentName]: {
+                            status: "success",
+                            data: {
+                                formatted_output: "Agent completed successfully but response formatting was corrupted during transmission. The analysis was processed but may not display properly. Please try running the analysis again.",
+                                raw_response: "Response parsing failed",
+                                note: "This is a fallback response due to JSON parsing errors"
+                            }
+                        }
+                    }
+                };
+            }
+            
+            return { success: false, error: repairError.message, originalError: error.message };
+        }
+    }
+}
+
 // Enhanced function to handle all agent output formats
 function extractAgentContent(agentData, agentName) {
     if (!agentData) return "No data received";
@@ -968,245 +1033,170 @@ analysisForm.addEventListener('submit', async (e) => {
             for (const line of lines) {
                 if (!line.trim()) continue;
                 
-                try {
-                    const data = JSON.parse(line);
-                    console.log('Received data:', data); // Debug log
-                    
-                    // Check for session info
-                    if (data.session_info) {
-                        console.log('Session info received:', data.session_info);
-                        continue;
-                    }
-                    
-                    // Get the first key from the data object (agent name)
-                    const agentName = Object.keys(data)[0];
-                    if (!agentName) {
-                        console.warn('No agent name found in data');
-                        continue;
-                    }
-                    
-                    console.log('Processing agent:', agentName, 'with data:', data[agentName]);
-                    const outputDiv = document.getElementById(`${agentName}Output`);
-                    if (outputDiv) {
-                        const agentData = data[agentName];
-                        
-                        // Handle error responses
-                        if (typeof agentData === 'string' && agentData.startsWith('Error:')) {
-                            console.error(`Agent ${agentName} failed:`, agentData);
-                            updateAgentOutput(agentName, `<div class="text-red-500 bg-red-50 rounded-lg p-4 border border-red-200">
-                                <div class="flex items-center mb-2">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                                    </svg>
-                                    <strong class="font-semibold">Agent Processing Failed</strong>
-                                </div>
-                                <p class="text-sm">${agentData}</p>
-                            </div>`);
-                            removeLoadingState(agentName);
-                            completedAgents++;
-                            continue;
-                        }
-                        
-                        // Handle structured error responses
-                        if (agentData && agentData.status === 'error') {
-                            console.error(`Agent ${agentName} error:`, agentData.error);
-                            updateAgentOutput(agentName, `<div class="text-red-500 bg-red-50 rounded-lg p-4 border border-red-200">
-                                <div class="flex items-center mb-2">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                                    </svg>
-                                    <strong class="font-semibold">Processing Failed</strong>
-                                </div>
-                                <p class="text-sm"><strong>Error:</strong> ${agentData.error || 'Unknown error occurred'}</p>
-                            </div>`);
-                            removeLoadingState(agentName);
-                            completedAgents++;
-                            continue;
-                        }
-                        
-                        // Handle successful responses - both with and without nested data
-                        if (agentData && (agentData.status === 'success' || agentData.data || agentData.formatted_output)) {
-                            console.log(`Agent ${agentName} completed successfully`);
-                            
-                            // Store analysis result
-                            const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
-                            analysisResults[agentKey] = agentData;
-                            
-                            // Extract content using the comprehensive extractor
-                            let content;
-                            
-                            // If there's nested data, extract from it
-                            if (agentData.data) {
-                                content = extractAgentContent(agentData.data, agentName);
-                            } else {
-                                // Extract directly from agent data
-                                content = extractAgentContent(agentData, agentName);
-                            }
-                            
-                            // Validate content
-                            if (!content || (typeof content === 'string' && content.length < 10)) {
-                                content = "Agent completed successfully but no formatted output was generated.";
-                            }
-                            
-                            console.log(`Agent ${agentName} content to display:`, content.toString().substring(0, 200) + '...');
-                            
-                            updateAgentOutput(agentName, content);
-                            removeLoadingState(agentName);
-                            completedAgents++;
-                            
-                        } else {
-                            // Fallback handling for unexpected data formats
-                            console.warn(`Unexpected data format for agent: ${agentName}`, agentData);
-                            
-                            const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
-                            analysisResults[agentKey] = agentData;
-                            
-                            let content = agentData.data?.formatted_output || 
-                                        agentData.data?.analysis || 
-                                        agentData.data?.response || 
-                                        agentData.formatted_output ||
-                                        agentData.analysis ||
-                                        agentData.response ||
-                                        JSON.stringify(agentData, null, 2);
-                            
-                            content = decodeBase64Content(content);
-                            updateAgentOutput(agentName, content);
-                            removeLoadingState(agentName);
-                            completedAgents++;
-                            
-                            // Check completion after buffer processing
-                            console.log(`Buffer completion check: ${completedAgents}/${totalAgents} agents completed`);
-                            if (completedAgents >= totalAgents) {
-                                analysisCompleted = true;
-                                console.log('All agents completed after buffer processing - showing download button');
-                                showDownloadButton();
-                                
-                                const saveBtn = document.getElementById('saveAsTemplateBtn');
-                                if (saveBtn) {
-                                    saveBtn.style.display = 'inline-flex';
-                                }
-                            }
-                        }
-                        
-                        // Check if all agents are completed
-                        console.log(`Completion check: ${completedAgents}/${totalAgents} agents completed`);
-                        if (completedAgents >= totalAgents) {
-                            analysisCompleted = true;
-                            console.log('All agents completed - showing download button');
-                            showDownloadButton();
-                            
-                            const saveBtn = document.getElementById('saveAsTemplateBtn');
-                            if (saveBtn) {
-                                saveBtn.style.display = 'inline-flex';
-                            }
-                        }
-                    } else {
-                        console.warn(`Output div not found for agent: ${agentName}`);
-                    }
-                } catch (error) {
-                    console.error('Error parsing agent output:', error);
+                // Validate JSON structure before parsing
+                if (!isValidJSONStructure(line)) {
+                    console.warn('Skipping non-JSON line:', line.substring(0, 100) + '...');
+                    continue;
+                }
+                
+                // Use safe JSON parsing
+                const parseResult = safeJSONParse(line);
+                
+                if (!parseResult.success) {
+                    console.error('Failed to parse JSON after all repair attempts:', parseResult.error);
+                    console.log('Original error:', parseResult.originalError);
                     console.log('Problematic line (first 200 chars):', line.substring(0, 200));
                     
-                    // Enhanced error recovery for malformed JSON
-                    let recoveredAgent = null;
-                    let recoveredContent = null;
-                    
-                    // Strategy 1: Try to identify agent from the malformed line
+                    // Try to extract agent name and provide feedback
                     const agentNames = ['Problem Explorer', 'Best Practices', 'Horizon Scanning', 'Scenario Planning', 
                                       'Research Synthesis', 'Strategic Action', 'High Impact', 'Backcasting'];
                     
+                    let identifiedAgent = null;
                     for (const agentName of agentNames) {
                         if (line.includes(`"${agentName}"`) || line.includes(agentName)) {
-                            recoveredAgent = agentName;
+                            identifiedAgent = agentName;
                             break;
                         }
                     }
                     
-                    // Strategy 2: Try to extract readable content using various patterns
-                    if (recoveredAgent) {
-                        console.log(`Attempting content recovery for ${recoveredAgent}...`);
-                        
-                        // Content extraction patterns for malformed JSON
-                        const contentPatterns = [
-                            // Standard JSON fields
-                            /"formatted_output":\s*"([^"]*(?:\\.[^"]*)*)/,
-                            /"raw_response":\s*"([^"]*(?:\\.[^"]*)*)/,
-                            /"analysis":\s*"([^"]*(?:\\.[^"]*)*)/,
-                            
-                            // Base64 encoded content
-                            /"content":\s*"([A-Za-z0-9+/=]{100,})"/,
-                            /"_base64_encoded":\s*true,\s*"content":\s*"([A-Za-z0-9+/=]{100,})"/,
-                            
-                            // Markdown content patterns
-                            /\\n(#{1,3}\s+[^\\]+)/,
-                            /\\n(\*\*[^*]+\*\*[^\\]*)/,
-                            /(#{1,3}\s+[^\n]+)/,
-                            
-                            // Structured content patterns
-                            /Description[":]\s*([^"\\]+)/,
-                            /Summary[":]\s*([^"\\]+)/,
-                            /Problem[":]\s*([^"\\]+)/
-                        ];
-                        
-                        for (const pattern of contentPatterns) {
-                            const match = line.match(pattern);
-                            if (match && match[1] && match[1].length > 30) {
-                                let content = match[1];
-                                
-                                // Clean up the extracted content
-                                content = content
-                                    .replace(/\\n/g, '\n')
-                                    .replace(/\\"/g, '"')
-                                    .replace(/\\\\/g, '\\')
-                                    .replace(/\\r/g, '\r')
-                                    .replace(/\\t/g, '\t');
-                                
-                                // Check if it's base64 and decode
-                                if (/^[A-Za-z0-9+/=]+$/.test(content) && content.length > 100) {
-                                    try {
-                                        content = atob(content);
-                                        console.log('Decoded base64 content in recovery');
-                                    } catch (e) {
-                                        // Not base64, keep original
-                                    }
-                                }
-                                
-                                if (content.length > 5000) {
-                                    content = content.substring(0, 5000) + "\n\n... (content truncated due to parsing error)";
-                                }
-                                
-                                recoveredContent = content;
-                                console.log(`Recovered ${content.length} chars for ${recoveredAgent}`);
-                                break;
-                            }
-                        }
-                        
-                        // If no content found, create minimal fallback
-                        if (!recoveredContent) {
-                            recoveredContent = `${recoveredAgent} completed but the response format was corrupted during transmission. Please try running the analysis again.`;
-                        }
-                        
-                        // Display recovered content
-                        const outputDiv = document.getElementById(`${recoveredAgent}Output`);
+                    if (identifiedAgent) {
+                        const outputDiv = document.getElementById(`${identifiedAgent}Output`);
                         if (outputDiv) {
-                            const agentKey = recoveredAgent.toLowerCase().replace(/\s+/g, '_');
-                            analysisResults[agentKey] = {
-                                status: 'success',
-                                data: {
-                                    formatted_output: recoveredContent,
-                                    raw_response: 'Response recovered from malformed JSON'
-                                }
-                            };
-                            
-                            updateAgentOutput(recoveredAgent, recoveredContent);
-                            removeLoadingState(recoveredAgent);
+                            updateAgentOutput(identifiedAgent, `<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                <div class="flex items-center mb-2">
+                                    <svg class="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                    </svg>
+                                    <strong class="font-semibold text-yellow-800">Response Formatting Issue</strong>
+                                </div>
+                                <p class="text-sm text-yellow-700">
+                                    ${identifiedAgent} completed its analysis, but the response format was corrupted during transmission. 
+                                    This is usually due to special characters in the content. Please try running the analysis again.
+                                </p>
+                                <details class="mt-2">
+                                    <summary class="text-xs text-yellow-600 cursor-pointer">Technical Details</summary>
+                                    <pre class="text-xs text-yellow-600 mt-1 overflow-x-auto">${parseResult.error}</pre>
+                                </details>
+                            </div>`);
+                            removeLoadingState(identifiedAgent);
                             completedAgents++;
-                            
-                            console.log(`Successfully recovered and displayed content for ${recoveredAgent}`);
                         }
-                    } else {
-                        console.log('Could not identify agent from malformed line');
                     }
+                    continue;
+                }
+                
+                const data = parseResult.data;
+                console.log('Received data:', data);
+                
+                // Check for session info
+                if (data.session_info) {
+                    console.log('Session info received:', data.session_info);
+                    continue;
+                }
+                
+                // Get the first key from the data object (agent name)
+                const agentName = Object.keys(data)[0];
+                if (!agentName) {
+                    console.warn('No agent name found in data');
+                    continue;
+                }
+                
+                console.log('Processing agent:', agentName, 'with data:', data[agentName]);
+                const outputDiv = document.getElementById(`${agentName}Output`);
+                if (outputDiv) {
+                    const agentData = data[agentName];
+                    
+                    // Handle error responses
+                    if (typeof agentData === 'string' && agentData.startsWith('Error:')) {
+                        console.error(`Agent ${agentName} failed:`, agentData);
+                        updateAgentOutput(agentName, `<div class="text-red-500 bg-red-50 rounded-lg p-4 border border-red-200">
+                            <div class="flex items-center mb-2">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                                <strong class="font-semibold">Agent Processing Failed</strong>
+                            </div>
+                            <p class="text-sm">${agentData}</p>
+                        </div>`);
+                        removeLoadingState(agentName);
+                        completedAgents++;
+                        continue;
+                    }
+                    
+                    // Handle structured error responses
+                    if (agentData && agentData.status === 'error') {
+                        console.error(`Agent ${agentName} error:`, agentData.error);
+                        updateAgentOutput(agentName, `<div class="text-red-500 bg-red-50 rounded-lg p-4 border border-red-200">
+                            <div class="flex items-center mb-2">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                                <strong class="font-semibold">Processing Failed</strong>
+                            </div>
+                            <p class="text-sm"><strong>Error:</strong> ${agentData.error || 'Unknown error occurred'}</p>
+                            </div>`);
+                        removeLoadingState(agentName);
+                        completedAgents++;
+                        continue;
+                    }
+                    
+                    // Handle successful responses - both with and without nested data
+                    if (agentData && (agentData.status === 'success' || agentData.data || agentData.formatted_output)) {
+                        console.log(`Agent ${agentName} completed successfully`);
+                        
+                        // Store analysis result
+                        const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
+                        analysisResults[agentKey] = agentData;
+                        
+                        // Extract content using the comprehensive extractor
+                        let content;
+                        
+                        // If there's nested data, extract from it
+                        if (agentData.data) {
+                            content = extractAgentContent(agentData.data, agentName);
+                        } else {
+                            // Extract directly from agent data
+                            content = extractAgentContent(agentData, agentName);
+                        }
+                        
+                        // Validate content
+                        if (!content || (typeof content === 'string' && content.length < 10)) {
+                            content = "Agent completed successfully but no formatted output was generated.";
+                        }
+                        
+                        console.log(`Agent ${agentName} content to display:`, content.toString().substring(0, 200) + '...');
+                        
+                        updateAgentOutput(agentName, content);
+                        removeLoadingState(agentName);
+                        completedAgents++;
+                        
+                    } else {
+                        // Fallback handling for unexpected data formats
+                        console.warn(`Unexpected data format for agent: ${agentName}`, agentData);
+                        
+                        const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
+                        analysisResults[agentKey] = agentData;
+                        
+                        const content = extractAgentContent(agentData, agentName);
+                        updateAgentOutput(agentName, content);
+                        removeLoadingState(agentName);
+                        completedAgents++;
+                    }
+                    
+                    // Check if all agents are completed
+                    console.log(`Completion check: ${completedAgents}/${totalAgents} agents completed`);
+                    if (completedAgents >= totalAgents) {
+                        analysisCompleted = true;
+                        console.log('All agents completed - showing download button');
+                        showDownloadButton();
+                        
+                        const saveBtn = document.getElementById('saveAsTemplateBtn');
+                        if (saveBtn) {
+                            saveBtn.style.display = 'inline-flex';
+                        }
+                    }
+                } else {
+                    console.warn(`Output div not found for agent: ${agentName}`);
                 }
             }
         }
@@ -1215,43 +1205,49 @@ analysisForm.addEventListener('submit', async (e) => {
         if (buffer.trim()) {
             console.log('Processing remaining buffer data:', buffer.substring(0, 100) + '...');
             
-            try {
-                const data = JSON.parse(buffer);
-                const agentName = Object.keys(data)[0];
-                if (agentName && ['Problem Explorer', 'Best Practices', 'Horizon Scanning', 'Scenario Planning', 
-                                 'Research Synthesis', 'Strategic Action', 'High Impact', 'Backcasting'].includes(agentName)) {
-                    
-                    console.log('Processing buffered agent:', agentName);
-                    const outputDiv = document.getElementById(`${agentName}Output`);
-                    if (outputDiv) {
-                        const agentData = data[agentName];
-                        if (agentData && (agentData.status === 'success' || agentData.data || agentData.formatted_output)) {
-                            const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
-                            analysisResults[agentKey] = agentData;
-                            
-                            const content = agentData.data ? 
-                                          extractAgentContent(agentData.data, agentName) : 
-                                          extractAgentContent(agentData, agentName);
-                            
-                            updateAgentOutput(agentName, content);
-                            removeLoadingState(agentName);
-                            completedAgents++;
-                            
-                            console.log(`Buffer completion check: ${completedAgents}/${totalAgents} agents completed`);
-                            if (completedAgents >= totalAgents) {
-                                analysisCompleted = true;
-                                showDownloadButton();
+            if (isValidJSONStructure(buffer)) {
+                const parseResult = safeJSONParse(buffer);
+                
+                if (parseResult.success) {
+                    const data = parseResult.data;
+                    const agentName = Object.keys(data)[0];
+                    if (agentName && ['Problem Explorer', 'Best Practices', 'Horizon Scanning', 'Scenario Planning', 
+                                     'Research Synthesis', 'Strategic Action', 'High Impact', 'Backcasting'].includes(agentName)) {
+                        
+                        console.log('Processing buffered agent:', agentName);
+                        const outputDiv = document.getElementById(`${agentName}Output`);
+                        if (outputDiv) {
+                            const agentData = data[agentName];
+                            if (agentData && (agentData.status === 'success' || agentData.data || agentData.formatted_output)) {
+                                const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
+                                analysisResults[agentKey] = agentData;
                                 
-                                const saveBtn = document.getElementById('saveAsTemplateBtn');
-                                if (saveBtn) {
-                                    saveBtn.style.display = 'inline-flex';
+                                const content = agentData.data ? 
+                                              extractAgentContent(agentData.data, agentName) : 
+                                              extractAgentContent(agentData, agentName);
+                                
+                                updateAgentOutput(agentName, content);
+                                removeLoadingState(agentName);
+                                completedAgents++;
+                                
+                                console.log(`Buffer completion check: ${completedAgents}/${totalAgents} agents completed`);
+                                if (completedAgents >= totalAgents) {
+                                    analysisCompleted = true;
+                                    showDownloadButton();
+                                    
+                                    const saveBtn = document.getElementById('saveAsTemplateBtn');
+                                    if (saveBtn) {
+                                        saveBtn.style.display = 'inline-flex';
+                                    }
                                 }
                             }
                         }
                     }
+                } else {
+                    console.log('Failed to parse buffer data:', parseResult.error);
                 }
-            } catch (error) {
-                console.log('Failed to parse buffer data:', error.message);
+            } else {
+                console.log('Buffer does not contain valid JSON structure, skipping');
             }
         }
     } catch (error) {
