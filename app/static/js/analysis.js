@@ -848,13 +848,18 @@ analysisForm.addEventListener('submit', async (e) => {
         // Process the response stream
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
+        let buffer = '';  // Buffer to handle incomplete JSON across chunks
         
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
             
             const chunk = decoder.decode(value);
-            const lines = chunk.split('\n');
+            buffer += chunk;
+            
+            // Split by newlines but keep incomplete lines in buffer
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';  // Keep the last (potentially incomplete) line in buffer
             
             for (const line of lines) {
                 if (!line.trim()) continue;
@@ -1087,9 +1092,10 @@ analysisForm.addEventListener('submit', async (e) => {
                         }
                         
                         // Check if all agents are completed (including errors)
-                        console.log(`Completed agents: ${completedAgents}/${totalAgents}`);
+                        console.log(`Completion check: ${completedAgents}/${totalAgents} agents completed`);
                         if (completedAgents >= totalAgents) {
                             analysisCompleted = true;
+                            console.log('All agents completed - showing download button');
                             showDownloadButton();
                             console.log('All agents processed! PDF download now available.');
                             
@@ -1106,95 +1112,162 @@ analysisForm.addEventListener('submit', async (e) => {
                     console.error('Error parsing agent output:', error);
                     console.log('Problematic line (first 200 chars):', line.substring(0, 200));
                     
-                    // Try to extract agent name and create a fallback response
-                    const agentNameMatch = line.match(/"([^"]*)":\s*{/);
-                    if (agentNameMatch) {
-                        const agentName = agentNameMatch[1];
-                        if (['Problem Explorer', 'Best Practices', 'Horizon Scanning', 'Scenario Planning', 
-                             'Research Synthesis', 'Strategic Action', 'High Impact', 'Backcasting'].includes(agentName)) {
-                            console.log(`Attempting recovery for agent: ${agentName}`);
+                    // Enhanced JSON parsing error recovery
+                    let recoveredData = null;
+                    
+                    // Strategy 1: Try simple JSON repair methods
+                    const repairAttempts = [
+                        line.replace(/,(\s*[}\]])/g, '$1'),                    // Remove trailing commas
+                        line.replace(/([^\\])\\"/g, '$1"'),                   // Fix escaped quotes
+                        line + (line.includes('{') && !line.includes('}') ? '}' : ''),  // Close braces
+                        line.replace(/"\s*:\s*"([^"]*[^\\])$/, '": "$1"')     // Close unterminated strings
+                    ];
+                    
+                    for (const attempt of repairAttempts) {
+                        try {
+                            recoveredData = JSON.parse(attempt);
+                            console.log('Successfully repaired JSON');
+                            break;
+                        } catch (e) {
+                            continue;
+                        }
+                    }
+                    
+                    // Strategy 2: If repair succeeded, process normally
+                    if (recoveredData) {
+                        const agentName = Object.keys(recoveredData)[0];
+                        if (agentName && ['Problem Explorer', 'Best Practices', 'Horizon Scanning', 'Scenario Planning', 
+                                         'Research Synthesis', 'Strategic Action', 'High Impact', 'Backcasting'].includes(agentName)) {
                             
                             const outputDiv = document.getElementById(`${agentName}Output`);
                             if (outputDiv) {
-                                // Try to extract partial content from the malformed JSON
-                                let fallbackContent = "Agent completed but response formatting failed.";
-                                
-                                // Look for content patterns in the malformed JSON with more aggressive extraction
-                                const contentMatches = [
-                                    // Try to extract formatted_output content
-                                    line.match(/"formatted_output":\s*"([^"]+(?:\\.[^"]*)*)/),
-                                    // Try to extract raw_response content  
-                                    line.match(/"raw_response":\s*"([^"]+(?:\\.[^"]*)*)/),
-                                    // Try to extract analysis content
-                                    line.match(/"analysis":\s*"([^"]+(?:\\.[^"]*)*)/),
-                                    // Try to extract response content
-                                    line.match(/"response":\s*"([^"]+(?:\\.[^"]*)*)/),
-                                    // Try to find any content after common patterns
-                                    line.match(/\\n\\n([^"]+(?:\\.[^"]*)*)/),
-                                    // Try to extract content from raw_sections
-                                    line.match(/"raw_sections":\s*{[^}]*"raw_response":\s*"([^"]+(?:\\.[^"]*)*)/),
-                                    // More aggressive patterns to catch partial JSON
-                                    line.match(/formatted_output":\s*"([^}]+)/),
-                                    line.match(/raw_response":\s*"([^}]+)/),
-                                    // Try to catch base64 encoded content
-                                    line.match(/"formatted_output":\s*"([A-Za-z0-9+/=]{100,})"/),
-                                    // Try to extract longer content spans
-                                    line.match(/"formatted_output":\s*"([^"]*(?:[^\\"]|\\.|"(?!""))*)/),
-                                ];
-                                
-                                for (const match of contentMatches) {
-                                    if (match && match[1] && match[1].length > 50) {
-                                        // Clean up escaped characters for display
-                                        let content = match[1];
-                                        
-                                        // Check if it's base64 - decode if so
-                                        if (/^[A-Za-z0-9+/=]+$/.test(content) && content.length > 100) {
-                                            try {
-                                                content = atob(content);
-                                            } catch (e) {
-                                                // Not base64, continue with original
-                                            }
-                                        }
-                                        
-                                        content = content.replace(/\\n/g, '\n');
-                                        content = content.replace(/\\"/g, '"');
-                                        content = content.replace(/\\\\/g, '\\');
-                                        content = content.replace(/\\r/g, '\r');
-                                        content = content.replace(/\\t/g, '\t');
-                                        
-                                        // Keep more content - up to 5000 chars instead of 1000
-                                        if (content.length > 5000) {
-                                            fallbackContent = content.substring(0, 5000) + "\n\n... (content truncated)";
-                                        } else {
-                                            fallbackContent = content;
-                                        }
-                                        console.log(`Extracted ${content.length} chars from malformed JSON for ${agentName}`);
-                                        break;
-                                    }
+                                const agentData = recoveredData[agentName];
+                                if (agentData && (agentData.status === 'success' || agentData.data || agentData.formatted_output)) {
+                                    const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
+                                    analysisResults[agentKey] = agentData;
+                                    
+                                    let content = agentData.data?.formatted_output || 
+                                                agentData.data?.analysis || 
+                                                agentData.data?.response || 
+                                                agentData.formatted_output ||
+                                                agentData.analysis ||
+                                                agentData.response ||
+                                                JSON.stringify(agentData, null, 2);
+                                    
+                                    content = decodeBase64Content(content);
+                                    updateAgentOutput(agentName, content);
+                                    removeLoadingState(agentName);
+                                    completedAgents++;
+                                    console.log(`Successfully recovered and processed ${agentName}`);
                                 }
+                            }
+                        }
+                    } else {
+                        // Strategy 3: Regex extraction fallback
+                        const agentNameMatch = line.match(/"([^"]*)":\s*{/);
+                        if (agentNameMatch) {
+                            const agentName = agentNameMatch[1];
+                            if (['Problem Explorer', 'Best Practices', 'Horizon Scanning', 'Scenario Planning', 
+                                 'Research Synthesis', 'Strategic Action', 'High Impact', 'Backcasting'].includes(agentName)) {
                                 
-                                // Store the recovered result
-                                const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
-                                analysisResults[agentKey] = {
-                                    status: 'success',
-                                    data: {
-                                        formatted_output: fallbackContent,
-                                        raw_response: 'Response recovered from malformed JSON'
+                                console.log(`Attempting regex recovery for agent: ${agentName}`);
+                                const outputDiv = document.getElementById(`${agentName}Output`);
+                                
+                                if (outputDiv) {
+                                    let fallbackContent = "Agent completed but response formatting failed.";
+                                    
+                                    // Try to extract content using regex patterns
+                                    const contentPatterns = [
+                                        /"formatted_output":\s*"([^"]*(?:\\.[^"]*)*)/,
+                                        /"raw_response":\s*"([^"]*(?:\\.[^"]*)*)/,
+                                        /"analysis":\s*"([^"]*(?:\\.[^"]*)*)/,
+                                        /"response":\s*"([^"]*(?:\\.[^"]*)*)/
+                                    ];
+                                    
+                                    for (const pattern of contentPatterns) {
+                                        const match = line.match(pattern);
+                                        if (match && match[1] && match[1].length > 50) {
+                                            let content = match[1]
+                                                .replace(/\\n/g, '\n')
+                                                .replace(/\\"/g, '"')
+                                                .replace(/\\\\/g, '\\');
+                                            
+                                            if (content.length > 5000) {
+                                                content = content.substring(0, 5000) + "\n\n... (content truncated)";
+                                            }
+                                            fallbackContent = content;
+                                            break;
+                                        }
                                     }
-                                };
-                                
-                                // Also decode any base64 content in the recovered data
-                                fallbackContent = decodeBase64Content(fallbackContent);
-                                
-                                updateAgentOutput(agentName, fallbackContent);
-                                removeLoadingState(agentName);
-                                completedAgents++;
-                                
-                                console.log(`Successfully recovered content for ${agentName}`);
+                                    
+                                    // Store recovered result
+                                    const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
+                                    analysisResults[agentKey] = {
+                                        status: 'success',
+                                        data: {
+                                            formatted_output: fallbackContent,
+                                            raw_response: 'Response recovered from malformed JSON'
+                                        }
+                                    };
+                                    
+                                    updateAgentOutput(agentName, decodeBase64Content(fallbackContent));
+                                    removeLoadingState(agentName);
+                                    completedAgents++;
+                                    console.log(`Successfully recovered content for ${agentName}`);
+                                }
                             }
                         }
                     }
                 }
+            }
+        }
+        
+        // Process any remaining data in buffer
+        if (buffer.trim()) {
+            console.log('Processing remaining buffer data:', buffer.substring(0, 100) + '...');
+            
+            try {
+                const data = JSON.parse(buffer);
+                const agentName = Object.keys(data)[0];
+                if (agentName) {
+                    console.log('Processing buffered agent:', agentName);
+                    const outputDiv = document.getElementById(`${agentName}Output`);
+                    if (outputDiv) {
+                        const agentData = data[agentName];
+                        if (agentData && agentData.status === 'success') {
+                            const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
+                            analysisResults[agentKey] = agentData;
+                            
+                            let content = agentData.data?.formatted_output || 
+                                        agentData.data?.analysis || 
+                                        agentData.data?.response || 
+                                        agentData.formatted_output ||
+                                        agentData.analysis ||
+                                        agentData.response ||
+                                        JSON.stringify(agentData, null, 2);
+                            
+                            content = decodeBase64Content(content);
+                            updateAgentOutput(agentName, content);
+                            removeLoadingState(agentName);
+                            completedAgents++;
+                            
+                            // Check completion after buffer processing
+                            console.log(`Buffer completion check: ${completedAgents}/${totalAgents} agents completed`);
+                            if (completedAgents >= totalAgents) {
+                                analysisCompleted = true;
+                                console.log('All agents completed after buffer processing - showing download button');
+                                showDownloadButton();
+                                
+                                const saveBtn = document.getElementById('saveAsTemplateBtn');
+                                if (saveBtn) {
+                                    saveBtn.style.display = 'inline-flex';
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('Failed to parse buffer data, ignoring:', error.message);
             }
         }
     } catch (error) {
