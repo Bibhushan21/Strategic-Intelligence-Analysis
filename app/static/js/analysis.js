@@ -1,6 +1,41 @@
 // DOM Elements
 const agentOutputs = document.getElementById('agentOutputs');
 const analysisForm = document.getElementById('analysisForm');
+const startAnalysisBtn = document.getElementById('startAnalysisBtn');
+const stopAnalysisBtn = document.getElementById('stopAnalysisBtn');
+
+// Button state management
+let isAnalysisRunning = false;
+
+function startAnalysis() {
+    if (isAnalysisRunning) return;
+    
+    isAnalysisRunning = true;
+    startAnalysisBtn.disabled = true;
+    startAnalysisBtn.style.cursor = 'wait';
+    startAnalysisBtn.querySelector('span').innerHTML = `
+        <svg class="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        Analysis Started...
+    `;
+    stopAnalysisBtn.style.display = 'block';
+}
+
+function stopAnalysis() {
+    if (!isAnalysisRunning) return;
+    
+    isAnalysisRunning = false;
+    startAnalysisBtn.disabled = false;
+    startAnalysisBtn.style.cursor = 'pointer';
+    startAnalysisBtn.querySelector('span').innerHTML = `
+        <svg class="w-5 h-5 mr-2 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        </svg>
+        Start Analysis
+    `;
+    stopAnalysisBtn.style.display = 'none';
+}
 
 // Track expanded state of agent sections
 const expandedSections = new Set();
@@ -83,6 +118,28 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('click', function(event) {
             if (!mobileMenuButton.contains(event.target) && !mobileMenu.contains(event.target)) {
                 mobileMenu.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Add button event listeners
+    if (startAnalysisBtn) {
+        startAnalysisBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!isAnalysisRunning) {
+                startAnalysis();
+                // Trigger the form submission
+                analysisForm.dispatchEvent(new Event('submit'));
+            }
+        });
+    }
+
+    if (stopAnalysisBtn) {
+        stopAnalysisBtn.addEventListener('click', function() {
+            if (isAnalysisRunning) {
+                stopAnalysis();
+                // Add any cleanup or cancellation logic here
+                showToast('Analysis stopped', 'warning');
             }
         });
     }
@@ -733,39 +790,27 @@ function extractAgentContent(agentData, agentName) {
 }
 
 function checkAllAgentsCompleted() {
-    const agents = [
-        'Problem Explorer',
-        'Best Practices',
-        'Horizon Scanning',
-        'Scenario Planning',
-        'Research Synthesis',
-        'Strategic Action',
-        'High Impact',
-        'Backcasting'
-    ];
-    
-    let completedCount = 0;
-    
-    agents.forEach(agentName => {
-        const statusIndicator = document.getElementById(`${agentName}StatusIndicator`);
-        if (statusIndicator) {
-            const statusText = statusIndicator.textContent.toLowerCase();
-            if (statusText.includes('completed') || statusText.includes('error')) {
-                completedCount++;
-            }
-        }
+    const allAgents = ['strategic', 'market', 'competitor', 'technology', 'regulatory', 'social', 'environmental', 'economic', 'political', 'legal'];
+    const allCompleted = allAgents.every(agent => {
+        const section = document.getElementById(`${agent}Content`);
+        return section && !section.classList.contains('loading');
     });
-    
-    console.log(`Completion check: ${completedCount}/${agents.length} agents completed`);
-    
-    if (completedCount >= agents.length) {
-        console.log('All agents completed - showing download button');
+
+    if (allCompleted) {
         analysisCompleted = true;
+        isAnalysisRunning = false;
+        startAnalysisBtn.disabled = false;
+        startAnalysisBtn.style.cursor = 'pointer';
+        startAnalysisBtn.querySelector('span').innerHTML = `
+            <svg class="w-5 h-5 mr-2 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            Start Analysis
+        `;
+        stopAnalysisBtn.style.display = 'none';
         showDownloadButton();
-        return true;
+        showSuccessMessage('Analysis completed successfully!');
     }
-    
-    return false;
 }
 
 // Function to show download button when analysis is complete
