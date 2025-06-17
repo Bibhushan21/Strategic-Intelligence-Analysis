@@ -55,7 +55,7 @@ def safe_json_dumps(data):
             except Exception as final_e:
                 # Log the error for debugging
                 print(f"All JSON serialization methods failed: {str(final_e)}")
-                # Final fallback - return minimal error structure
+                # Return a clean error response instead of generating debug file
                 agent_name = "Unknown"
                 if isinstance(data, dict):
                     # Try to extract agent name from the data structure
@@ -64,8 +64,14 @@ def safe_json_dumps(data):
                                   "Research Synthesis", "Strategic Action", "High Impact", "Backcasting"]:
                             agent_name = key
                             break
-                fallback = {agent_name: {"status": "error", "message": "Failed to serialize response"}}
-                return json.dumps(fallback, ensure_ascii=False, separators=(',', ':'))
+                error_response = {
+                    agent_name: {
+                        "status": "error",
+                        "message": "Failed to process response. Please try again.",
+                        "error_details": str(final_e)[:200]  # Limit error details length
+                    }
+                }
+                return json.dumps(error_response, ensure_ascii=False, separators=(',', ':'))
 
 def encode_strings_for_json(data):
     """Encode strings using base64 to avoid JSON issues."""

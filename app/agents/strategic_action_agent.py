@@ -120,15 +120,8 @@ Focus on creating a practical and actionable roadmap.
             logger.info(f"Raw LLM response (first 500 chars): {response[:500]}...")
             logger.info(f"Full LLM response length: {len(response)} characters")
             
-            # Save full response to file for debugging
-            try:
-                with open('debug_strategic_response.txt', 'w', encoding='utf-8') as f:
-                    f.write("=== FULL LLM RESPONSE ===\n")
-                    f.write(response)
-                    f.write("\n=== END RESPONSE ===\n")
-                logger.info("Saved full LLM response to debug_strategic_response.txt")
-            except Exception as e:
-                logger.warning(f"Could not save debug file: {e}")
+            # Log the response instead of saving to file
+            logger.debug(f"Full LLM response: {response}")
             
             # Parse the response with multiple strategies
             parsed_action_plan = self._parse_structured_response(response)
