@@ -5,7 +5,7 @@ A modern, AI-powered strategic intelligence analysis platform built with FastAPI
 ## 🚀 Key Features
 
 ### **Core Analytics Platform**
-- **12 Specialized AI Agents**: Advanced agent workflow for comprehensive strategic analysis
+- **9 Specialized AI Agents**: Advanced agent workflow for comprehensive strategic analysis
 - **Real-time Streaming**: Live updates and progress tracking for long-running analyses
 - **PostgreSQL Database**: Robust data storage with connection pooling and session tracking
 - **PDF Report Generation**: Professional PDF reports with detailed formatting
