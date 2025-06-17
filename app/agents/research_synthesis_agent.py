@@ -26,8 +26,8 @@ Scenario Planning Agent (GBN & Change Progression)
 
 Your goal is to synthesize all inputs and extract the most important, actionable insights that can inform solution development and strategic decisions.
 
-✍️ Section-by-Section Instructions
-📌 Section 1: Key Insights
+ Section-by-Section Instructions
+ Section 1: Key Insights
 Extract the most critical, decision-ready findings
 
 Each point must offer actionable value, not just observation
@@ -38,7 +38,7 @@ What has our combined research taught us?
 
 How can that insight be acted on?
 
-🚀 Section 2: Opportunity Spaces
+ Section 2: Opportunity Spaces
 Identify areas of high potential for innovation or impact
 
 Relate them to research and scenarios where relevant
@@ -49,7 +49,7 @@ Where are the biggest levers for change?
 
 What needs or gaps are most urgent?
 
-⚠️ Section 3: Risk & Resilience
+ Section 3: Risk & Resilience
 List risks or uncertainties revealed by the research
 
 Recommend practical strategies to absorb or adapt
@@ -60,7 +60,7 @@ What could go wrong?
 
 How can we build resilience?
 
-💡 Section 4: Innovation Pathways
+ Section 4: Innovation Pathways
 Point out where current solutions are failing
 
 Suggest emerging technologies or ideas that enable transformation
@@ -71,7 +71,7 @@ Where can we move beyond the status quo?
 
 What innovation can unlock new possibilities?
 
-📆 Section 5: Quick Wins vs Long-Term Strategies
+ Section 5: Quick Wins vs Long-Term Strategies
 Identify actions we can take now
 
 Also outline strategic foundations for the future
@@ -82,7 +82,7 @@ What's urgent and doable right away?
 
 What needs deeper setup but must start now?
 
-✅ Guidelines
+ Guidelines
 Output must be fully structured, not freeform text
 
 All insights must be grounded in research and scenarios
@@ -173,23 +173,23 @@ Ensure all insights are grounded in the provided research and scenarios.
            
             current_section_key = None
             section_headers = {
-                "📌 Section 1: Key Insights": "key_insights",
+                " Section 1: Key Insights": "key_insights",
                 "Section 1: Key Insights": "key_insights",
                 "Key Insights": "key_insights",
                 
-                "🚀 Section 2: Opportunity Spaces": "opportunity_spaces",
+                " Section 2: Opportunity Spaces": "opportunity_spaces",
                 "Section 2: Opportunity Spaces": "opportunity_spaces",
                 "Opportunity Spaces": "opportunity_spaces",
 
-                "⚠️ Section 3: Risk & Resilience": "risk_and_resilience",
+                " Section 3: Risk & Resilience": "risk_and_resilience",
                 "Section 3: Risk & Resilience": "risk_and_resilience",
                 "Risk & Resilience": "risk_and_resilience",
 
-                "💡 Section 4: Innovation Pathways": "innovation_pathways",
+                " Section 4: Innovation Pathways": "innovation_pathways",
                 "Section 4: Innovation Pathways": "innovation_pathways",
                 "Innovation Pathways": "innovation_pathways",
 
-                "📆 Section 5: Quick Wins vs Long-Term Strategies": "quick_wins_vs_long_term",
+                "Section 5: Quick Wins vs Long-Term Strategies": "quick_wins_vs_long_term",
                 "Section 5: Quick Wins vs Long-Term Strategies": "quick_wins_vs_long_term",
                 "Quick Wins vs Long-Term Strategies": "quick_wins_vs_long_term"
             }
@@ -243,11 +243,11 @@ Ensure all insights are grounded in the provided research and scenarios.
             markdown_output = "# Research Synthesis\n\n"
             
             section_titles_map = {
-                "key_insights": "📌 Key Insights",
-                "opportunity_spaces": "🚀 Opportunity Spaces",
-                "risk_and_resilience": "⚠️ Risk & Resilience",
-                "innovation_pathways": "💡 Innovation Pathways",
-                "quick_wins_vs_long_term": "📆 Quick Wins vs Long-Term Strategies"
+                "key_insights": " Key Insights",
+                "opportunity_spaces": " Opportunity Spaces",
+                "risk_and_resilience": " Risk & Resilience",
+                "innovation_pathways": " Innovation Pathways",
+                "quick_wins_vs_long_term": " Quick Wins vs Long-Term Strategies"
             }
 
             for section_key, display_title in section_titles_map.items():
