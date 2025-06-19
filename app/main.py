@@ -1280,5 +1280,47 @@ async def get_user_analytics(user_id: str):
         logging.error(f"Error getting user analytics: {e}")
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
+@app.get("/api/analysis-session/{session_id}")
+async def get_analysis_session(session_id: int):
+    try:
+        # Add database imports for this endpoint
+        import sys
+        import os
+        from pathlib import Path
+        
+        # Get the project root directory
+        current_file = Path(__file__).resolve()
+        project_root = current_file.parent.parent
+        data_path = project_root / 'data'
+        
+        # Add data directory to Python path
+        sys.path.insert(0, str(data_path))
+        
+        try:
+            from database_service import DatabaseService
+            
+            # Get analysis session with all agent results
+            session = DatabaseService.get_analysis_session(session_id)
+            
+            if not session:
+                return JSONResponse({
+                    "status": "error",
+                    "message": "Session not found"
+                }, status_code=404)
+            
+            return {
+                "status": "success",
+                "data": session
+            }
+            
+        except ImportError:
+            return JSONResponse({
+                "status": "error",
+                "message": "Database not available"
+            }, status_code=500)
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch session details: {str(e)}")
+
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True) 

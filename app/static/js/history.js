@@ -224,6 +224,10 @@ class HistoryManager {
     async openSessionModal(sessionId) {
         try {
             this.sessionModal.classList.remove('hidden');
+            
+            // Scroll to the modal
+            this.sessionModal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
             this.modalContent.innerHTML = `
                 <div class="text-center py-12">
                     <div class="relative inline-block">
@@ -234,20 +238,130 @@ class HistoryManager {
                 </div>
             `;
             
-            // TODO: Implement session detail loading
-            setTimeout(() => {
+            const response = await fetch(`/api/analysis-session/${sessionId}`);
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                const session = data.data;
                 this.modalContent.innerHTML = `
-                    <div class="text-center py-12">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Session Details</h3>
-                        <p class="text-gray-600 mb-4">Session ID: ${sessionId}</p>
-                        <p class="text-sm text-gray-500">Detailed session view coming soon...</p>
-                        <p class="text-sm text-gray-500 mt-2">This will show the full analysis results and agent outputs.</p>
+                    <div class="space-y-6">
+                        <!-- Session Overview -->
+                        <div class="bg-gradient-to-r from-brand-lapis/5 to-brand-pervenche/5 rounded-xl p-6">
+                            <h3 class="text-xl font-brand-black font-bold text-brand-oxford mb-4">Analysis Overview</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-brand-nickel mb-1">Strategic Question</p>
+                                    <p class="font-brand-regular text-brand-oxford">${session.strategic_question}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-brand-nickel mb-1">Region</p>
+                                    <p class="font-brand-regular text-brand-oxford">${session.region || 'Not specified'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-brand-nickel mb-1">Time Frame</p>
+                                    <p class="font-brand-regular text-brand-oxford">${session.time_frame || 'Not specified'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-brand-nickel mb-1">Status</p>
+                                    <p class="font-brand-regular text-brand-oxford">${session.status}</p>
+                                </div>
+                            </div>
+                            ${session.additional_instructions ? `
+                                <div class="mt-4">
+                                    <p class="text-sm text-brand-nickel mb-1">Additional Instructions</p>
+                                    <p class="font-brand-regular text-brand-oxford">${session.additional_instructions}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Agent Results -->
+                        <div class="space-y-4">
+                            <h3 class="text-xl font-brand-black font-bold text-brand-oxford">Agent Results</h3>
+                            ${session.agent_results.map(agent => `
+                                <div class="bg-white rounded-xl shadow-sm border border-brand-kodama p-6">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div>
+                                            <h4 class="text-lg font-brand-black font-bold text-brand-oxford">${agent.agent_name}</h4>
+                                            <p class="text-sm text-brand-nickel">${agent.agent_type || 'Strategic Analysis'}</p>
+                                        </div>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                            agent.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                            agent.status === 'failed' ? 'bg-red-100 text-red-800' :
+                                            agent.status === 'timeout' ? 'bg-yellow-100 text-yellow-800' :
+                                            'bg-blue-100 text-blue-800'
+                                        }">
+                                            ${agent.status}
+                                        </span>
+                                    </div>
+                                    ${agent.formatted_output ? `
+                                        <div class="prose prose-sm max-w-none text-brand-oxford whitespace-pre-wrap">
+                                            ${this.formatMarkdown(agent.formatted_output)}
+                                        </div>
+                                    ` : agent.error_message ? `
+                                        <div class="text-red-600 text-sm">
+                                            ${agent.error_message}
+                                        </div>
+                                    ` : `
+                                        <div class="text-brand-nickel text-sm">
+                                            No output available
+                                        </div>
+                                    `}
+                                    ${agent.processing_time ? `
+                                        <div class="mt-4 text-xs text-brand-nickel">
+                                            Processing time: ${agent.processing_time.toFixed(2)} seconds
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <!-- Session Metadata -->
+                        <div class="bg-gradient-to-r from-brand-lapis/5 to-brand-pervenche/5 rounded-xl p-6">
+                            <h3 class="text-xl font-brand-black font-bold text-brand-oxford mb-4">Session Information</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-brand-nickel mb-1">Session ID</p>
+                                    <p class="font-brand-regular text-brand-oxford">${session.id}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-brand-nickel mb-1">Created At</p>
+                                    <p class="font-brand-regular text-brand-oxford">${new Date(session.created_at).toLocaleString()}</p>
+                                </div>
+                                ${session.completed_at ? `
+                                    <div>
+                                        <p class="text-sm text-brand-nickel mb-1">Completed At</p>
+                                        <p class="font-brand-regular text-brand-oxford">${new Date(session.completed_at).toLocaleString()}</p>
+                                    </div>
+                                ` : ''}
+                                ${session.total_processing_time ? `
+                                    <div>
+                                        <p class="text-sm text-brand-nickel mb-1">Total Processing Time</p>
+                                        <p class="font-brand-regular text-brand-oxford">${session.total_processing_time.toFixed(2)} seconds</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
                     </div>
                 `;
-            }, 1000);
-            
+                
+                // Scroll to the top of the modal content after it's loaded
+                this.modalContent.scrollTop = 0;
+            } else {
+                this.modalContent.innerHTML = `
+                    <div class="text-center py-12">
+                        <p class="text-red-600 mb-4">Failed to load session details</p>
+                        <p class="text-sm text-gray-500">${data.message || 'Please try again later'}</p>
+                    </div>
+                `;
+            }
         } catch (error) {
             console.error('Error loading session details:', error);
+            this.modalContent.innerHTML = `
+                <div class="text-center py-12">
+                    <p class="text-red-600 mb-4">Error loading session details</p>
+                    <p class="text-sm text-gray-500">Please try again later</p>
+                </div>
+            `;
         }
     }
     
@@ -328,6 +442,66 @@ class HistoryManager {
     truncateText(text, maxLength) {
         if (text.length <= maxLength) return text;
         return text.substring(0, maxLength) + '...';
+    }
+    
+    formatMarkdown(text) {
+        if (!text) return '';
+        
+        // Remove scenario numbering (e.g., "#### Scenario 1" -> "#### Scenario")
+        text = text.replace(/#### Scenario \d+/g, '#### Scenario');
+        
+        // Remove unnecessary line numbering (e.g., "1. Domain:" -> "Domain:")
+        text = text.replace(/^\d+\.\s+/gm, '');
+        
+        // Replace markdown headers with styled headers
+        text = text.replace(/^#### (.*$)/gm, '<h4 class="text-lg font-bold mt-4 mb-2 text-brand-oxford">$1</h4>');
+        text = text.replace(/^### (.*$)/gm, '<h3 class="text-lg font-bold mt-4 mb-2 text-brand-oxford">$1</h3>');
+        text = text.replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold mt-6 mb-3 text-brand-oxford">$1</h2>');
+        text = text.replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold mt-8 mb-4 text-brand-oxford">$1</h1>');
+        
+        // Format structured data sections
+        text = text.replace(/^Domain: (.*$)/gm, '<div class="mb-4"><span class="font-bold text-brand-oxford">Domain:</span> $1</div>');
+        text = text.replace(/^Description: (.*$)/gm, '<div class="mb-4"><span class="font-bold text-brand-oxford">Description:</span> $1</div>');
+        text = text.replace(/^Impact: (.*$)/gm, '<div class="mb-4"><span class="font-bold text-brand-oxford">Impact:</span> $1</div>');
+        text = text.replace(/^Time: (.*$)/gm, '<div class="mb-4"><span class="font-bold text-brand-oxford">Time:</span> $1</div>');
+        
+        // Replace bold text
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>');
+        
+        // Replace italic text
+        text = text.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
+        
+        // Replace bullet points
+        text = text.replace(/^\s*[-*+]\s+(.*$)/gm, '<li class="ml-4">$1</li>');
+        text = text.replace(/(<li class="ml-4">.*<\/li>)/gs, '<ul class="list-disc mb-4">$1</ul>');
+        
+        // // Replace numbered lists
+        // text = text.replace(/^\s*\d+\.\s+(.*$)/gm, '<li class="ml-4">$1</li>');
+        // text = text.replace(/(<li class="ml-4">.*<\/li>)/gs, '<ol class="list-decimal mb-4">$1</ol>');
+        
+        // Replace code blocks
+        text = text.replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-100 p-4 rounded-lg my-4 overflow-x-auto"><code>$1</code></pre>');
+        
+        // Replace inline code
+        text = text.replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>');
+        
+        // Replace horizontal rules
+        text = text.replace(/^---$/gm, '<hr class="my-4 border-t border-gray-200">');
+        
+        // Replace blockquotes
+        text = text.replace(/^>\s+(.*$)/gm, '<blockquote class="border-l-4 border-gray-300 pl-4 my-4 italic">$1</blockquote>');
+        
+        // Replace links
+        text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-brand-lapis hover:text-brand-oxford underline">$1</a>');
+        
+        // Replace line breaks
+        text = text.replace(/\n/g, '<br>');
+        
+        // Add spacing between sections
+        text = text.replace(/<\/h4><br>/g, '</h4><div class="mb-6">');
+        text = text.replace(/<\/div><br><h4/g, '</div><h4');
+        
+        return text;
     }
 }
 
