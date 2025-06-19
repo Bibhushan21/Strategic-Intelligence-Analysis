@@ -5,7 +5,7 @@ A modern, AI-powered strategic intelligence analysis platform built with FastAPI
 ## 🚀 Key Features
 
 ### **Core Analytics Platform**
-- **12 Specialized AI Agents**: Advanced agent workflow for comprehensive strategic analysis
+- **9 Specialized AI Agents**: Advanced agent workflow for comprehensive strategic analysis
 - **Real-time Streaming**: Live updates and progress tracking for long-running analyses
 - **PostgreSQL Database**: Robust data storage with connection pooling and session tracking
 - **PDF Report Generation**: Professional PDF reports with detailed formatting
@@ -75,7 +75,7 @@ A modern, AI-powered strategic intelligence analysis platform built with FastAPI
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/Bibhushan21/Strategic-Intelligence-Analysis.git
+git clone https://github.com/yourusername/strategic-intelligence-app.git
 cd strategic-intelligence-app
 ```
 
@@ -135,11 +135,11 @@ The AI-powered template system learns from your analysis patterns to provide per
 5. **Real-time Recommendations**: Templates appear as you type strategic questions
 
 ### **Key Features**
--  Personalized AI Suggestions**: Based on your unique analysis patterns
--  Real-time Recommendations**: Intelligent matching as you type
--  Save Analysis as Template**: Convert successful analyses into reusable templates
--  Usage Analytics**: Track patterns and improve recommendations
--  Continuous Learning**: System gets smarter with every use
+- **🎯 Personalized AI Suggestions**: Based on your unique analysis patterns
+- **⚡ Real-time Recommendations**: Intelligent matching as you type
+- **💾 Save Analysis as Template**: Convert successful analyses into reusable templates
+- **📊 Usage Analytics**: Track patterns and improve recommendations
+- **🧠 Continuous Learning**: System gets smarter with every use
 
 ### **Domain Classification**
 - **Market**: Customer, competitor, market analysis
