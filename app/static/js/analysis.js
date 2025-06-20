@@ -29,23 +29,6 @@ function startAnalysis() {
     agents.forEach(agent => {
         updateAgentProgressStatus(agent, 'waiting', 0);
     });
-    
-    // Start periodic progress checking during analysis
-    if (window.progressChecker) {
-        clearInterval(window.progressChecker);
-    }
-    
-    window.progressChecker = setInterval(() => {
-        if (isAnalysisRunning) {
-            console.log('🔄 Periodic progress check...');
-            checkAllAgentsCompleted();
-            forceRecalculateProgress();
-        } else {
-            // Stop checking when analysis is done
-            clearInterval(window.progressChecker);
-            window.progressChecker = null;
-        }
-    }, 3000); // Check every 3 seconds
 }
 
 function stopAnalysis() {
@@ -163,14 +146,9 @@ function updateProgressDetails(mainText, subText) {
 // Update agent status in progress indicator
 function updateAgentProgressStatus(agentName, status, progress = 0) {
     const agentStatusList = document.getElementById('agentStatusList');
-    if (!agentStatusList) {
-        console.warn('⚠️ Agent status list not found');
-        return;
-    }
+    if (!agentStatusList) return;
     
     let agentItem = document.querySelector(`[data-agent="${agentName}"]`);
-    
-    console.log(`📊 Updating ${agentName} to ${status} (${progress}%)`);
     
     if (!agentItem) {
         // Create new agent item
@@ -178,7 +156,6 @@ function updateAgentProgressStatus(agentName, status, progress = 0) {
         agentItem.className = 'flex items-center justify-between text-xs';
         agentItem.setAttribute('data-agent', agentName);
         agentStatusList.appendChild(agentItem);
-        console.log(`➕ Created new agent item for ${agentName}`);
     }
     
     // Update content based on status
@@ -206,7 +183,6 @@ function updateAgentProgressStatus(agentName, status, progress = 0) {
             statusColor = 'text-brand-nickel';
     }
     
-    const oldHTML = agentItem.innerHTML;
     agentItem.innerHTML = `
         <div class="flex items-center">
             <span class="mr-2">${statusIcon}</span>
@@ -214,8 +190,6 @@ function updateAgentProgressStatus(agentName, status, progress = 0) {
         </div>
         <span class="${statusColor}">${statusText}</span>
     `;
-    
-    console.log(`🔄 ${agentName}: ${oldHTML} → ${agentItem.innerHTML}`);
     
     // Update overall progress
     updateOverallProgress();
@@ -236,41 +210,33 @@ function updateOverallProgress() {
         const statusText = item.querySelector('span:last-child').textContent.toLowerCase().trim();
         // Also check for checkmark emoji which indicates completion
         const hasCheckmark = item.innerHTML.includes('✅');
-        const agentName = item.getAttribute('data-agent');
-        
-        console.log(`🔍 ${agentName}: statusText="${statusText}", hasCheckmark=${hasCheckmark}, innerHTML="${item.innerHTML}"`);
         
         if (statusText === 'completed' || hasCheckmark) {
             completedAgents++;
-            console.log(`✅ ${agentName} counted as COMPLETED`);
         } else if (statusText === 'running' || item.innerHTML.includes('🔄')) {
             runningAgents++;
-            console.log(`🔄 ${agentName} counted as RUNNING`);
         } else if (statusText === 'waiting' || item.innerHTML.includes('⏳')) {
             waitingAgents++;
-            console.log(`⏳ ${agentName} counted as WAITING`);
         }
     });
     
-    // Calculate progress with partial credit for running agents
-    const baseProgress = totalAgents > 0 ? (completedAgents / totalAgents) * 100 : 0;
-    const runningProgress = totalAgents > 0 ? (runningAgents / totalAgents) * 25 : 0; // 25% credit for running
-    const progress = Math.round(baseProgress + runningProgress);
+    // Calculate progress (completed agents get 100%, running agents get 25%)
+    const totalProgress = Math.round(((completedAgents * 100) + (runningAgents * 25)) / (totalAgents || 1));
     
     // Update progress bar
     const progressBar = document.getElementById('progressBar');
     const progressPercentage = document.getElementById('progressPercentage');
     
     if (progressBar) {
-        progressBar.style.width = `${progress}%`;
-        progressBar.setAttribute('aria-valuenow', progress);
+        progressBar.style.width = `${totalProgress}%`;
+        progressBar.setAttribute('aria-valuenow', totalProgress);
     }
     
     if (progressPercentage) {
-        progressPercentage.textContent = `${Math.round(baseProgress)}%`;
+        progressPercentage.textContent = `${totalProgress}%`;
     }
     
-    console.log(`Progress Update: ${completedAgents}/${totalAgents} completed (${Math.round(baseProgress)}%)`);
+    console.log(`Progress Update: ${completedAgents}/${totalAgents} completed (${totalProgress}%)`);
     
     // Update progress details with more specific information
     if (completedAgents === totalAgents && totalAgents > 0) {
@@ -293,30 +259,17 @@ function updateOverallProgress() {
             stopAnalysisBtn.style.display = 'none';
         }
         
-        // Auto-hide progress indicator after completion
-        setTimeout(() => {
-            const progressContainer = document.getElementById('progressContainer');
-            if (progressContainer) {
-                progressContainer.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-                progressContainer.style.color = 'white';
-                setTimeout(() => {
-                    hideProgressIndicator();
-                }, 3000);
-            }
-        }, 1000);
+        // Change progress container to completion state
+        const progressContainer = document.getElementById('progressContainer');
+        if (progressContainer) {
+            progressContainer.style.borderColor = '#10b981'; // Green border
+            progressContainer.style.backgroundColor = '#f0fdf4'; // Light green background
+        }
         
     } else if (runningAgents > 0) {
-        updateProgressDetails(
-            `${runningAgents} agent${runningAgents > 1 ? 's' : ''} processing...`, 
-            `${completedAgents}/${totalAgents} completed • ${runningAgents} running • ${waitingAgents} waiting`
-        );
+        updateProgressDetails(`Processing analysis...`, `${runningAgents} agent${runningAgents > 1 ? 's' : ''} running, ${completedAgents} completed`);
     } else if (completedAgents > 0) {
-        updateProgressDetails(
-            `${completedAgents} agent${completedAgents > 1 ? 's' : ''} completed`, 
-            `${totalAgents - completedAgents} remaining`
-        );
-    } else {
-        updateProgressDetails('Starting analysis...', 'Preparing agents');
+        updateProgressDetails(`Analysis in progress...`, `${completedAgents}/${totalAgents} agents completed`);
     }
 }
 
@@ -331,34 +284,24 @@ function forceRecalculateProgress() {
     const agentItems = agentStatusList.querySelectorAll('[data-agent]');
     console.log(`Found ${agentItems.length} agents in progress list`);
     
-    const allAgents = ['Problem Explorer', 'Best Practices', 'Horizon Scanning', 'Scenario Planning', 'Research Synthesis', 'Strategic Action', 'High Impact', 'Backcasting'];
     let completedCount = 0;
-    
-    // Check actual agent outputs to determine real completion status
-    allAgents.forEach(agentName => {
-        const outputDiv = document.getElementById(`${agentName}Output`);
-        const isCompleted = outputDiv && outputDiv.innerHTML.trim() !== '' && !outputDiv.innerHTML.includes('loading');
-        
-        if (isCompleted) {
-            completedCount++;
-            // Force update status to completed if output exists
-            updateAgentProgressStatus(agentName, 'completed', 100);
-            console.log(`✅ ${agentName}: Found output, marked as completed`);
-        } else {
-            console.log(`⏳ ${agentName}: No output found, keeping as waiting`);
-        }
-    });
-    
     agentItems.forEach((item, index) => {
         const agentName = item.getAttribute('data-agent');
         const innerHTML = item.innerHTML;
+        const hasCheckmark = innerHTML.includes('✅');
+        const statusText = item.querySelector('span:last-child')?.textContent.toLowerCase().trim();
+        
+        if (hasCheckmark || statusText === 'completed') {
+            completedCount++;
+        }
+        
         console.log(`Agent ${index + 1}: ${agentName}`, innerHTML);
     });
     
-    console.log(`Found ${completedCount} completed agents out of ${allAgents.length}`);
+    console.log(`Found ${completedCount} completed agents out of ${agentItems.length}`);
     
     // If all agents are completed, reset the button
-    if (completedCount === allAgents.length && allAgents.length > 0) {
+    if (completedCount === agentItems.length && agentItems.length > 0) {
         console.log('All agents completed, resetting button...');
         resetAnalysisButton();
     }
@@ -1130,35 +1073,26 @@ function extractAgentContent(agentData, agentName) {
 }
 
 function checkAllAgentsCompleted() {
-    const allAgents = ['Problem Explorer', 'Best Practices', 'Horizon Scanning', 'Scenario Planning', 'Research Synthesis', 'Strategic Action', 'High Impact', 'Backcasting'];
-    let completedCount = 0;
-    
-    allAgents.forEach(agentName => {
-        const outputDiv = document.getElementById(`${agentName}Output`);
-        if (outputDiv && outputDiv.innerHTML.trim() !== '' && !outputDiv.innerHTML.includes('loading')) {
-            completedCount++;
-        }
+    const allAgents = ['strategic', 'market', 'competitor', 'technology', 'regulatory', 'social', 'environmental', 'economic', 'political', 'legal'];
+    const allCompleted = allAgents.every(agent => {
+        const section = document.getElementById(`${agent}Content`);
+        return section && !section.classList.contains('loading');
     });
 
-    console.log(`Agents completed: ${completedCount}/${allAgents.length}`);
-
-    if (completedCount === allAgents.length) {
+    if (allCompleted) {
         analysisCompleted = true;
         isAnalysisRunning = false;
-        
-        // Reset analysis button
-        resetAnalysisButton();
-        
+        startAnalysisBtn.disabled = false;
+        startAnalysisBtn.style.cursor = 'pointer';
+        startAnalysisBtn.querySelector('span').innerHTML = `
+            <svg class="w-5 h-5 mr-2 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            Start Analysis
+        `;
+        stopAnalysisBtn.style.display = 'none';
         showDownloadButton();
         showSuccessMessage('Analysis completed successfully!');
-        
-        // Force update all agents to completed status in progress tracker
-        allAgents.forEach(agentName => {
-            updateAgentProgressStatus(agentName, 'completed', 100);
-        });
-        
-        // Final progress update
-        updateOverallProgress();
     }
 }
 
@@ -1238,12 +1172,6 @@ function updateAgentOutput(agentName, output) {
 
         // Update agent progress status in the progress indicator
         updateAgentProgressStatus(agentName, 'completed', 100);
-
-        // Force immediate progress update after marking complete
-        setTimeout(() => {
-            console.log(`🔄 Force progress update after ${agentName} completion`);
-            updateOverallProgress();
-        }, 100);
 
         // Update timestamp
         if (timestampSpan) {
@@ -1554,6 +1482,9 @@ analysisForm.addEventListener('submit', async (e) => {
                         // Extract content using the comprehensive extractor
                         let content;
                         
+                        // Update agent status to running when we start processing
+                        updateAgentProgressStatus(agentName, 'running', 50);
+                        
                         // If there's nested data, extract from it
                         if (agentData.data) {
                             content = extractAgentContent(agentData.data, agentName);
@@ -1579,6 +1510,9 @@ analysisForm.addEventListener('submit', async (e) => {
                         
                         const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
                         analysisResults[agentKey] = agentData;
+                        
+                        // Update agent status to running when processing fallback data
+                        updateAgentProgressStatus(agentName, 'running', 50);
                         
                         const content = extractAgentContent(agentData, agentName);
                         updateAgentOutput(agentName, content);
@@ -1624,6 +1558,9 @@ analysisForm.addEventListener('submit', async (e) => {
                             if (agentData && (agentData.status === 'success' || agentData.data || agentData.formatted_output)) {
                                 const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
                                 analysisResults[agentKey] = agentData;
+                                
+                                // Update agent status to running when processing buffered data
+                                updateAgentProgressStatus(agentName, 'running', 50);
                                 
                                 const content = agentData.data ? 
                                               extractAgentContent(agentData.data, agentName) : 
