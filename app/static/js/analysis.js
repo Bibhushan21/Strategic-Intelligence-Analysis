@@ -163,9 +163,14 @@ function updateProgressDetails(mainText, subText) {
 // Update agent status in progress indicator
 function updateAgentProgressStatus(agentName, status, progress = 0) {
     const agentStatusList = document.getElementById('agentStatusList');
-    if (!agentStatusList) return;
+    if (!agentStatusList) {
+        console.warn('⚠️ Agent status list not found');
+        return;
+    }
     
     let agentItem = document.querySelector(`[data-agent="${agentName}"]`);
+    
+    console.log(`📊 Updating ${agentName} to ${status} (${progress}%)`);
     
     if (!agentItem) {
         // Create new agent item
@@ -173,6 +178,7 @@ function updateAgentProgressStatus(agentName, status, progress = 0) {
         agentItem.className = 'flex items-center justify-between text-xs';
         agentItem.setAttribute('data-agent', agentName);
         agentStatusList.appendChild(agentItem);
+        console.log(`➕ Created new agent item for ${agentName}`);
     }
     
     // Update content based on status
@@ -200,6 +206,7 @@ function updateAgentProgressStatus(agentName, status, progress = 0) {
             statusColor = 'text-brand-nickel';
     }
     
+    const oldHTML = agentItem.innerHTML;
     agentItem.innerHTML = `
         <div class="flex items-center">
             <span class="mr-2">${statusIcon}</span>
@@ -207,6 +214,8 @@ function updateAgentProgressStatus(agentName, status, progress = 0) {
         </div>
         <span class="${statusColor}">${statusText}</span>
     `;
+    
+    console.log(`🔄 ${agentName}: ${oldHTML} → ${agentItem.innerHTML}`);
     
     // Update overall progress
     updateOverallProgress();
@@ -227,13 +236,19 @@ function updateOverallProgress() {
         const statusText = item.querySelector('span:last-child').textContent.toLowerCase().trim();
         // Also check for checkmark emoji which indicates completion
         const hasCheckmark = item.innerHTML.includes('✅');
+        const agentName = item.getAttribute('data-agent');
+        
+        console.log(`🔍 ${agentName}: statusText="${statusText}", hasCheckmark=${hasCheckmark}, innerHTML="${item.innerHTML}"`);
         
         if (statusText === 'completed' || hasCheckmark) {
             completedAgents++;
+            console.log(`✅ ${agentName} counted as COMPLETED`);
         } else if (statusText === 'running' || item.innerHTML.includes('🔄')) {
             runningAgents++;
+            console.log(`🔄 ${agentName} counted as RUNNING`);
         } else if (statusText === 'waiting' || item.innerHTML.includes('⏳')) {
             waitingAgents++;
+            console.log(`⏳ ${agentName} counted as WAITING`);
         }
     });
     
@@ -1223,6 +1238,12 @@ function updateAgentOutput(agentName, output) {
 
         // Update agent progress status in the progress indicator
         updateAgentProgressStatus(agentName, 'completed', 100);
+
+        // Force immediate progress update after marking complete
+        setTimeout(() => {
+            console.log(`🔄 Force progress update after ${agentName} completion`);
+            updateOverallProgress();
+        }, 100);
 
         // Update timestamp
         if (timestampSpan) {
