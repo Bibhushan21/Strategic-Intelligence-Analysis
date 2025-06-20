@@ -7,6 +7,158 @@ const stopAnalysisBtn = document.getElementById('stopAnalysisBtn');
 // Button state management
 let isAnalysisRunning = false;
 
+// WebSocket connection for real-time progress updates
+let ws = null;
+let reconnectAttempts = 0;
+const maxReconnectAttempts = 5;
+
+// Initialize WebSocket connection
+function initializeWebSocket() {
+    try {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/analysis`;
+        ws = new WebSocket(wsUrl);
+        
+        ws.onopen = function() {
+            console.log('WebSocket connected');
+            reconnectAttempts = 0;
+        };
+        
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            handleWebSocketMessage(data);
+        };
+        
+        ws.onclose = function() {
+            console.log('WebSocket disconnected');
+            if (isAnalysisRunning && reconnectAttempts < maxReconnectAttempts) {
+                reconnectAttempts++;
+                setTimeout(initializeWebSocket, 1000 * reconnectAttempts);
+            }
+        };
+        
+        ws.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+    } catch (error) {
+        console.error('Failed to initialize WebSocket:', error);
+    }
+}
+
+// Handle WebSocket messages
+function handleWebSocketMessage(data) {
+    switch (data.type) {
+        case 'analysis_started':
+            showProgressMessage('Analysis started...', 'info');
+            updateProgressDetails('Analysis started', 'Initializing AI agents');
+            break;
+        case 'agent_started':
+            showProgressMessage(`${data.agent_name} is running...`, 'info');
+            updateAgentStatus(data.agent_name, 'running');
+            updateAgentProgressStatus(data.agent_name, 'running');
+            updateProgressDetails(`${data.agent_name} is running`, 'Processing analysis');
+            break;
+        case 'agent_completed':
+            showProgressMessage(`${data.agent_name} completed`, 'success');
+            updateAgentStatus(data.agent_name, 'completed');
+            updateAgentProgressStatus(data.agent_name, 'completed');
+            if (data.output) {
+                updateAgentOutput(data.agent_name, data.output);
+            }
+            break;
+        case 'agent_error':
+            showProgressMessage(`${data.agent_name} failed: ${data.error}`, 'error');
+            updateAgentStatus(data.agent_name, 'error');
+            updateAgentProgressStatus(data.agent_name, 'error');
+            break;
+        case 'analysis_completed':
+            showProgressMessage('Analysis completed successfully!', 'success');
+            updateProgressDetails('Analysis completed!', 'All agents finished');
+            isAnalysisRunning = false;
+            stopAnalysis();
+            showDownloadButton();
+            break;
+        case 'analysis_error':
+            showProgressMessage(`Analysis failed: ${data.error}`, 'error');
+            updateProgressDetails('Analysis failed', data.error);
+            isAnalysisRunning = false;
+            stopAnalysis();
+            break;
+        case 'progress_update':
+            updateProgressBar(data.progress);
+            if (data.message) {
+                updateProgressDetails(data.message, data.details || '');
+            }
+            break;
+    }
+}
+
+// Show progress message with toast notification
+function showProgressMessage(message, type = 'info') {
+    showToast(message, type);
+    
+    // Update progress indicator if it exists
+    const progressIndicator = document.getElementById('progressIndicator');
+    if (progressIndicator) {
+        progressIndicator.textContent = message;
+        progressIndicator.className = `text-sm font-medium ${getTypeColor(type)}`;
+    }
+}
+
+// Update agent status indicator
+function updateAgentStatus(agentName, status) {
+    const statusIndicator = document.querySelector(`[data-agent="${agentName}"] .status-indicator`);
+    if (statusIndicator) {
+        statusIndicator.className = `status-indicator ${status}`;
+        statusIndicator.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    }
+}
+
+// Update progress bar
+function updateProgressBar(progress) {
+    const progressBar = document.getElementById('progressBar');
+    const progressPercentage = document.getElementById('progressPercentage');
+    if (progressBar) {
+        progressBar.style.width = `${progress}%`;
+        progressBar.setAttribute('aria-valuenow', progress);
+    }
+    if (progressPercentage) {
+        progressPercentage.textContent = `${progress}%`;
+    }
+}
+
+// Get color class based on message type
+function getTypeColor(type) {
+    switch (type) {
+        case 'success': return 'text-green-600';
+        case 'error': return 'text-red-600';
+        case 'warning': return 'text-yellow-600';
+        default: return 'text-blue-600';
+    }
+}
+
+// Reset analysis button to ready state
+function resetAnalysisButton() {
+    isAnalysisRunning = false;
+    
+    if (startAnalysisBtn) {
+        startAnalysisBtn.disabled = false;
+        startAnalysisBtn.style.cursor = 'pointer';
+        startAnalysisBtn.querySelector('span').innerHTML = `
+            <svg class="w-5 h-5 mr-2 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            Start Analysis
+        `;
+    }
+    
+    if (stopAnalysisBtn) {
+        stopAnalysisBtn.style.display = 'none';
+    }
+    
+    console.log('Analysis button reset to ready state');
+}
+
 function startAnalysis() {
     if (isAnalysisRunning) return;
     
@@ -20,6 +172,14 @@ function startAnalysis() {
         Analysis Started...
     `;
     stopAnalysisBtn.style.display = 'block';
+    
+    // Initialize WebSocket if not already connected
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+        initializeWebSocket();
+    }
+    
+    // Show progress indicator
+    showProgressIndicator();
 }
 
 function stopAnalysis() {
@@ -35,6 +195,227 @@ function stopAnalysis() {
         Start Analysis
     `;
     stopAnalysisBtn.style.display = 'none';
+    
+    // Hide progress indicator
+    hideProgressIndicator();
+    
+    // Close WebSocket connection
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+    }
+}
+
+// Show progress indicator
+function showProgressIndicator() {
+    const existingIndicator = document.getElementById('progressContainer');
+    if (existingIndicator) {
+        existingIndicator.remove();
+    }
+    
+    const progressContainer = document.createElement('div');
+    progressContainer.id = 'progressContainer';
+    progressContainer.className = 'fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 z-50 max-w-sm border border-brand-lapis/20';
+    progressContainer.innerHTML = `
+        <div class="flex items-center space-x-3 mb-3">
+            <div class="flex-shrink-0">
+                <svg class="w-6 h-6 text-brand-lapis animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p id="progressIndicator" class="text-sm font-medium text-brand-lapis">Initializing analysis...</p>
+                <p id="progressDetails" class="text-xs text-brand-nickel mt-1">Preparing AI agents</p>
+            </div>
+            <button onclick="hideProgressIndicator()" class="flex-shrink-0 text-brand-nickel hover:text-brand-oxford transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="mb-3">
+            <div class="flex justify-between text-xs text-brand-nickel mb-1">
+                <span>Overall Progress</span>
+                <span id="progressPercentage">0%</span>
+            </div>
+            <div class="bg-brand-kodama rounded-full h-2">
+                <div id="progressBar" class="bg-gradient-to-r from-brand-lapis to-brand-pervenche h-2 rounded-full transition-all duration-300" style="width: 0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+        <div id="agentProgress" class="space-y-2">
+            <div class="text-xs text-brand-nickel font-medium">Agent Status:</div>
+            <div id="agentStatusList" class="space-y-1">
+                <!-- Agent status items will be added here -->
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(progressContainer);
+    
+    // Add slide-in animation
+    progressContainer.style.opacity = '0';
+    progressContainer.style.transform = 'translateX(100%)';
+    setTimeout(() => {
+        progressContainer.style.transition = 'all 0.3s ease';
+        progressContainer.style.opacity = '1';
+        progressContainer.style.transform = 'translateX(0)';
+    }, 10);
+}
+
+// Update progress with more details
+function updateProgressDetails(message, details = '') {
+    const progressIndicator = document.getElementById('progressIndicator');
+    const progressDetails = document.getElementById('progressDetails');
+    
+    if (progressIndicator) {
+        progressIndicator.textContent = message;
+    }
+    
+    if (progressDetails && details) {
+        progressDetails.textContent = details;
+    }
+}
+
+// Update agent status in progress indicator
+function updateAgentProgressStatus(agentName, status, progress = 0) {
+    const agentStatusList = document.getElementById('agentStatusList');
+    if (!agentStatusList) return;
+    
+    let agentStatusItem = agentStatusList.querySelector(`[data-agent="${agentName}"]`);
+    
+    if (!agentStatusItem) {
+        agentStatusItem = document.createElement('div');
+        agentStatusItem.className = 'flex items-center justify-between text-xs';
+        agentStatusItem.setAttribute('data-agent', agentName);
+        agentStatusList.appendChild(agentStatusItem);
+    }
+    
+    const statusColors = {
+        'waiting': 'text-brand-nickel',
+        'running': 'text-brand-lapis',
+        'completed': 'text-green-600',
+        'error': 'text-red-600'
+    };
+    
+    const statusIcons = {
+        'waiting': '⏳',
+        'running': '🔄',
+        'completed': '✅',
+        'error': '❌'
+    };
+    
+    agentStatusItem.innerHTML = `
+        <span class="flex items-center">
+            <span class="mr-2">${statusIcons[status] || '⏳'}</span>
+            <span class="font-medium">${agentName.replace(/([A-Z])/g, ' $1').trim()}</span>
+        </span>
+        <span class="${statusColors[status] || 'text-brand-nickel'}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+    `;
+    
+    // Update overall progress
+    updateOverallProgress();
+}
+
+// Update overall progress based on agent statuses
+function updateOverallProgress() {
+    const agentStatusList = document.getElementById('agentStatusList');
+    if (!agentStatusList) return;
+    
+    const agentItems = agentStatusList.querySelectorAll('[data-agent]');
+    const totalAgents = agentItems.length;
+    let completedAgents = 0;
+    let runningAgents = 0;
+    let waitingAgents = 0;
+    
+    agentItems.forEach(item => {
+        const statusText = item.querySelector('span:last-child').textContent.toLowerCase().trim();
+        // Also check for checkmark emoji which indicates completion
+        const hasCheckmark = item.innerHTML.includes('✅');
+        
+        if (statusText === 'completed' || hasCheckmark) {
+            completedAgents++;
+        } else if (statusText === 'running' || item.innerHTML.includes('🔄')) {
+            runningAgents++;
+        } else if (statusText === 'waiting' || item.innerHTML.includes('⏳')) {
+            waitingAgents++;
+        }
+    });
+    
+    // Calculate progress with partial credit for running agents
+    const baseProgress = totalAgents > 0 ? (completedAgents / totalAgents) * 100 : 0;
+    const runningProgress = totalAgents > 0 ? (runningAgents / totalAgents) * 25 : 0; // 25% credit for running
+    const progress = Math.round(baseProgress + runningProgress);
+    
+    updateProgressBar(progress);
+    
+    // Update progress percentage text
+    const progressPercentage = document.getElementById('progressPercentage');
+    if (progressPercentage) {
+        progressPercentage.textContent = `${Math.round(baseProgress)}%`;
+    }
+    
+    // Update progress details with more specific information
+    if (completedAgents === totalAgents && totalAgents > 0) {
+        updateProgressDetails('Analysis completed!', 'All agents finished successfully');
+        
+        // Reset analysis state and re-enable start button
+        isAnalysisRunning = false;
+        if (startAnalysisBtn) {
+            startAnalysisBtn.disabled = false;
+            startAnalysisBtn.style.cursor = 'pointer';
+            startAnalysisBtn.querySelector('span').innerHTML = `
+                <svg class="w-5 h-5 mr-2 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Start Analysis
+            `;
+        }
+        
+        // Hide stop button
+        if (stopAnalysisBtn) {
+            stopAnalysisBtn.style.display = 'none';
+        }
+        
+        // Auto-hide progress indicator after completion
+        setTimeout(() => {
+            const progressContainer = document.getElementById('progressContainer');
+            if (progressContainer) {
+                progressContainer.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                progressContainer.style.color = 'white';
+                setTimeout(() => {
+                    hideProgressIndicator();
+                }, 3000);
+            }
+        }, 1000);
+        
+    } else if (runningAgents > 0) {
+        updateProgressDetails(
+            `${runningAgents} agent${runningAgents > 1 ? 's' : ''} processing...`, 
+            `${completedAgents}/${totalAgents} completed • ${runningAgents} running • ${waitingAgents} waiting`
+        );
+    } else if (completedAgents > 0) {
+        updateProgressDetails(
+            `${completedAgents} agent${completedAgents > 1 ? 's' : ''} completed`, 
+            `${totalAgents - completedAgents} remaining`
+        );
+    } else {
+        updateProgressDetails('Starting analysis...', 'Preparing agents');
+    }
+    
+    // Debug logging
+    console.log(`Progress Update: ${completedAgents}/${totalAgents} completed (${Math.round(baseProgress)}%)`);
+}
+
+// Hide progress indicator
+function hideProgressIndicator() {
+    const progressContainer = document.getElementById('progressContainer');
+    if (progressContainer) {
+        progressContainer.style.transition = 'all 0.3s ease';
+        progressContainer.style.opacity = '0';
+        progressContainer.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            progressContainer.remove();
+        }, 300);
+    }
 }
 
 // Track expanded state of agent sections
@@ -175,6 +556,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (agentOutputsContainer && agentOutputsContainer.children.length > 0) {
             console.log('Found existing agent outputs, checking completion status...');
             checkAllAgentsCompleted();
+        }
+        
+        // Also check if progress indicator exists and recalculate
+        const progressContainer = document.getElementById('progressContainer');
+        if (progressContainer) {
+            console.log('Found existing progress container, recalculating...');
+            forceRecalculateProgress();
         }
     }, 1000);
     
@@ -405,10 +793,6 @@ function createAgentOutputSection(agentName) {
                 </div>
             </div>
             
-            <!-- Progress Bar -->
-            <div class="mt-4 bg-white/20 rounded-full h-2 overflow-hidden">
-                <div class="bg-white h-full rounded-full animate-pulse transition-all duration-1000" style="width: 0%" id="${agentName}ProgressBar"></div>
-            </div>
         </div>
         
         <!-- Collapsible Content Section -->
@@ -834,8 +1218,6 @@ function updateAgentOutput(agentName, output) {
     const rawOutputDiv = document.getElementById(`${agentName}RawOutput`);
     const timestampSpan = document.getElementById(`${agentName}Timestamp`);
     const durationSpan = document.getElementById(`${agentName}Duration`);
-    const progressBar = document.getElementById(`${agentName}ProgressBar`);
-    
     if (!outputDiv) {
         console.warn(`Output div not found for ${agentName}`);
         return;
@@ -873,10 +1255,6 @@ function updateAgentOutput(agentName, output) {
         }
 
         // Update progress bar to 100%
-        if (progressBar) {
-            progressBar.style.width = '100%';
-            progressBar.classList.remove('animate-pulse');
-        }
 
         // Update status indicator
         const statusIndicator = document.getElementById(`${agentName}StatusIndicator`);
@@ -886,6 +1264,9 @@ function updateAgentOutput(agentName, output) {
                 <span class="text-sm text-white font-medium">Completed</span>
             `;
         }
+
+        // Update agent progress status in the progress indicator
+        updateAgentProgressStatus(agentName, 'completed', 100);
 
         // Update timestamp
         if (timestampSpan) {
@@ -1047,6 +1428,8 @@ analysisForm.addEventListener('submit', async (e) => {
         agents.forEach(agent => {
             const section = createAgentOutputSection(agent);
             agentOutputs.appendChild(section);
+            // Initialize agent in progress tracker
+            updateAgentProgressStatus(agent, 'waiting', 0);
         });
         
         // Auto-scroll to the analysis results section
@@ -1195,6 +1578,9 @@ analysisForm.addEventListener('submit', async (e) => {
                         
                         // Extract content using the comprehensive extractor
                         let content;
+                        
+                        // Update agent status to running when we start processing
+                        updateAgentProgressStatus(agentName, 'running', 50);
                         
                         // If there's nested data, extract from it
                         if (agentData.data) {
@@ -1638,27 +2024,25 @@ function convertHtmlToMarkdown(html) {
 
 // Function to collect form data from UI
 function collectFormDataFromUI() {
-    const questionField = document.getElementById('strategic_question');
-    const timeFrameField = document.getElementById('time_frame');
-    const regionField = document.getElementById('region');
+    const strategicQuestion = document.getElementById('strategic_question').value;
+    const timeFrame = document.getElementById('time_frame').value;
+    const region = document.getElementById('region').value;
+    const prompt = document.getElementById('prompt').value;
     
-    if (questionField && timeFrameField && regionField) {
-        originalFormData = {
-            strategic_question: questionField.value || 'Strategic Analysis',
-            time_frame: timeFrameField.value || 'medium_term',
-            region: regionField.value || 'global'
-        };
-        console.log('Collected form data:', originalFormData);
-        return true;
-    }
+    // Collect new customization parameters
+    const analysisDepth = document.getElementById('analysis_depth')?.value || 'standard';
+    const creativityLevel = document.getElementById('creativity_level')?.value || 'balanced';
+    const focusAreas = document.getElementById('focus_areas')?.value || 'general';
     
-    // Fallback values
-    originalFormData = {
-        strategic_question: 'Strategic Intelligence Analysis',
-        time_frame: 'medium_term',
-        region: 'global'
+    return {
+        strategic_question: strategicQuestion,
+        time_frame: timeFrame,
+        region: region,
+        prompt: prompt,
+        analysis_depth: analysisDepth,
+        creativity_level: creativityLevel,
+        focus_areas: focusAreas
     };
-    return false;
 }
 
 // Function to show success message
@@ -2177,3 +2561,42 @@ function checkAnalysisCompletion() {
 document.addEventListener('DOMContentLoaded', function() {
     setupRefreshSuggestions();
 }); 
+
+// Force recalculate progress (useful for debugging or page refresh)
+function forceRecalculateProgress() {
+    const agentStatusList = document.getElementById('agentStatusList');
+    if (!agentStatusList) {
+        console.log('No agent status list found');
+        return;
+    }
+    
+    const agentItems = agentStatusList.querySelectorAll('[data-agent]');
+    console.log(`Found ${agentItems.length} agents in progress list`);
+    
+    let completedCount = 0;
+    agentItems.forEach((item, index) => {
+        const agentName = item.getAttribute('data-agent');
+        const innerHTML = item.innerHTML;
+        const hasCheckmark = innerHTML.includes('✅');
+        const statusText = item.querySelector('span:last-child')?.textContent.toLowerCase().trim();
+        
+        if (hasCheckmark || statusText === 'completed') {
+            completedCount++;
+        }
+        
+        console.log(`Agent ${index + 1}: ${agentName} - Completed: ${hasCheckmark || statusText === 'completed'}`);
+    });
+    
+    console.log(`${completedCount}/${agentItems.length} agents completed`);
+    
+    // If all agents are completed, reset the button
+    if (completedCount === agentItems.length && agentItems.length > 0) {
+        resetAnalysisButton();
+    }
+    
+    updateOverallProgress();
+}
+
+// Make functions globally available for debugging
+window.resetAnalysisButton = resetAnalysisButton;
+window.forceRecalculateProgress = forceRecalculateProgress;

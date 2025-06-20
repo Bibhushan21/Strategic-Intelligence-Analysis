@@ -33,6 +33,12 @@
     </script>
     <link href="/static/css/main.css?v=2.0.0" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Intro.js for interactive tour -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js@7.2.0/minified/introjs.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/intro.js@7.2.0/minified/intro.min.js"></script>
+    <!-- Tippy.js for tooltips -->
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
     <script src="/static/js/analysis.js" defer></script>
     <script src="/static/js/main.js" defer></script>
 </head>
@@ -105,6 +111,16 @@
     <div class="container mx-auto px-4 py-8">
         <h1 class="text-4xl font-brand-slab font-bold text-center mb-10 text-brand-oxford">Strategic Intelligence Analysis</h1>
         
+        <!-- Interactive Tour Button -->
+        <div class="text-center mb-6">
+            <button id="startTourBtn" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-brand-pervenche to-brand-lapis text-white rounded-lg hover:from-brand-lapis hover:to-brand-oxford transition-all duration-300 font-medium">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Take Interactive Tour
+            </button>
+        </div>
+        
         <form id="analysisForm" class="max-w-4xl mx-auto bg-gradient-to-br from-brand-white to-brand-kodama rounded-3xl shadow-2xl p-8 mb-10 space-y-8 border border-brand-kodama relative overflow-hidden">
             <!-- Background Pattern -->
             <div class="absolute inset-0 opacity-5">
@@ -116,7 +132,7 @@
             <!-- Form Content -->
             <div class="relative z-10">
                 <!-- Strategic Question Section -->
-                <div class="bg-brand-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-brand-white/50">
+                <div class="bg-brand-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-brand-white/50" data-intro="Start here! Enter your strategic question - this is the core challenge you want to analyze." data-step="1">
                     <div class="flex items-center mb-4">
                         <div class="w-10 h-10 bg-gradient-to-r from-brand-lapis to-brand-pervenche rounded-full flex items-center justify-center mr-3">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,6 +140,11 @@
                             </svg>
                         </div>
                         <label for="strategic_question" class="text-lg font-brand-slab font-semibold text-brand-oxford">Strategic Question</label>
+                        <div class="ml-2 relative">
+                            <svg class="w-5 h-5 text-brand-nickel cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-tippy-content="Your strategic question should be specific, actionable, and focused on a key business challenge or opportunity. Examples: 'How can we expand into Asian markets?' or 'What technologies will disrupt our industry?'">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
                     </div>
                     <textarea id="strategic_question" name="strategic_question" rows="4" 
                         class="w-full rounded-xl border-0 bg-brand-white/80 shadow-inner focus:ring-2 focus:ring-brand-lapis focus:bg-brand-white transition-all duration-300 p-4 text-brand-oxford placeholder-brand-nickel font-brand-regular" 
@@ -132,7 +153,7 @@
 
                 <!-- Time Frame and Region -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-brand-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-brand-white/50">
+                    <div class="bg-brand-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-brand-white/50" data-intro="Choose your analysis time frame - this helps focus the analysis on relevant trends and developments." data-step="2">
                         <div class="flex items-center mb-4">
                             <div class="w-10 h-10 bg-gradient-to-r from-brand-pervenche to-brand-lapis rounded-full flex items-center justify-center mr-3">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,17 +161,22 @@
                                 </svg>
                             </div>
                             <label for="time_frame" class="text-lg font-brand-slab font-semibold text-brand-oxford">Time Frame</label>
-            </div>
-                <select id="time_frame" name="time_frame" required
+                            <div class="ml-2 relative">
+                                <svg class="w-5 h-5 text-brand-nickel cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-tippy-content="Short term: 1-2 years (tactical decisions), Medium term: 3-5 years (strategic planning), Long term: 5+ years (vision and transformation)">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <select id="time_frame" name="time_frame" required
                             class="w-full rounded-xl border-0 bg-brand-white/80 shadow-inner focus:ring-2 focus:ring-brand-pervenche focus:bg-brand-white transition-all duration-300 p-4 text-brand-oxford font-brand-regular">
                             <option value="" disabled selected>Select time frame</option>
-                    <option value="short_term">Short Term (1-2 years)</option>
-                    <option value="medium_term">Medium Term (3-5 years)</option>
-                    <option value="long_term">Long Term (5+ years)</option>
-                </select>
-            </div>
+                            <option value="short_term">Short Term (1-2 years)</option>
+                            <option value="medium_term">Medium Term (3-5 years)</option>
+                            <option value="long_term">Long Term (5+ years)</option>
+                        </select>
+                    </div>
 
-                    <div class="bg-brand-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-brand-white/50">
+                    <div class="bg-brand-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-brand-white/50" data-intro="Select the geographic region for your analysis - this helps focus on relevant market conditions and regulations." data-step="3">
                         <div class="flex items-center mb-4">
                             <div class="w-10 h-10 bg-gradient-to-r from-brand-lapis to-brand-oxford rounded-full flex items-center justify-center mr-3">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,22 +184,76 @@
                                 </svg>
                             </div>
                             <label for="region" class="text-lg font-brand-slab font-semibold text-brand-oxford">Region</label>
+                            <div class="ml-2 relative">
+                                <svg class="w-5 h-5 text-brand-nickel cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-tippy-content="Choose the geographic scope for your analysis. Global covers worldwide trends, while specific regions focus on local market conditions, regulations, and cultural factors.">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
                         </div>
-                <select id="region" name="region" required
+                        <select id="region" name="region" required
                             class="w-full rounded-xl border-0 bg-brand-white/80 shadow-inner focus:ring-2 focus:ring-brand-lapis focus:bg-brand-white transition-all duration-300 p-4 text-brand-oxford font-brand-regular">
                             <option value="" disabled selected>Select region</option>
-                    <option value="global">Global</option>
-                    <option value="north_america">North America</option>
-                    <option value="europe">Europe</option>
-                    <option value="asia">Asia</option>
-                    <option value="africa">Africa</option>
-                    <option value="latin_america">Latin America</option>
-                </select>
+                            <option value="global">Global</option>
+                            <option value="north_america">North America</option>
+                            <option value="europe">Europe</option>
+                            <option value="asia">Asia</option>
+                            <option value="africa">Africa</option>
+                            <option value="latin_america">Latin America</option>
+                        </select>
                     </div>
-            </div>
+                </div>
+
+                <!-- Agent Customization Section -->
+                <div class="bg-brand-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-brand-white/50" data-intro="Customize your analysis by adjusting agent parameters for more targeted insights." data-step="4">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-r from-brand-oxford to-brand-pervenche rounded-full flex items-center justify-center mr-3">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                        <label class="text-lg font-brand-slab font-semibold text-brand-oxford">Analysis Customization</label>
+                        <div class="ml-2 relative">
+                            <svg class="w-5 h-5 text-brand-nickel cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-tippy-content="Fine-tune your analysis by adjusting these parameters. Higher depth means more detailed analysis, higher creativity means more innovative insights.">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="analysis_depth" class="block text-sm font-medium text-brand-oxford mb-2">Analysis Depth</label>
+                            <select id="analysis_depth" name="analysis_depth" class="w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-lapis focus:border-transparent p-3 text-brand-oxford">
+                                <option value="standard">Standard</option>
+                                <option value="detailed">Detailed</option>
+                                <option value="comprehensive">Comprehensive</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="creativity_level" class="block text-sm font-medium text-brand-oxford mb-2">Creativity Level</label>
+                            <select id="creativity_level" name="creativity_level" class="w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-lapis focus:border-transparent p-3 text-brand-oxford">
+                                <option value="balanced">Balanced</option>
+                                <option value="creative">Creative</option>
+                                <option value="highly_creative">Highly Creative</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="focus_areas" class="block text-sm font-medium text-brand-oxford mb-2">Focus Areas</label>
+                            <select id="focus_areas" name="focus_areas" class="w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-lapis focus:border-transparent p-3 text-brand-oxford">
+                                <option value="general">General</option>
+                                <option value="technology">Technology</option>
+                                <option value="market">Market</option>
+                                <option value="regulatory">Regulatory</option>
+                                <option value="social">Social</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Additional Instructions -->
-                <div class="bg-brand-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-brand-white/50">
+                <div class="bg-brand-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-brand-white/50" data-intro="Add any specific instructions or constraints to guide your analysis." data-step="5">
                     <div class="flex items-center mb-4">
                         <div class="w-10 h-10 bg-gradient-to-r from-brand-oxford to-brand-pervenche rounded-full flex items-center justify-center mr-3">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,14 +262,19 @@
                         </div>
                         <label for="prompt" class="text-lg font-brand-slab font-semibold text-brand-oxford">Additional Instructions</label>
                         <span class="ml-2 text-sm text-brand-nickel italic font-brand-regular">(Optional)</span>
+                        <div class="ml-2 relative">
+                            <svg class="w-5 h-5 text-brand-nickel cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-tippy-content="Add specific constraints, focus areas, or special considerations for your analysis. For example: 'Focus on sustainability aspects' or 'Consider regulatory changes in 2024'">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
                     </div>
-                <textarea id="prompt" name="prompt" rows="3"
+                    <textarea id="prompt" name="prompt" rows="3"
                         class="w-full rounded-xl border-0 bg-brand-white/80 shadow-inner focus:ring-2 focus:ring-brand-oxford focus:bg-brand-white transition-all duration-300 p-4 text-brand-oxford placeholder-brand-nickel font-brand-regular" 
                         placeholder="Any specific aspects, constraints, or focus areas to consider in the analysis..."></textarea>
-            </div>
+                </div>
 
                 <!-- Submit Button -->
-                <div class="flex justify-center pt-6">
+                <div class="flex justify-center pt-6" data-intro="Ready to start your analysis? Click here to begin the strategic intelligence process!" data-step="6">
                     <div class="flex flex-wrap justify-center gap-4">
                         <button type="submit" id="startAnalysisBtn"
                             class="group relative bg-gradient-to-r from-brand-lapis to-brand-pervenche text-white font-brand-black font-bold px-8 py-4 rounded-2xl hover:from-brand-oxford hover:to-brand-lapis focus:outline-none focus:ring-4 focus:ring-brand-lapis/30 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 text-lg">

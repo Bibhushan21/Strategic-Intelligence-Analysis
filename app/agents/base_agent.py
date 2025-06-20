@@ -33,7 +33,7 @@ class BaseAgent(ABC):
         self.base_retry_delay = 1  # Faster retry for deployment
         self.system_prompt = self.get_system_prompt()
         self.required_fields = ['strategic_question', 'time_frame', 'region']
-        self.optional_fields = ['additional_context']
+        self.optional_fields = ['additional_context', 'analysis_depth', 'creativity_level', 'focus_areas']
 
     @abstractmethod
     def get_system_prompt(self) -> str:
@@ -82,6 +82,63 @@ class BaseAgent(ABC):
                 status_code=400,
                 detail="additional_context must be a string"
             )
+        
+        # Validate optional customization fields
+        if 'analysis_depth' in input_data and input_data['analysis_depth'] not in ['standard', 'detailed', 'comprehensive']:
+            raise HTTPException(
+                status_code=400,
+                detail="analysis_depth must be one of: standard, detailed, comprehensive"
+            )
+        if 'creativity_level' in input_data and input_data['creativity_level'] not in ['balanced', 'creative', 'highly_creative']:
+            raise HTTPException(
+                status_code=400,
+                detail="creativity_level must be one of: balanced, creative, highly_creative"
+            )
+        if 'focus_areas' in input_data and input_data['focus_areas'] not in ['general', 'technology', 'market', 'regulatory', 'social']:
+            raise HTTPException(
+                status_code=400,
+                detail="focus_areas must be one of: general, technology, market, regulatory, social"
+            )
+
+    def get_customization_instructions(self, input_data: Dict[str, Any]) -> str:
+        """Generate customization instructions based on user preferences"""
+        instructions = []
+        
+        # Analysis depth instructions
+        if 'analysis_depth' in input_data:
+            depth = input_data['analysis_depth']
+            if depth == 'detailed':
+                instructions.append("Provide a detailed analysis with comprehensive coverage of all relevant aspects.")
+            elif depth == 'comprehensive':
+                instructions.append("Provide an exhaustive analysis with extensive detail, multiple perspectives, and thorough exploration of all relevant factors.")
+            else:  # standard
+                instructions.append("Provide a balanced analysis with appropriate detail for strategic decision-making.")
+        
+        # Creativity level instructions
+        if 'creativity_level' in input_data:
+            creativity = input_data['creativity_level']
+            if creativity == 'creative':
+                instructions.append("Include innovative and creative insights, thinking outside conventional frameworks.")
+            elif creativity == 'highly_creative':
+                instructions.append("Emphasize highly innovative, breakthrough thinking and unconventional approaches.")
+            else:  # balanced
+                instructions.append("Balance analytical rigor with creative insights.")
+        
+        # Focus areas instructions
+        if 'focus_areas' in input_data:
+            focus = input_data['focus_areas']
+            if focus == 'technology':
+                instructions.append("Prioritize technological trends, innovations, and their strategic implications.")
+            elif focus == 'market':
+                instructions.append("Emphasize market dynamics, competitive landscape, and customer behavior.")
+            elif focus == 'regulatory':
+                instructions.append("Focus on regulatory environment, compliance requirements, and policy implications.")
+            elif focus == 'social':
+                instructions.append("Prioritize social trends, cultural shifts, and stakeholder perspectives.")
+            else:  # general
+                instructions.append("Provide a balanced view across all relevant dimensions.")
+        
+        return " ".join(instructions) if instructions else ""
 
     def format_output(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Format the output data"""
@@ -154,6 +211,13 @@ class BaseAgent(ABC):
             
             agent_name = self.__class__.__name__
             logger.info(f"\n{'='*80}\n{agent_name} Output:\n{'='*80}")
+            
+            # Add customization instructions to the prompt
+            customization_instructions = self.get_customization_instructions(input_data)
+            if customization_instructions:
+                # Add customization instructions to the input data
+                input_data['customization_instructions'] = customization_instructions
+                logger.info(f"Customization instructions: {customization_instructions}")
             
             prompt = self.format_prompt(input_data)
             response = await self.invoke_llm(prompt)
