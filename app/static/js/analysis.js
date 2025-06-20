@@ -4,94 +4,172 @@ const analysisForm = document.getElementById('analysisForm');
 const startAnalysisBtn = document.getElementById('startAnalysisBtn');
 const stopAnalysisBtn = document.getElementById('stopAnalysisBtn');
 
-// Button state management
+// Variables for analysis state
 let isAnalysisRunning = false;
-
-// WebSocket connection for real-time progress updates
-let ws = null;
+let abortController = null;
 let reconnectAttempts = 0;
-const maxReconnectAttempts = 5;
+const maxReconnectAttempts = 3;
 
-// Initialize WebSocket connection
-function initializeWebSocket() {
+// Initialize analysis with SSE instead of WebSocket
+function initializeAnalysis() {
+    console.log('Analysis system initialized with SSE streaming');
+}
+
+// Start analysis with streaming
+async function startAnalysisStreaming(formData) {
     try {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws/analysis`;
-        ws = new WebSocket(wsUrl);
+        // Create abort controller for cancellation
+        abortController = new AbortController();
         
-        ws.onopen = function() {
-            console.log('WebSocket connected');
-            reconnectAttempts = 0;
-        };
-        
-        ws.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            handleWebSocketMessage(data);
-        };
-        
-        ws.onclose = function() {
-            console.log('WebSocket disconnected');
-            if (isAnalysisRunning && reconnectAttempts < maxReconnectAttempts) {
-                reconnectAttempts++;
-                setTimeout(initializeWebSocket, 1000 * reconnectAttempts);
+        // Send analysis request
+        const response = await fetch('/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+            signal: abortController.signal
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+            const { value, done } = await reader.read();
+            
+            if (done) {
+                console.log('Analysis stream completed');
+                break;
             }
-        };
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+            
+            for (const line of lines) {
+                if (line.trim()) {
+                    try {
+                        const data = JSON.parse(line);
+                        handleStreamingData(data);
+                    } catch (e) {
+                        console.warn('Failed to parse streaming data:', line, e);
+                    }
+                }
+            }
+        }
         
-        ws.onerror = function(error) {
-            console.error('WebSocket error:', error);
-        };
+        // Analysis completed successfully
+        handleAnalysisCompletion();
+        
     } catch (error) {
-        console.error('Failed to initialize WebSocket:', error);
+        if (error.name === 'AbortError') {
+            console.log('Analysis was cancelled');
+            handleAnalysisCancellation();
+        } else {
+            console.error('Analysis failed:', error);
+            handleAnalysisError(error);
+        }
     }
 }
 
-// Handle WebSocket messages
-function handleWebSocketMessage(data) {
-    switch (data.type) {
-        case 'analysis_started':
-            showProgressMessage('Analysis started...', 'info');
-            updateProgressDetails('Analysis started', 'Initializing AI agents');
-            break;
-        case 'agent_started':
-            showProgressMessage(`${data.agent_name} is running...`, 'info');
-            updateAgentStatus(data.agent_name, 'running');
-            updateAgentProgressStatus(data.agent_name, 'running');
-            updateProgressDetails(`${data.agent_name} is running`, 'Processing analysis');
-            break;
-        case 'agent_completed':
-            showProgressMessage(`${data.agent_name} completed`, 'success');
-            updateAgentStatus(data.agent_name, 'completed');
-            updateAgentProgressStatus(data.agent_name, 'completed');
-            if (data.output) {
-                updateAgentOutput(data.agent_name, data.output);
-            }
-            break;
-        case 'agent_error':
-            showProgressMessage(`${data.agent_name} failed: ${data.error}`, 'error');
-            updateAgentStatus(data.agent_name, 'error');
-            updateAgentProgressStatus(data.agent_name, 'error');
-            break;
-        case 'analysis_completed':
-            showProgressMessage('Analysis completed successfully!', 'success');
-            updateProgressDetails('Analysis completed!', 'All agents finished');
-            isAnalysisRunning = false;
-            stopAnalysis();
-            showDownloadButton();
-            break;
-        case 'analysis_error':
-            showProgressMessage(`Analysis failed: ${data.error}`, 'error');
-            updateProgressDetails('Analysis failed', data.error);
-            isAnalysisRunning = false;
-            stopAnalysis();
-            break;
-        case 'progress_update':
-            updateProgressBar(data.progress);
-            if (data.message) {
-                updateProgressDetails(data.message, data.details || '');
-            }
-            break;
+// Handle streaming data from backend
+function handleStreamingData(data) {
+    console.log('Received streaming data:', data);
+    
+    // Handle different types of data
+    if (data.error) {
+        showProgressMessage(`Analysis failed: ${data.error}`, 'error');
+        updateProgressDetails('Analysis failed', data.error);
+        return;
+    }
+    
+    if (data.session_info) {
+        console.log('Session info:', data.session_info);
+        return;
+    }
+    
+    // Handle agent results
+    for (const [agentName, result] of Object.entries(data)) {
+        if (agentName !== 'error' && agentName !== 'session_info') {
+            handleAgentResult(agentName, result);
+        }
     }
 }
+
+// Handle individual agent results
+function handleAgentResult(agentName, result) {
+    console.log(`Agent ${agentName} completed`);
+    
+    // Update agent progress status
+    updateAgentProgressStatus(agentName, 'completed', 100);
+    
+    // Update agent output
+    updateAgentOutput(agentName, result);
+    
+    // Show progress message
+    showProgressMessage(`${agentName} completed`, 'success');
+    
+    // Update progress details
+    updateProgressDetails(`${agentName} completed`, 'Processing next agent...');
+}
+
+// Handle analysis completion
+function handleAnalysisCompletion() {
+    showProgressMessage('Analysis completed successfully!', 'success');
+    updateProgressDetails('Analysis completed!', 'All agents finished successfully');
+    
+    // Reset analysis state
+    isAnalysisRunning = false;
+    resetAnalysisButton();
+    
+    // Show download button
+    showDownloadButton();
+    
+    // Check all agents completed for final progress update
+    setTimeout(() => {
+        checkAllAgentsCompleted();
+        forceRecalculateProgress();
+    }, 1000);
+}
+
+// Handle analysis cancellation
+function handleAnalysisCancellation() {
+    showProgressMessage('Analysis was cancelled', 'warning');
+    updateProgressDetails('Analysis cancelled', 'User cancelled the operation');
+    
+    isAnalysisRunning = false;
+    resetAnalysisButton();
+    hideProgressIndicator();
+}
+
+// Handle analysis error
+function handleAnalysisError(error) {
+    showProgressMessage(`Analysis failed: ${error.message}`, 'error');
+    updateProgressDetails('Analysis failed', error.message);
+    
+    isAnalysisRunning = false;
+    resetAnalysisButton();
+}
+
+// Cancel running analysis
+function cancelAnalysis() {
+    if (abortController) {
+        abortController.abort();
+        abortController = null;
+    }
+}
+
+// Button state management
+// Variables moved to top of file
+
+// Real-time progress updates via Server-Sent Events
+
+// SSE initialization handled in startAnalysisStreaming function
+
+// Message handling is now done in handleStreamingData function
 
 // Show progress message with toast notification
 function showProgressMessage(message, type = 'info') {
@@ -173,13 +251,12 @@ function startAnalysis() {
     `;
     stopAnalysisBtn.style.display = 'block';
     
-    // Initialize WebSocket if not already connected
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-        initializeWebSocket();
-    }
-    
     // Show progress indicator
     showProgressIndicator();
+    
+    // Get form data and start streaming analysis
+    const formData = collectFormDataFromUI();
+    startAnalysisStreaming(formData);
 }
 
 function stopAnalysis() {
@@ -199,10 +276,8 @@ function stopAnalysis() {
     // Hide progress indicator
     hideProgressIndicator();
     
-    // Close WebSocket connection
-    if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.close();
-    }
+    // Cancel the streaming analysis
+    cancelAnalysis();
 }
 
 // Show progress indicator
