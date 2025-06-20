@@ -6,7 +6,22 @@ const stopAnalysisBtn = document.getElementById('stopAnalysisBtn');
 
 // Button state management
 let isAnalysisRunning = false;
+let currentAnalysisController = null;
 
+// Variables for analysis state
+let analysisResults = {};
+let originalFormData = {};
+let analysisCompleted = false;
+
+// Track expanded sections
+const expandedSections = new Set();
+
+// Global variables to store analysis data for PDF generation
+let currentAnalysisData = {};
+let currentSessionId = null;
+let userId = 'anonymous'; // In production, get from authentication
+
+// Analysis control functions
 function startAnalysis() {
     if (isAnalysisRunning) return;
     
@@ -21,29 +36,23 @@ function startAnalysis() {
     `;
     stopAnalysisBtn.style.display = 'block';
     
-    // Always show progress indicator
+    // Show progress indicator
     showProgressIndicator();
-    
-    // Initialize agents in progress tracker
-    const agents = ['Problem Explorer', 'Best Practices', 'Horizon Scanning', 'Scenario Planning', 'Research Synthesis', 'Strategic Action', 'High Impact', 'Backcasting'];
-    agents.forEach(agent => {
-        updateAgentProgressStatus(agent, 'waiting', 0);
-    });
 }
 
 function stopAnalysis() {
     if (!isAnalysisRunning) return;
     
     isAnalysisRunning = false;
-    startAnalysisBtn.disabled = false;
-    startAnalysisBtn.style.cursor = 'pointer';
-    startAnalysisBtn.querySelector('span').innerHTML = `
-        <svg class="w-5 h-5 mr-2 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-        </svg>
-        Start Analysis
-    `;
-    stopAnalysisBtn.style.display = 'none';
+    
+    // Cancel current analysis if running
+    if (currentAnalysisController) {
+        currentAnalysisController.abort();
+        currentAnalysisController = null;
+    }
+    
+    resetAnalysisButton();
+    hideProgressIndicator();
 }
 
 // Reset analysis button to ready state
@@ -68,105 +77,104 @@ function resetAnalysisButton() {
     console.log('Analysis button reset to ready state');
 }
 
-// Progress indicator management
+// Progress indicator functions
 function showProgressIndicator() {
-    let progressContainer = document.getElementById('progressContainer');
-    
-    if (!progressContainer) {
-        // Create progress container if it doesn't exist
-        progressContainer = document.createElement('div');
-        progressContainer.id = 'progressContainer';
-        progressContainer.className = 'fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 z-50 max-w-sm border border-brand-lapis/20';
-        progressContainer.style.cssText = 'opacity: 1; transform: translateX(0px); transition: 0.3s;';
-        
-        progressContainer.innerHTML = `
-            <div class="flex items-center space-x-3 mb-3">
-                <div class="flex-shrink-0">
-                    <svg class="w-6 h-6 text-brand-lapis animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p id="progressIndicator" class="text-sm font-medium text-brand-lapis">Initializing analysis...</p>
-                    <p id="progressDetails" class="text-xs text-brand-nickel mt-1">Preparing AI agents</p>
-                </div>
-                <button onclick="hideProgressIndicator()" class="flex-shrink-0 text-brand-nickel hover:text-brand-oxford transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <div class="mb-3">
-                <div class="flex justify-between text-xs text-brand-nickel mb-1">
-                    <span>Overall Progress</span>
-                    <span id="progressPercentage">0%</span>
-                </div>
-                <div class="bg-brand-kodama rounded-full h-2">
-                    <div id="progressBar" class="bg-gradient-to-r from-brand-lapis to-brand-pervenche h-2 rounded-full transition-all duration-300" style="width: 0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-            </div>
-            <div id="agentProgress" class="space-y-2">
-                <div class="text-xs text-brand-nickel font-medium">Agent Status:</div>
-                <div id="agentStatusList" class="space-y-1">
-                    <!-- Agent status items will be added here -->
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(progressContainer);
-    } else {
-        progressContainer.style.opacity = '1';
-        progressContainer.style.transform = 'translateX(0px)';
+    const existingIndicator = document.getElementById('progressContainer');
+    if (existingIndicator) {
+        existingIndicator.remove();
     }
     
-    return progressContainer;
+    const progressContainer = document.createElement('div');
+    progressContainer.id = 'progressContainer';
+    progressContainer.className = 'fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 z-50 max-w-sm border border-brand-lapis/20';
+    progressContainer.style.opacity = '0';
+    progressContainer.style.transform = 'translateX(100px)';
+    progressContainer.style.transition = '0.3s';
+    
+    progressContainer.innerHTML = `
+        <div class="flex items-center space-x-3 mb-3">
+            <div class="flex-shrink-0">
+                <svg class="w-6 h-6 text-brand-lapis animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p id="progressIndicator" class="text-sm font-medium text-brand-lapis">Starting analysis...</p>
+                <p id="progressDetails" class="text-xs text-brand-nickel mt-1">Preparing AI agents</p>
+            </div>
+            <button onclick="hideProgressIndicator()" class="flex-shrink-0 text-brand-nickel hover:text-brand-oxford transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="mb-3">
+            <div class="flex justify-between text-xs text-brand-nickel mb-1">
+                <span>Overall Progress</span>
+                <span id="progressPercentage">0%</span>
+            </div>
+            <div class="bg-brand-kodama rounded-full h-2">
+                <div id="progressBar" class="bg-gradient-to-r from-brand-lapis to-brand-pervenche h-2 rounded-full transition-all duration-300" style="width: 0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+        <div id="agentProgress" class="space-y-2">
+            <div class="text-xs text-brand-nickel font-medium">Agent Status:</div>
+            <div id="agentStatusList" class="space-y-1">
+                <!-- Agent status items will be added here -->
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(progressContainer);
+    
+    // Animate in
+    setTimeout(() => {
+        progressContainer.style.opacity = '1';
+        progressContainer.style.transform = 'translateX(0px)';
+    }, 100);
 }
 
 function hideProgressIndicator() {
     const progressContainer = document.getElementById('progressContainer');
     if (progressContainer) {
         progressContainer.style.opacity = '0';
-        progressContainer.style.transform = 'translateX(100%)';
+        progressContainer.style.transform = 'translateX(100px)';
         setTimeout(() => {
-            if (progressContainer.parentNode) {
-                progressContainer.parentNode.removeChild(progressContainer);
-            }
+            progressContainer.remove();
         }, 300);
     }
 }
 
-function updateProgressDetails(mainText, subText) {
+function updateProgressDetails(message, details = '') {
     const progressIndicator = document.getElementById('progressIndicator');
     const progressDetails = document.getElementById('progressDetails');
     
-    if (progressIndicator) progressIndicator.textContent = mainText;
-    if (progressDetails) progressDetails.textContent = subText;
+    if (progressIndicator) {
+        progressIndicator.textContent = message;
+    }
+    if (progressDetails && details) {
+        progressDetails.textContent = details;
+    }
 }
 
-// Update agent status in progress indicator
 function updateAgentProgressStatus(agentName, status, progress = 0) {
     const agentStatusList = document.getElementById('agentStatusList');
     if (!agentStatusList) return;
     
-    let agentItem = document.querySelector(`[data-agent="${agentName}"]`);
+    let agentItem = agentStatusList.querySelector(`[data-agent="${agentName}"]`);
     
     if (!agentItem) {
-        // Create new agent item
         agentItem = document.createElement('div');
-        agentItem.className = 'flex items-center justify-between text-xs';
         agentItem.setAttribute('data-agent', agentName);
+        agentItem.className = 'flex items-center justify-between text-xs';
         agentStatusList.appendChild(agentItem);
     }
     
-    // Update content based on status
-    let statusIcon, statusText, statusColor;
+    let statusIcon = '⏳';
+    let statusText = 'Waiting';
+    let statusColor = 'text-brand-nickel';
     
     switch (status) {
-        case 'waiting':
-            statusIcon = '⏳';
-            statusText = 'Waiting';
-            statusColor = 'text-brand-nickel';
-            break;
         case 'running':
             statusIcon = '🔄';
             statusText = 'Running';
@@ -177,25 +185,21 @@ function updateAgentProgressStatus(agentName, status, progress = 0) {
             statusText = 'Completed';
             statusColor = 'text-green-600';
             break;
-        default:
-            statusIcon = '⏳';
-            statusText = 'Waiting';
-            statusColor = 'text-brand-nickel';
+        case 'error':
+            statusIcon = '❌';
+            statusText = 'Error';
+            statusColor = 'text-red-600';
+            break;
     }
     
     agentItem.innerHTML = `
-        <div class="flex items-center">
-            <span class="mr-2">${statusIcon}</span>
-            <span class="${statusColor}">${agentName}</span>
-        </div>
+        <span class="font-medium">${statusIcon} ${agentName}</span>
         <span class="${statusColor}">${statusText}</span>
     `;
     
-    // Update overall progress
     updateOverallProgress();
 }
 
-// Update overall progress based on agent statuses
 function updateOverallProgress() {
     const agentStatusList = document.getElementById('agentStatusList');
     if (!agentStatusList) return;
@@ -213,30 +217,31 @@ function updateOverallProgress() {
         
         if (statusText === 'completed' || hasCheckmark) {
             completedAgents++;
-        } else if (statusText === 'running' || item.innerHTML.includes('🔄')) {
+        } else if (statusText === 'running') {
             runningAgents++;
-        } else if (statusText === 'waiting' || item.innerHTML.includes('⏳')) {
+        } else if (statusText === 'waiting') {
             waitingAgents++;
         }
     });
     
-    // Calculate progress (completed agents get 100%, running agents get 25%)
-    const totalProgress = Math.round(((completedAgents * 100) + (runningAgents * 25)) / (totalAgents || 1));
+    // Calculate progress: completed agents get 100% credit, running agents get 25% credit
+    const progressPercentage = totalAgents > 0 ? 
+        Math.round(((completedAgents * 100) + (runningAgents * 25)) / totalAgents) : 0;
     
     // Update progress bar
     const progressBar = document.getElementById('progressBar');
-    const progressPercentage = document.getElementById('progressPercentage');
+    const progressPercentageElement = document.getElementById('progressPercentage');
     
     if (progressBar) {
-        progressBar.style.width = `${totalProgress}%`;
-        progressBar.setAttribute('aria-valuenow', totalProgress);
+        progressBar.style.width = `${progressPercentage}%`;
+        progressBar.setAttribute('aria-valuenow', progressPercentage);
     }
     
-    if (progressPercentage) {
-        progressPercentage.textContent = `${totalProgress}%`;
+    if (progressPercentageElement) {
+        progressPercentageElement.textContent = `${progressPercentage}%`;
     }
     
-    console.log(`Progress Update: ${completedAgents}/${totalAgents} completed (${totalProgress}%)`);
+    console.log(`Progress Update: ${completedAgents}/${totalAgents} completed (${progressPercentage}%)`);
     
     // Update progress details with more specific information
     if (completedAgents === totalAgents && totalAgents > 0) {
@@ -259,72 +264,20 @@ function updateOverallProgress() {
             stopAnalysisBtn.style.display = 'none';
         }
         
-        // Change progress container to completion state
+        // Add completion animation to progress container
         const progressContainer = document.getElementById('progressContainer');
         if (progressContainer) {
-            progressContainer.style.borderColor = '#10b981'; // Green border
-            progressContainer.style.backgroundColor = '#f0fdf4'; // Light green background
+            progressContainer.style.borderColor = '#10b981';
+            progressContainer.style.backgroundColor = '#f0fdf4';
         }
         
+        console.log('Analysis completed! Button re-enabled.');
     } else if (runningAgents > 0) {
-        updateProgressDetails(`Processing analysis...`, `${runningAgents} agent${runningAgents > 1 ? 's' : ''} running, ${completedAgents} completed`);
-    } else if (completedAgents > 0) {
-        updateProgressDetails(`Analysis in progress...`, `${completedAgents}/${totalAgents} agents completed`);
+        updateProgressDetails(`Processing agents...`, `${runningAgents} running, ${waitingAgents} waiting`);
+    } else if (waitingAgents > 0) {
+        updateProgressDetails('Preparing analysis...', 'Initializing agents');
     }
 }
-
-// Force recalculate progress (useful for debugging or page refresh)
-function forceRecalculateProgress() {
-    const agentStatusList = document.getElementById('agentStatusList');
-    if (!agentStatusList) {
-        console.log('No agent status list found');
-        return;
-    }
-    
-    const agentItems = agentStatusList.querySelectorAll('[data-agent]');
-    console.log(`Found ${agentItems.length} agents in progress list`);
-    
-    let completedCount = 0;
-    agentItems.forEach((item, index) => {
-        const agentName = item.getAttribute('data-agent');
-        const innerHTML = item.innerHTML;
-        const hasCheckmark = innerHTML.includes('✅');
-        const statusText = item.querySelector('span:last-child')?.textContent.toLowerCase().trim();
-        
-        if (hasCheckmark || statusText === 'completed') {
-            completedCount++;
-        }
-        
-        console.log(`Agent ${index + 1}: ${agentName}`, innerHTML);
-    });
-    
-    console.log(`Found ${completedCount} completed agents out of ${agentItems.length}`);
-    
-    // If all agents are completed, reset the button
-    if (completedCount === agentItems.length && agentItems.length > 0) {
-        console.log('All agents completed, resetting button...');
-        resetAnalysisButton();
-    }
-    
-    updateOverallProgress();
-}
-
-// Make functions globally available for debugging
-window.resetAnalysisButton = resetAnalysisButton;
-window.forceRecalculateProgress = forceRecalculateProgress;
-
-// Track expanded state of agent sections
-const expandedSections = new Set();
-
-// Global variables to store analysis data for PDF generation
-let analysisResults = {};
-let originalFormData = {};
-let analysisCompleted = false;
-
-// 🚀 SMART TEMPLATE MANAGEMENT & AI FEATURES
-let currentAnalysisData = {};
-let currentSessionId = null;
-let userId = 'anonymous'; // In production, get from authentication
 
 // Toggle agent section collapse/expand
 function toggleAgentSection(agentName) {
@@ -688,10 +641,6 @@ function createAgentOutputSection(agentName) {
                 </div>
             </div>
             
-            <!-- Progress Bar -->
-            <div class="mt-4 bg-white/20 rounded-full h-2 overflow-hidden">
-                <div class="bg-white h-full rounded-full animate-pulse transition-all duration-1000" style="width: 0%" id="${agentName}ProgressBar"></div>
-            </div>
         </div>
         
         <!-- Collapsible Content Section -->
@@ -1117,8 +1066,6 @@ function updateAgentOutput(agentName, output) {
     const rawOutputDiv = document.getElementById(`${agentName}RawOutput`);
     const timestampSpan = document.getElementById(`${agentName}Timestamp`);
     const durationSpan = document.getElementById(`${agentName}Duration`);
-    const progressBar = document.getElementById(`${agentName}ProgressBar`);
-    
     if (!outputDiv) {
         console.warn(`Output div not found for ${agentName}`);
         return;
@@ -1156,10 +1103,6 @@ function updateAgentOutput(agentName, output) {
         }
 
         // Update progress bar to 100%
-        if (progressBar) {
-            progressBar.style.width = '100%';
-            progressBar.classList.remove('animate-pulse');
-        }
 
         // Update status indicator
         const statusIndicator = document.getElementById(`${agentName}StatusIndicator`);
@@ -1333,6 +1276,8 @@ analysisForm.addEventListener('submit', async (e) => {
         agents.forEach(agent => {
             const section = createAgentOutputSection(agent);
             agentOutputs.appendChild(section);
+            // Initialize agent in progress tracker
+            updateAgentProgressStatus(agent, 'waiting', 0);
         });
         
         // Auto-scroll to the analysis results section
@@ -1511,9 +1456,6 @@ analysisForm.addEventListener('submit', async (e) => {
                         const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
                         analysisResults[agentKey] = agentData;
                         
-                        // Update agent status to running when processing fallback data
-                        updateAgentProgressStatus(agentName, 'running', 50);
-                        
                         const content = extractAgentContent(agentData, agentName);
                         updateAgentOutput(agentName, content);
                         removeLoadingState(agentName);
@@ -1558,9 +1500,6 @@ analysisForm.addEventListener('submit', async (e) => {
                             if (agentData && (agentData.status === 'success' || agentData.data || agentData.formatted_output)) {
                                 const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
                                 analysisResults[agentKey] = agentData;
-                                
-                                // Update agent status to running when processing buffered data
-                                updateAgentProgressStatus(agentName, 'running', 50);
                                 
                                 const content = agentData.data ? 
                                               extractAgentContent(agentData.data, agentName) : 
@@ -1933,27 +1872,25 @@ function convertHtmlToMarkdown(html) {
 
 // Function to collect form data from UI
 function collectFormDataFromUI() {
-    const questionField = document.getElementById('strategic_question');
-    const timeFrameField = document.getElementById('time_frame');
-    const regionField = document.getElementById('region');
+    const strategicQuestion = document.getElementById('strategic_question').value;
+    const timeFrame = document.getElementById('time_frame').value;
+    const region = document.getElementById('region').value;
+    const prompt = document.getElementById('prompt').value;
     
-    if (questionField && timeFrameField && regionField) {
-        originalFormData = {
-            strategic_question: questionField.value || 'Strategic Analysis',
-            time_frame: timeFrameField.value || 'medium_term',
-            region: regionField.value || 'global'
-        };
-        console.log('Collected form data:', originalFormData);
-        return true;
-    }
+    // Collect new customization parameters
+    const analysisDepth = document.getElementById('analysis_depth')?.value || 'standard';
+    const creativityLevel = document.getElementById('creativity_level')?.value || 'balanced';
+    const focusAreas = document.getElementById('focus_areas')?.value || 'general';
     
-    // Fallback values
-    originalFormData = {
-        strategic_question: 'Strategic Intelligence Analysis',
-        time_frame: 'medium_term',
-        region: 'global'
+    return {
+        strategic_question: strategicQuestion,
+        time_frame: timeFrame,
+        region: region,
+        prompt: prompt,
+        analysis_depth: analysisDepth,
+        creativity_level: creativityLevel,
+        focus_areas: focusAreas
     };
-    return false;
 }
 
 // Function to show success message
@@ -2472,3 +2409,155 @@ function checkAnalysisCompletion() {
 document.addEventListener('DOMContentLoaded', function() {
     setupRefreshSuggestions();
 }); 
+
+// Force recalculate progress (useful for debugging or page refresh)
+function forceRecalculateProgress() {
+    const agentStatusList = document.getElementById('agentStatusList');
+    if (!agentStatusList) {
+        console.log('No agent status list found');
+        return;
+    }
+    
+    const agentItems = agentStatusList.querySelectorAll('[data-agent]');
+    console.log(`Found ${agentItems.length} agents in progress list`);
+    
+    let completedCount = 0;
+    agentItems.forEach((item, index) => {
+        const agentName = item.getAttribute('data-agent');
+        const innerHTML = item.innerHTML;
+        const hasCheckmark = innerHTML.includes('✅');
+        const statusText = item.querySelector('span:last-child')?.textContent.toLowerCase().trim();
+        
+        if (hasCheckmark || statusText === 'completed') {
+            completedCount++;
+        }
+        
+        console.log(`Agent ${index + 1}: ${agentName} - Completed: ${hasCheckmark || statusText === 'completed'}`);
+    });
+    
+    console.log(`${completedCount}/${agentItems.length} agents completed`);
+    
+    // If all agents are completed, reset the button
+    if (completedCount === agentItems.length && agentItems.length > 0) {
+        resetAnalysisButton();
+    }
+    
+    updateOverallProgress();
+}
+
+// Make functions globally available for debugging
+window.resetAnalysisButton = resetAnalysisButton;
+window.forceRecalculateProgress = forceRecalculateProgress;
+
+// Handle streaming response from /analyze endpoint
+async function handleStreamingAnalysis(formData) {
+    try {
+        // Create abort controller for cancellation
+        currentAnalysisController = new AbortController();
+        
+        const response = await fetch('/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+            signal: currentAnalysisController.signal
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) {
+                console.log('Analysis stream completed');
+                break;
+            }
+
+            // Decode the chunk
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+                if (line.trim()) {
+                    try {
+                        const data = JSON.parse(line);
+                        handleAnalysisData(data);
+                    } catch (parseError) {
+                        console.warn('Failed to parse line:', line, parseError);
+                    }
+                }
+            }
+        }
+        
+        // Analysis completed successfully
+        handleAnalysisComplete();
+        
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.log('Analysis was cancelled');
+            handleAnalysisError('Analysis was cancelled');
+        } else {
+            console.error('Analysis error:', error);
+            handleAnalysisError(error.message);
+        }
+    }
+}
+
+// Handle individual agent data from streaming response
+function handleAnalysisData(data) {
+    // Each data object contains one agent's result
+    for (const [agentName, agentData] of Object.entries(data)) {
+        if (agentName === 'session_info') {
+            // Handle session completion info
+            console.log('Session info:', agentData);
+            continue;
+        }
+        
+        if (agentName === 'error') {
+            handleAnalysisError(agentData);
+            return;
+        }
+        
+        // Update agent output
+        console.log(`Received data for ${agentName}`);
+        updateAgentOutput(agentName, agentData);
+        
+        // Update progress status
+        updateAgentProgressStatus(agentName, 'completed', 100);
+        
+        // Update overall progress
+        updateOverallProgress();
+    }
+}
+
+// Handle analysis completion
+function handleAnalysisComplete() {
+    console.log('Analysis completed successfully');
+    showSuccessMessage('Analysis completed successfully!');
+    updateProgressDetails('Analysis completed!', 'All agents finished successfully');
+    
+    // Reset analysis state
+    resetAnalysisButton();
+    
+    // Show download button
+    showDownloadButton();
+    
+    // Check all agents completed
+    checkAllAgentsCompleted();
+}
+
+// Handle analysis errors
+function handleAnalysisError(errorMessage) {
+    console.error('Analysis error:', errorMessage);
+    showErrorMessage(`Analysis failed: ${errorMessage}`);
+    updateProgressDetails('Analysis failed', errorMessage);
+    
+    // Reset analysis state
+    resetAnalysisButton();
+}

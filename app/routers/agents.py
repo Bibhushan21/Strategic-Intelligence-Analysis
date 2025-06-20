@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from typing import Dict, Any
 from app.agents.best_practices_agent import BestPracticesAgent
 from app.agents.scenario_planning_agent import ScenarioPlanningAgent
-from app.agents.horizon_scan_agent import HorizonScanAgent
+from app.agents.horizon_scanning_agent import HorizonScanningAgent
 from app.agents.research_synthesis_agent import ResearchSynthesisAgent
 import json
 import os
@@ -19,7 +19,7 @@ templates = Jinja2Templates(directory="app/templates")
 agents = {
     "best_practices": BestPracticesAgent(),
     "scenario_planning": ScenarioPlanningAgent(),
-    "horizon_scan": HorizonScanAgent(),
+    "horizon_scan": HorizonScanningAgent(),
     "synthesis": ResearchSynthesisAgent()
 }
 
