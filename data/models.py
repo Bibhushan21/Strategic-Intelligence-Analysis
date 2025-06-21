@@ -173,3 +173,88 @@ class AgentPerformance(Base):
             'min_processing_time': self.min_processing_time,
             'max_processing_time': self.max_processing_time
         } 
+
+class AgentRating(Base):
+    """
+    Agent ratings table.
+    Store user ratings and reviews for agent outputs.
+    """
+    __tablename__ = 'agent_ratings'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey('analysis_sessions.id'), nullable=False)
+    agent_result_id = Column(Integer, ForeignKey('agent_results.id'), nullable=False)
+    agent_name = Column(String(100), nullable=False)
+    user_id = Column(String(100), default='anonymous')  # For future user authentication
+    rating = Column(Integer, nullable=False)  # 1-5 star rating
+    review_text = Column(Text)  # Optional text review
+    helpful_aspects = Column(JSON)  # What was helpful (array of aspects)
+    improvement_suggestions = Column(Text)  # What could be improved
+    would_recommend = Column(Boolean, default=True)  # Would recommend this agent
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    session = relationship("AnalysisSession", backref="ratings")
+    agent_result = relationship("AgentResult", backref="ratings")
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            'id': self.id,
+            'session_id': self.session_id,
+            'agent_result_id': self.agent_result_id,
+            'agent_name': self.agent_name,
+            'user_id': self.user_id,
+            'rating': self.rating,
+            'review_text': self.review_text,
+            'helpful_aspects': self.helpful_aspects,
+            'improvement_suggestions': self.improvement_suggestions,
+            'would_recommend': self.would_recommend,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+class AgentRatingSummary(Base):
+    """
+    Agent rating summary table.
+    Store aggregated rating statistics for each agent.
+    """
+    __tablename__ = 'agent_rating_summaries'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    agent_name = Column(String(100), nullable=False, unique=True)
+    total_ratings = Column(Integer, default=0)
+    average_rating = Column(Float, default=0.0)
+    five_star_count = Column(Integer, default=0)
+    four_star_count = Column(Integer, default=0)
+    three_star_count = Column(Integer, default=0)
+    two_star_count = Column(Integer, default=0)
+    one_star_count = Column(Integer, default=0)
+    total_reviews = Column(Integer, default=0)  # Count of ratings with review text
+    recommendation_percentage = Column(Float, default=0.0)  # % who would recommend
+    last_updated = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            'id': self.id,
+            'agent_name': self.agent_name,
+            'total_ratings': self.total_ratings,
+            'average_rating': self.average_rating,
+            'five_star_count': self.five_star_count,
+            'four_star_count': self.four_star_count,
+            'three_star_count': self.three_star_count,
+            'two_star_count': self.two_star_count,
+            'one_star_count': self.one_star_count,
+            'total_reviews': self.total_reviews,
+            'recommendation_percentage': self.recommendation_percentage,
+            'last_updated': self.last_updated.isoformat() if self.last_updated else None,
+            'rating_distribution': {
+                '5': self.five_star_count,
+                '4': self.four_star_count,
+                '3': self.three_star_count,
+                '2': self.two_star_count,
+                '1': self.one_star_count
+            }
+        } 

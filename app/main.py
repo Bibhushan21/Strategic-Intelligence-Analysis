@@ -24,6 +24,7 @@ import uvicorn
 
 from data.database_service import DatabaseService
 from app.agents.orchestrator_agent import OrchestratorAgent
+from app.routers import ratings, analysis
 
 def safe_json_dumps(data):
     """Safely serialize data to JSON, with base64 encoding as fallback."""
@@ -205,6 +206,10 @@ def clean_string_for_json(text):
 
 app = FastAPI(title="Strategic Intelligence App")
 
+# Include routers
+app.include_router(ratings.router)
+app.include_router(analysis.router)
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize database on app startup"""
@@ -217,7 +222,7 @@ async def startup_event():
         from data.database_config import engine, test_connection, Base
         from data.models import (
             AnalysisSession, AgentResult, AnalysisTemplate,
-            SystemLog, AgentPerformance
+            SystemLog, AgentPerformance, AgentRating, AgentRatingSummary
         )
         
         print("Initializing database tables on startup...")

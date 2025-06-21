@@ -344,4 +344,46 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 **🎉 Your Strategic Intelligence App is ready to transform decision-making with AI-powered insights and intelligent automation!**
 
-**🌐 Access at: http://localhost:8000** 
+**🌐 Access at: http://localhost:8000**
+
+## Features
+
+- **Multi-Agent Strategic Analysis**: Coordinated analysis using specialized AI agents
+- **Interactive Dashboard**: Real-time monitoring and analytics
+- **Analysis History**: Track and review past strategic assessments
+- **Performance Analytics**: Monitor agent effectiveness and response times
+- **Template System**: Reusable analysis configurations
+- **PDF Export**: Professional reports generation
+- **Agent Rating System**: User feedback and evaluation system for agent outputs
+
+## Rating System
+
+The application includes a comprehensive rating system that allows users to evaluate and provide feedback on agent outputs:
+
+### Features
+- **5-Star Rating System**: Rate each agent's analysis from 1-5 stars
+- **Detailed Reviews**: Optional text reviews and feedback
+- **Helpful Aspects**: Tag what was most valuable (clarity, depth, actionable insights, etc.)
+- **Improvement Suggestions**: Provide specific feedback for enhancement
+- **Recommendation System**: Indicate whether you'd recommend the agent to others
+- **Rating Analytics**: View aggregated ratings and trends
+- **Agent Performance Metrics**: Track agent effectiveness over time
+
+### API Endpoints
+- `POST /ratings/submit` - Submit a rating for an agent result
+- `GET /ratings/agent/{agent_name}` - Get ratings for a specific agent
+- `GET /ratings/session/{session_id}` - Get all ratings for an analysis session
+- `GET /ratings/summaries` - Get rating summaries for all agents
+- `GET /ratings/analytics` - Get rating analytics and trends
+- `GET /ratings/top-rated` - Get top-rated agents
+
+### Usage
+After completing an analysis, users can:
+1. Rate each agent's output using the star rating system
+2. Provide detailed written feedback
+3. Select helpful aspects from predefined categories
+4. Suggest improvements
+5. Indicate recommendation status
+6. View aggregated ratings and analytics
+
+The rating system helps improve agent performance and provides valuable insights for users selecting agents for future analyses. 

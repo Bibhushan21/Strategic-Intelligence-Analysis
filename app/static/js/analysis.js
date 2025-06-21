@@ -2550,6 +2550,12 @@ function handleAnalysisComplete() {
     
     // Check all agents completed
     checkAllAgentsCompleted();
+    
+    // Initialize rating system for completed analysis
+    if (window.initializeRatingsForSession && currentSessionId) {
+        console.log('Initializing rating system for session:', currentSessionId);
+        window.initializeRatingsForSession(currentSessionId);
+    }
 }
 
 // Handle analysis errors

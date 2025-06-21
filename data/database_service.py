@@ -11,7 +11,7 @@ import json
 from data.database_config import get_db_session, close_db_session, get_db_connection
 from data.models import (
     AnalysisSession, AgentResult, AnalysisTemplate, 
-    SystemLog, AgentPerformance
+    SystemLog, AgentPerformance, AgentRating, AgentRatingSummary
 )
 
 logger = logging.getLogger(__name__)
@@ -1625,3 +1625,342 @@ class DatabaseService:
                 question = question.replace('[specific area/context]', '[technology implementation/digital transformation]')
         
         return question 
+
+    # ==========================================
+    # AGENT RATING METHODS
+    # ==========================================
+
+    @staticmethod
+    def submit_agent_rating(
+        session_id: int,
+        agent_result_id: int,
+        agent_name: str,
+        rating: int,
+        review_text: Optional[str] = None,
+        helpful_aspects: Optional[List[str]] = None,
+        improvement_suggestions: Optional[str] = None,
+        would_recommend: bool = True,
+        user_id: str = 'anonymous'
+    ) -> Optional[int]:
+        """
+        Submit a rating for an agent result.
+        Returns the rating ID if successful, None if failed.
+        """
+        session = get_db_session()
+        try:
+            # Validate rating range
+            if rating < 1 or rating > 5:
+                logger.error(f"Invalid rating value: {rating}. Must be between 1 and 5.")
+                return None
+
+            # Check if user has already rated this result
+            existing_rating = session.query(AgentRating).filter(
+                and_(
+                    AgentRating.agent_result_id == agent_result_id,
+                    AgentRating.user_id == user_id
+                )
+            ).first()
+
+            if existing_rating:
+                # Update existing rating
+                existing_rating.rating = rating
+                existing_rating.review_text = review_text
+                existing_rating.helpful_aspects = helpful_aspects
+                existing_rating.improvement_suggestions = improvement_suggestions
+                existing_rating.would_recommend = would_recommend
+                # updated_at will be set automatically by SQLAlchemy onupdate trigger
+                
+                session.commit()
+                logger.info(f"Updated rating {existing_rating.id} for agent {agent_name}")
+                
+                # Update rating summary
+                DatabaseService._update_rating_summary(agent_name)
+                return existing_rating.id
+            else:
+                # Create new rating
+                agent_rating = AgentRating(
+                    session_id=session_id,
+                    agent_result_id=agent_result_id,
+                    agent_name=agent_name,
+                    user_id=user_id,
+                    rating=rating,
+                    review_text=review_text,
+                    helpful_aspects=helpful_aspects,
+                    improvement_suggestions=improvement_suggestions,
+                    would_recommend=would_recommend
+                )
+                session.add(agent_rating)
+                session.commit()
+                session.refresh(agent_rating)
+                
+                logger.info(f"Created new rating {agent_rating.id} for agent {agent_name}")
+                
+                # Update rating summary
+                DatabaseService._update_rating_summary(agent_name)
+                return agent_rating.id
+                
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to submit agent rating: {str(e)}")
+            return None
+        finally:
+            close_db_session(session)
+
+    @staticmethod
+    def get_agent_ratings(
+        agent_name: Optional[str] = None,
+        session_id: Optional[int] = None,
+        limit: int = 50,
+        offset: int = 0
+    ) -> List[Dict[str, Any]]:
+        """
+        Get agent ratings with optional filtering.
+        """
+        session = get_db_session()
+        try:
+            query = session.query(AgentRating)
+            
+            if agent_name:
+                query = query.filter(AgentRating.agent_name == agent_name)
+            if session_id:
+                query = query.filter(AgentRating.session_id == session_id)
+            
+            ratings = query.order_by(desc(AgentRating.created_at)).offset(offset).limit(limit).all()
+            
+            return [rating.to_dict() for rating in ratings]
+            
+        except Exception as e:
+            logger.error(f"Failed to get agent ratings: {str(e)}")
+            return []
+        finally:
+            close_db_session(session)
+
+    @staticmethod
+    def get_agent_rating_summary(agent_name: str) -> Optional[Dict[str, Any]]:
+        """
+        Get rating summary for a specific agent.
+        """
+        session = get_db_session()
+        try:
+            summary = session.query(AgentRatingSummary).filter(
+                AgentRatingSummary.agent_name == agent_name
+            ).first()
+            
+            if summary:
+                return summary.to_dict()
+            else:
+                # Create default summary if doesn't exist
+                DatabaseService._update_rating_summary(agent_name)
+                return {
+                    'agent_name': agent_name,
+                    'total_ratings': 0,
+                    'average_rating': 0.0,
+                    'rating_distribution': {'5': 0, '4': 0, '3': 0, '2': 0, '1': 0},
+                    'total_reviews': 0,
+                    'recommendation_percentage': 0.0
+                }
+                
+        except Exception as e:
+            logger.error(f"Failed to get agent rating summary: {str(e)}")
+            return None
+        finally:
+            close_db_session(session)
+
+    @staticmethod
+    def get_all_agent_rating_summaries() -> List[Dict[str, Any]]:
+        """
+        Get rating summaries for all agents.
+        """
+        session = get_db_session()
+        try:
+            summaries = session.query(AgentRatingSummary).order_by(
+                desc(AgentRatingSummary.average_rating)
+            ).all()
+            
+            return [summary.to_dict() for summary in summaries]
+            
+        except Exception as e:
+            logger.error(f"Failed to get all agent rating summaries: {str(e)}")
+            return []
+        finally:
+            close_db_session(session)
+
+    @staticmethod
+    def get_user_rating_for_result(agent_result_id: int, user_id: str = 'anonymous') -> Optional[Dict[str, Any]]:
+        """
+        Get user's existing rating for a specific agent result.
+        """
+        session = get_db_session()
+        try:
+            rating = session.query(AgentRating).filter(
+                and_(
+                    AgentRating.agent_result_id == agent_result_id,
+                    AgentRating.user_id == user_id
+                )
+            ).first()
+            
+            return rating.to_dict() if rating else None
+            
+        except Exception as e:
+            logger.error(f"Failed to get user rating: {str(e)}")
+            return None
+        finally:
+            close_db_session(session)
+
+    @staticmethod
+    def get_top_rated_agents(limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Get top-rated agents based on average rating and number of ratings.
+        """
+        session = get_db_session()
+        try:
+            summaries = session.query(AgentRatingSummary).filter(
+                AgentRatingSummary.total_ratings >= 5  # Minimum ratings for reliability
+            ).order_by(
+                desc(AgentRatingSummary.average_rating),
+                desc(AgentRatingSummary.total_ratings)
+            ).limit(limit).all()
+            
+            return [summary.to_dict() for summary in summaries]
+            
+        except Exception as e:
+            logger.error(f"Failed to get top rated agents: {str(e)}")
+            return []
+        finally:
+            close_db_session(session)
+
+    @staticmethod
+    def _update_rating_summary(agent_name: str) -> bool:
+        """
+        Update the rating summary for a specific agent.
+        This is called whenever a new rating is submitted.
+        """
+        session = get_db_session()
+        try:
+            # Calculate summary statistics
+            ratings = session.query(AgentRating).filter(
+                AgentRating.agent_name == agent_name
+            ).all()
+            
+            if not ratings:
+                return True
+            
+            total_ratings = len(ratings)
+            total_score = sum(r.rating for r in ratings)
+            average_rating = total_score / total_ratings if total_ratings > 0 else 0.0
+            
+            # Count ratings by star
+            star_counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+            for rating in ratings:
+                star_counts[rating.rating] += 1
+            
+            total_reviews = sum(1 for r in ratings if r.review_text and r.review_text.strip())
+            recommendations = sum(1 for r in ratings if r.would_recommend)
+            recommendation_percentage = (recommendations / total_ratings * 100) if total_ratings > 0 else 0.0
+            
+            # Update or create summary
+            summary = session.query(AgentRatingSummary).filter(
+                AgentRatingSummary.agent_name == agent_name
+            ).first()
+            
+            if summary:
+                summary.total_ratings = total_ratings
+                summary.average_rating = round(average_rating, 2)
+                summary.five_star_count = star_counts[5]
+                summary.four_star_count = star_counts[4]
+                summary.three_star_count = star_counts[3]
+                summary.two_star_count = star_counts[2]
+                summary.one_star_count = star_counts[1]
+                summary.total_reviews = total_reviews
+                summary.recommendation_percentage = round(recommendation_percentage, 1)
+                summary.last_updated = datetime.utcnow()
+            else:
+                summary = AgentRatingSummary(
+                    agent_name=agent_name,
+                    total_ratings=total_ratings,
+                    average_rating=round(average_rating, 2),
+                    five_star_count=star_counts[5],
+                    four_star_count=star_counts[4],
+                    three_star_count=star_counts[3],
+                    two_star_count=star_counts[2],
+                    one_star_count=star_counts[1],
+                    total_reviews=total_reviews,
+                    recommendation_percentage=round(recommendation_percentage, 1)
+                )
+                session.add(summary)
+            
+            session.commit()
+            logger.info(f"Updated rating summary for agent {agent_name}")
+            return True
+            
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to update rating summary: {str(e)}")
+            return False
+        finally:
+            close_db_session(session)
+
+    @staticmethod
+    def get_rating_analytics(days_back: int = 30) -> Dict[str, Any]:
+        """
+        Get rating analytics for the dashboard.
+        """
+        session = get_db_session()
+        try:
+            # Calculate date threshold
+            date_threshold = datetime.utcnow() - timedelta(days=days_back)
+            
+            # Get ratings within time period
+            recent_ratings = session.query(AgentRating).filter(
+                AgentRating.created_at >= date_threshold
+            ).all()
+            
+            if not recent_ratings:
+                return {
+                    'total_ratings': 0,
+                    'average_rating': 0.0,
+                    'rating_trend': 'stable',
+                    'most_rated_agent': None,
+                    'highest_rated_agent': None,
+                    'rating_distribution': {'5': 0, '4': 0, '3': 0, '2': 0, '1': 0}
+                }
+            
+            # Calculate overall metrics
+            total_ratings = len(recent_ratings)
+            average_rating = sum(r.rating for r in recent_ratings) / total_ratings
+            
+            # Rating distribution
+            distribution = {str(i): 0 for i in range(1, 6)}
+            for rating in recent_ratings:
+                distribution[str(rating.rating)] += 1
+            
+            # Agent-specific metrics
+            agent_ratings = {}
+            for rating in recent_ratings:
+                if rating.agent_name not in agent_ratings:
+                    agent_ratings[rating.agent_name] = []
+                agent_ratings[rating.agent_name].append(rating.rating)
+            
+            # Most rated agent
+            most_rated_agent = max(agent_ratings.keys(), key=lambda x: len(agent_ratings[x])) if agent_ratings else None
+            
+            # Highest rated agent (with minimum 3 ratings)
+            qualified_agents = {k: v for k, v in agent_ratings.items() if len(v) >= 3}
+            highest_rated_agent = max(qualified_agents.keys(), 
+                                    key=lambda x: sum(qualified_agents[x]) / len(qualified_agents[x])) if qualified_agents else None
+            
+            return {
+                'total_ratings': total_ratings,
+                'average_rating': round(average_rating, 2),
+                'rating_trend': 'positive' if average_rating >= 4.0 else 'needs_improvement' if average_rating < 3.0 else 'stable',
+                'most_rated_agent': most_rated_agent,
+                'highest_rated_agent': highest_rated_agent,
+                'rating_distribution': distribution,
+                'days_analyzed': days_back
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get rating analytics: {str(e)}")
+            return {'error': str(e)}
+        finally:
+            close_db_session(session) 
