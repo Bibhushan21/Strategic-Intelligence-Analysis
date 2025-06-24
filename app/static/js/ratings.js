@@ -311,14 +311,30 @@ class AgentRatingSystem {
         }
 
         try {
-            // Get current session ID from URL or generate one
+            // Get current session ID (must be real)
             const sessionId = AgentRatingSystem.getCurrentSessionId();
+            
+            if (!sessionId) {
+                AgentRatingSystem.showErrorMessage(
+                    'Cannot Submit Review', 
+                    'No analysis session found. Please complete an analysis first before submitting a review.'
+                );
+                return;
+            }
+            
+            console.log(`📊 Submitting ratings for session ${sessionId}`);
             
             // Submit individual ratings for each selected agent
             const submissionPromises = selectedAgents.map(async (agentName) => {
+                const agentResultId = AgentRatingSystem.getAgentResultId(agentName);
+                
+                if (!agentResultId) {
+                    throw new Error(`No result found for ${agentName}. This agent may not have completed successfully.`);
+                }
+                
                 const ratingData = {
                     session_id: sessionId,
-                    agent_result_id: AgentRatingSystem.generateAgentResultId(agentName, sessionId),
+                    agent_result_id: agentResultId,
                     agent_name: agentName,
                     rating: rating,
                     review_text: review || null,
@@ -327,6 +343,12 @@ class AgentRatingSystem {
                     would_recommend: rating >= 4, // 4 or 5 stars = recommend
                     user_id: "anonymous"
                 };
+
+                console.log(`📊 Submitting rating for ${agentName}:`, {
+                    session_id: sessionId,
+                    agent_result_id: agentResultId,
+                    rating: rating
+                });
 
                 const response = await fetch('/ratings/submit', {
                     method: 'POST',
@@ -341,52 +363,71 @@ class AgentRatingSystem {
                     throw new Error(`Failed to submit rating for ${agentName}: ${errorData.detail}`);
                 }
 
-                return response.json();
+                const result = await response.json();
+                console.log(`✅ Successfully submitted rating for ${agentName}:`, result);
+                return result;
             });
 
             // Wait for all submissions to complete
-            await Promise.all(submissionPromises);
+            const results = await Promise.all(submissionPromises);
             
+            console.log(`✅ All ratings submitted successfully:`, results);
             AgentRatingSystem.showSuccessMessage('Review submitted successfully!', 'Thank you for your feedback!');
             modal.remove();
             
         } catch (error) {
-            console.error('Error submitting review:', error);
+            console.error('❌ Error submitting review:', error);
             AgentRatingSystem.showErrorMessage('Failed to submit review', error.message || 'Please try again.');
         }
     }
 
     /**
-     * Get current session ID from URL or generate one
+     * Get current session ID from analysis response or URL
      */
     static getCurrentSessionId() {
+        // First try to get from window.analysisData (set during analysis)
+        if (window.analysisData && window.analysisData.session_id) {
+            console.log(`🔍 Found session ID from analysis data: ${window.analysisData.session_id}`);
+            return window.analysisData.session_id;
+        }
+        
         // Try to get session ID from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('session_id');
         
         if (sessionId) {
+            console.log(`🔍 Found session ID from URL: ${sessionId}`);
             return parseInt(sessionId);
         }
         
         // Try to get from current analysis session (if available)
         if (window.currentSessionId) {
+            console.log(`🔍 Found session ID from window: ${window.currentSessionId}`);
             return window.currentSessionId;
         }
         
-        // Generate a temporary session ID based on timestamp
-        return Date.now();
+        console.warn('⚠️ No real session ID found, analysis may not have been completed');
+        return null;
     }
 
     /**
-     * Generate agent result ID (temporary implementation)
+     * Get agent result ID for a specific agent
      */
-    static generateAgentResultId(agentName, sessionId) {
-        // Create a simple hash-like ID based on agent name and session
-        const agentHash = agentName.replace(/\s+/g, '').toLowerCase();
-        const baseId = sessionId.toString().slice(-4); // Last 4 digits of session ID
-        const agentCode = agentHash.charCodeAt(0) + agentHash.charCodeAt(agentHash.length - 1);
+    static getAgentResultId(agentName) {
+        // Check if we have stored agent result IDs from the analysis
+        if (window.agentResultIds && window.agentResultIds[agentName]) {
+            console.log(`🔍 Found agent result ID for ${agentName}: ${window.agentResultIds[agentName]}`);
+            return window.agentResultIds[agentName];
+        }
         
-        return parseInt(`${baseId}${agentCode}`);
+        // Check in analysis data
+        if (window.analysisData && window.analysisData[agentName] && window.analysisData[agentName].agent_result_id) {
+            console.log(`🔍 Found agent result ID in analysis data for ${agentName}: ${window.analysisData[agentName].agent_result_id}`);
+            return window.analysisData[agentName].agent_result_id;
+        }
+        
+        console.warn(`⚠️ No real agent result ID found for ${agentName}`);
+        return null;
     }
 
     /**

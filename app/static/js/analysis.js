@@ -2515,7 +2515,18 @@ function handleAnalysisData(data) {
     for (const [agentName, agentData] of Object.entries(data)) {
         if (agentName === 'session_info') {
             // Handle session completion info
-            console.log('Session info:', agentData);
+            console.log('📊 Session info:', agentData);
+            if (agentData.session_id) {
+                currentSessionId = agentData.session_id;
+                window.currentSessionId = agentData.session_id;
+                console.log(`📊 Stored session ID: ${currentSessionId}`);
+                
+                // Initialize analysis data structure with session ID
+                if (!window.analysisData) {
+                    window.analysisData = {};
+                }
+                window.analysisData.session_id = currentSessionId;
+            }
             continue;
         }
         
@@ -2525,7 +2536,36 @@ function handleAnalysisData(data) {
         }
         
         // Update agent output
-        console.log(`Received data for ${agentName}`);
+        console.log(`📊 Received data for ${agentName}:`, agentData);
+        
+        // Store agent result ID and session ID if available
+        if (agentData && typeof agentData === 'object') {
+            // Initialize storage objects if they don't exist
+            if (!window.agentResultIds) {
+                window.agentResultIds = {};
+            }
+            if (!window.analysisData) {
+                window.analysisData = {};
+            }
+            
+            // Store agent result ID if present
+            if (agentData.agent_result_id) {
+                window.agentResultIds[agentName] = agentData.agent_result_id;
+                console.log(`📊 Stored agent result ID for ${agentName}: ${agentData.agent_result_id}`);
+            }
+            
+            // Store session ID if present
+            if (agentData.session_id) {
+                currentSessionId = agentData.session_id;
+                window.currentSessionId = agentData.session_id;
+                window.analysisData.session_id = agentData.session_id;
+                console.log(`📊 Stored session ID from ${agentName}: ${agentData.session_id}`);
+            }
+            
+            // Store the complete agent data for ratings
+            window.analysisData[agentName] = agentData;
+        }
+        
         updateAgentOutput(agentName, agentData);
         
         // Update progress status
@@ -2538,9 +2578,15 @@ function handleAnalysisData(data) {
 
 // Handle analysis completion
 function handleAnalysisComplete() {
-    console.log('Analysis completed successfully');
+    console.log('📊 Analysis completed successfully');
     showSuccessMessage('Analysis completed successfully!');
     updateProgressDetails('Analysis completed!', 'All agents finished successfully');
+    
+    // Log stored IDs for debugging
+    console.log('📊 Final stored data:');
+    console.log('   Session ID:', window.currentSessionId || currentSessionId);
+    console.log('   Agent Result IDs:', window.agentResultIds);
+    console.log('   Analysis Data Keys:', window.analysisData ? Object.keys(window.analysisData) : 'None');
     
     // Reset analysis state
     resetAnalysisButton();
@@ -2552,10 +2598,29 @@ function handleAnalysisComplete() {
     checkAllAgentsCompleted();
     
     // Initialize rating system for completed analysis
-    if (window.initializeRatingsForSession && currentSessionId) {
-        console.log('Initializing rating system for session:', currentSessionId);
-        window.initializeRatingsForSession(currentSessionId);
+    if (window.onAnalysisComplete) {
+        console.log('📊 Triggering onAnalysisComplete callback');
+        window.onAnalysisComplete();
     }
+    
+    // Add review button immediately
+    setTimeout(() => {
+        if (window.addReviewButton) {
+            console.log('📊 Adding review button');
+            window.addReviewButton();
+        }
+    }, 1000);
+    
+    // Dispatch custom event for rating system
+    const analysisCompletedEvent = new CustomEvent('analysisCompleted', {
+        detail: {
+            sessionId: window.currentSessionId || currentSessionId,
+            agentResultIds: window.agentResultIds,
+            analysisData: window.analysisData
+        }
+    });
+    document.dispatchEvent(analysisCompletedEvent);
+    console.log('📊 Dispatched analysisCompleted event');
 }
 
 // Handle analysis errors

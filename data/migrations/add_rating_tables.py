@@ -12,8 +12,12 @@ current_dir = Path(__file__).parent
 data_dir = current_dir.parent
 sys.path.insert(0, str(data_dir))
 
-from database_config import engine, test_connection, Base
-from models import AgentRating, AgentRatingSummary
+# Also add the project root to find database_config and models
+project_root = data_dir.parent
+sys.path.insert(0, str(project_root))
+
+from data.database_config import engine, test_connection, Base
+from data.models import AgentRating, AgentRatingSummary
 import logging
 
 logger = logging.getLogger(__name__)

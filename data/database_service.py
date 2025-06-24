@@ -165,6 +165,28 @@ class DatabaseService:
             close_db_session(session)
     
     @staticmethod
+    def get_agent_result_by_id(agent_result_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Get a specific agent result by its ID.
+        """
+        session = get_db_session()
+        try:
+            agent_result = session.query(AgentResult).filter(
+                AgentResult.id == agent_result_id
+            ).first()
+            
+            if not agent_result:
+                return None
+            
+            return agent_result.to_dict()
+            
+        except Exception as e:
+            logger.error(f"Failed to get agent result {agent_result_id}: {str(e)}")
+            return None
+        finally:
+            close_db_session(session)
+    
+    @staticmethod
     def get_recent_sessions(limit: int = 10) -> List[Dict[str, Any]]:
         """
         Get recent analysis sessions.

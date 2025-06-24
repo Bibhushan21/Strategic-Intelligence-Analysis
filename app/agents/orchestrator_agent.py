@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from .base_agent import BaseAgent
 from .problem_explorer_agent import ProblemExplorerAgent
 from .best_practices_agent import BestPracticesAgent
@@ -149,10 +149,10 @@ Provide a coordinated analysis plan and execution strategy."""
             print(f"Error creating database session: {str(e)}")
             self.current_session_id = None
 
-    def _save_agent_result(self, agent_name: str, result: Dict[str, Any], processing_time: float) -> None:
-        """Save individual agent result to database."""
+    def _save_agent_result(self, agent_name: str, result: Dict[str, Any], processing_time: float) -> Optional[int]:
+        """Save individual agent result to database and return the result ID."""
         if not self.db_enabled or not self.current_session_id or not DATABASE_AVAILABLE:
-            return
+            return None
             
         try:
             # Extract different data formats from result
@@ -208,11 +208,17 @@ Provide a coordinated analysis plan and execution strategy."""
             if result_id:
                 print(f"Saved result for agent {agent_name} in session {self.current_session_id}")
                 print(f"Saved {agent_name} result to database (ID: {result_id})")
+                # Add database IDs to the result so they can be passed to frontend
+                result['agent_result_id'] = result_id
+                result['session_id'] = self.current_session_id
+                return result_id
             else:
                 print(f"Failed to save result for agent {agent_name}")
+                return None
                 
         except Exception as e:
             print(f"Error saving agent result to database: {str(e)}")
+            return None
 
     def _update_session_completion(self, status: str = "completed") -> None:
         """Update session completion status and total processing time."""

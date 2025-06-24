@@ -54,6 +54,34 @@ async def submit_rating(rating_data: RatingSubmission) -> JSONResponse:
         # Log the incoming data for debugging
         logger.info(f"Received rating submission: {rating_data.dict()}")
         
+        # Validate that session and agent result exist
+        session = DatabaseService.get_analysis_session(rating_data.session_id)
+        if not session:
+            logger.warning(f"Invalid session_id {rating_data.session_id} in rating submission")
+            raise HTTPException(status_code=400, detail=f"Session {rating_data.session_id} not found")
+        
+        # Check if agent result exists (you'll need to add this method to DatabaseService)
+        agent_result = DatabaseService.get_agent_result_by_id(rating_data.agent_result_id)
+        if not agent_result:
+            logger.warning(f"Invalid agent_result_id {rating_data.agent_result_id} in rating submission")
+            raise HTTPException(status_code=400, detail=f"Agent result {rating_data.agent_result_id} not found")
+        
+        # Validate that the agent result belongs to the session
+        if agent_result['session_id'] != rating_data.session_id:
+            logger.warning(f"Agent result {rating_data.agent_result_id} does not belong to session {rating_data.session_id}")
+            raise HTTPException(status_code=400, detail="Agent result does not belong to the specified session")
+        
+        # Validate that the agent name matches
+        if agent_result['agent_name'] != rating_data.agent_name:
+            logger.warning(f"Agent name mismatch: expected {agent_result['agent_name']}, got {rating_data.agent_name}")
+            raise HTTPException(status_code=400, detail="Agent name does not match the agent result")
+        
+        # Check if user has already rated this agent result
+        existing_rating = DatabaseService.get_user_rating_for_result(rating_data.agent_result_id, rating_data.user_id)
+        if existing_rating:
+            logger.info(f"User {rating_data.user_id} already rated agent result {rating_data.agent_result_id}")
+            raise HTTPException(status_code=409, detail="You have already rated this agent result")
+        
         rating_id = DatabaseService.submit_agent_rating(
             session_id=rating_data.session_id,
             agent_result_id=rating_data.agent_result_id,
@@ -67,18 +95,24 @@ async def submit_rating(rating_data: RatingSubmission) -> JSONResponse:
         )
         
         if rating_id:
+            logger.info(f"Successfully submitted rating {rating_id} for agent {rating_data.agent_name} in session {rating_data.session_id}")
             return JSONResponse(
                 status_code=200,
                 content={
                     "status": "success",
                     "message": "Rating submitted successfully",
-                    "rating_id": rating_id
+                    "rating_id": rating_id,
+                    "session_id": rating_data.session_id,
+                    "agent_result_id": rating_data.agent_result_id
                 }
             )
         else:
             logger.error(f"DatabaseService.submit_agent_rating returned None for data: {rating_data.dict()}")
             raise HTTPException(status_code=400, detail="Failed to submit rating - database operation returned None")
             
+    except HTTPException:
+        # Re-raise HTTP exceptions (like validation errors)
+        raise
     except Exception as e:
         logger.error(f"Error submitting rating: {str(e)}")
         logger.error(f"Rating data was: {rating_data.dict()}")
