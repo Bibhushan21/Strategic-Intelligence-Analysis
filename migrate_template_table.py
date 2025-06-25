@@ -181,7 +181,7 @@ def test_template_functionality():
         logger.info(f"✅ Retrieved {len(categories)} categories")
         
         if categories:
-            logger.info(f"📋 Available categories: {[cat['category'] for cat in categories]}")
+            logger.info(f"📋 Available categories: {[cat['name'] for cat in categories]}")
         
         logger.info("🎉 Template functionality test passed!")
         return True
