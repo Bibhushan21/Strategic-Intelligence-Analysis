@@ -604,6 +604,9 @@ async def stream_agent_outputs_realtime(orchestrator: OrchestratorAgent, input_d
         # Stage 1: Problem Explorer
         result = await process_agent("Problem Explorer", cumulative_input_data)
         cumulative_input_data[agent_names_map["Problem Explorer"]] = result
+        # Ensure session_id and agent_result_id are included in the response
+        if orchestrator.current_session_id and 'session_id' not in result:
+            result['session_id'] = orchestrator.current_session_id
         yield safe_json_dumps({"Problem Explorer": result}) + "\n"
         
         # Stage 2: Parallel agents (Best Practices, Horizon Scanning, Scenario Planning)
@@ -642,6 +645,10 @@ async def stream_agent_outputs_realtime(orchestrator: OrchestratorAgent, input_d
                         agent_key = agent_names_map[completed_agent]
                         cumulative_input_data[agent_key] = result
                         
+                        # Ensure session_id and agent_result_id are included in the response
+                        if orchestrator.current_session_id and 'session_id' not in result:
+                            result['session_id'] = orchestrator.current_session_id
+                        
                         # Yield result with correct agent name
                         yield safe_json_dumps({completed_agent: result}) + "\n"
                         
@@ -656,21 +663,33 @@ async def stream_agent_outputs_realtime(orchestrator: OrchestratorAgent, input_d
         # Stage 3: Research Synthesis
         result = await process_agent("Research Synthesis", cumulative_input_data)
         cumulative_input_data[agent_names_map["Research Synthesis"]] = result
+        # Ensure session_id and agent_result_id are included in the response
+        if orchestrator.current_session_id and 'session_id' not in result:
+            result['session_id'] = orchestrator.current_session_id
         yield safe_json_dumps({"Research Synthesis": result}) + "\n"
         
         # Stage 4: Strategic Action
         result = await process_agent("Strategic Action", cumulative_input_data)
         cumulative_input_data[agent_names_map["Strategic Action"]] = result
+        # Ensure session_id and agent_result_id are included in the response
+        if orchestrator.current_session_id and 'session_id' not in result:
+            result['session_id'] = orchestrator.current_session_id
         yield safe_json_dumps({"Strategic Action": result}) + "\n"
         
         # Stage 5: High Impact
         result = await process_agent("High Impact", cumulative_input_data)
         cumulative_input_data[agent_names_map["High Impact"]] = result
+        # Ensure session_id and agent_result_id are included in the response
+        if orchestrator.current_session_id and 'session_id' not in result:
+            result['session_id'] = orchestrator.current_session_id
         yield safe_json_dumps({"High Impact": result}) + "\n"
         
         # Stage 6: Backcasting
         result = await process_agent("Backcasting", cumulative_input_data)
         cumulative_input_data[agent_names_map["Backcasting"]] = result
+        # Ensure session_id and agent_result_id are included in the response
+        if orchestrator.current_session_id and 'session_id' not in result:
+            result['session_id'] = orchestrator.current_session_id
         yield safe_json_dumps({"Backcasting": result}) + "\n"
         
         # Update session completion status

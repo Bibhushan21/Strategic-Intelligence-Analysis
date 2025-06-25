@@ -1367,6 +1367,19 @@ analysisForm.addEventListener('submit', async (e) => {
                 // Check for session info
                 if (data.session_info) {
                     console.log('Session info received:', data.session_info);
+                    // Store session ID in global variables for ratings system
+                    if (data.session_info.session_id) {
+                        currentSessionId = data.session_info.session_id;
+                        window.currentSessionId = data.session_info.session_id;
+                        
+                        // Initialize analysis data structure if it doesn't exist
+                        if (!window.analysisData) {
+                            window.analysisData = {};
+                        }
+                        window.analysisData.session_id = data.session_info.session_id;
+                        
+                        console.log(`📊 Stored session ID for ratings: ${data.session_info.session_id}`);
+                    }
                     continue;
                 }
                 
@@ -1424,6 +1437,34 @@ analysisForm.addEventListener('submit', async (e) => {
                         const agentKey = agentName.toLowerCase().replace(/\s+/g, '_');
                         analysisResults[agentKey] = agentData;
                         
+                        // Store agent result ID and session ID for ratings system
+                        if (agentData && typeof agentData === 'object') {
+                            // Initialize storage objects if they don't exist
+                            if (!window.agentResultIds) {
+                                window.agentResultIds = {};
+                            }
+                            if (!window.analysisData) {
+                                window.analysisData = {};
+                            }
+                            
+                            // Store agent result ID if present
+                            if (agentData.agent_result_id) {
+                                window.agentResultIds[agentName] = agentData.agent_result_id;
+                                console.log(`📊 Stored agent result ID for ${agentName}: ${agentData.agent_result_id}`);
+                            }
+                            
+                            // Store session ID if present
+                            if (agentData.session_id) {
+                                currentSessionId = agentData.session_id;
+                                window.currentSessionId = agentData.session_id;
+                                window.analysisData.session_id = agentData.session_id;
+                                console.log(`📊 Stored session ID from ${agentName}: ${agentData.session_id}`);
+                            }
+                            
+                            // Store the complete agent data for ratings
+                            window.analysisData[agentName] = agentData;
+                        }
+                        
                         // Extract content using the comprehensive extractor
                         let content;
                         
@@ -1473,6 +1514,28 @@ analysisForm.addEventListener('submit', async (e) => {
                         if (saveBtn) {
                             saveBtn.style.display = 'inline-flex';
                         }
+                        
+                        // Trigger analysis completion for rating system
+                        setTimeout(() => {
+                            console.log('📊 Triggering analysis completion callbacks');
+                            if (window.onAnalysisComplete) {
+                                window.onAnalysisComplete();
+                            }
+                            if (window.addReviewButton) {
+                                window.addReviewButton();
+                            }
+                            
+                            // Dispatch custom event for rating system
+                            const analysisCompletedEvent = new CustomEvent('analysisCompleted', {
+                                detail: {
+                                    sessionId: window.currentSessionId || currentSessionId,
+                                    agentResultIds: window.agentResultIds,
+                                    analysisData: window.analysisData
+                                }
+                            });
+                            document.dispatchEvent(analysisCompletedEvent);
+                            console.log('📊 Dispatched analysisCompleted event');
+                        }, 1000);
                     }
                 } else {
                     console.warn(`Output div not found for agent: ${agentName}`);
