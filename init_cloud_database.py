@@ -30,7 +30,7 @@ def init_cloud_database():
         from data.database_config import engine, test_connection, Base
         from data.models import (
             AnalysisSession, AgentResult, AnalysisTemplate,
-            SystemLog, AgentPerformance
+            SystemLog, AgentPerformance, AgentRating, AgentRatingSummary
         )
         
         # Test connection first
@@ -52,6 +52,12 @@ def init_cloud_database():
             create_sample_templates_if_needed()
         except Exception as e:
             logger.warning(f"Could not create sample templates: {e}")
+        
+        # Initialize rating summaries for all agents
+        try:
+            initialize_rating_summaries()
+        except Exception as e:
+            logger.warning(f"Could not initialize rating summaries: {e}")
         
         logger.info("Cloud database initialization completed successfully!")
         return True
@@ -116,6 +122,40 @@ def create_sample_templates_if_needed():
         
     except Exception as e:
         logger.error(f"Failed to create sample templates: {str(e)}")
+
+def initialize_rating_summaries():
+    """
+    Initialize rating summary entries for all agents.
+    """
+    try:
+        from data.database_service import DatabaseService
+        
+        logger.info("Initializing rating summaries for all agents...")
+        
+        # List of all agents
+        agents = [
+            'Problem Explorer',
+            'Best Practices', 
+            'Horizon Scanning',
+            'Scenario Planning',
+            'Research Synthesis',
+            'Strategic Action',
+            'High Impact',
+            'Backcasting'
+        ]
+        
+        for agent_name in agents:
+            # This will create or update the rating summary for each agent
+            try:
+                DatabaseService._update_rating_summary(agent_name)
+                logger.info(f"✅ Initialized rating summary for {agent_name}")
+            except Exception as e:
+                logger.warning(f"Could not initialize rating summary for {agent_name}: {e}")
+        
+        logger.info("Rating summaries initialization completed!")
+        
+    except Exception as e:
+        logger.error(f"Failed to initialize rating summaries: {str(e)}")
 
 if __name__ == "__main__":
     print("=" * 60)

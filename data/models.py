@@ -89,10 +89,14 @@ class AnalysisTemplate(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(200), nullable=False)
     description = Column(Text)
+    category = Column(String(100), default='General')  # Template category
     strategic_question_template = Column(Text)
     default_time_frame = Column(String(50))
     default_region = Column(String(100))
     default_instructions = Column(Text)
+    tags = Column(JSON)  # Array of tags for better categorization
+    is_public = Column(Boolean, default=True)  # Whether template is publicly available
+    created_by = Column(String(100), default='system')  # Who created the template
     usage_count = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -104,10 +108,14 @@ class AnalysisTemplate(Base):
             'id': self.id,
             'name': self.name,
             'description': self.description,
+            'category': self.category,
             'strategic_question_template': self.strategic_question_template,
             'default_time_frame': self.default_time_frame,
             'default_region': self.default_region,
             'default_instructions': self.default_instructions,
+            'tags': self.tags,
+            'is_public': self.is_public,
+            'created_by': self.created_by,
             'usage_count': self.usage_count,
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat() if self.created_at else None,
