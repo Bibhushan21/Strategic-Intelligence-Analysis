@@ -264,11 +264,11 @@ h1, h2, h3, h4, h5, h6 {
     /* Mobile progress indicator */
     #progressContainer {
         position: fixed;
-        top: 1rem;
+        top: 5rem; /* Below navigation bar */
         right: 1rem;
         left: 1rem;
         max-width: none;
-        z-index: 50;
+        z-index: 40; /* Lower than navigation bar */
     }
 }
 

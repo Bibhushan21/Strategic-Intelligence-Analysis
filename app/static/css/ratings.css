@@ -18,6 +18,8 @@
     justify-content: center;
     z-index: 1000;
     font-family: 'Roboto', sans-serif;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 /* Modal Container */
@@ -29,6 +31,7 @@
     width: 90%;
     max-height: 90vh;
     overflow-y: auto;
+    position: relative; /* Allow absolute positioning when needed */
 }
 
 /* Modal Header */
@@ -270,11 +273,38 @@
     box-shadow: none;
 }
 
+/* Desktop positioning for review modal */
+@media (min-width: 769px) {
+    .review-modal-overlay {
+        align-items: flex-start;
+        justify-content: flex-start;
+    }
+    
+    .review-modal {
+        position: static; /* Allow for absolute positioning by JS */
+        width: 600px;
+        max-width: 600px;
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
+    .review-modal-overlay {
+        padding: 10px !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        padding-top: 2rem !important;
+    }
+    
     .review-modal {
-        width: 95%;
-        margin: 1rem;
+        width: 100% !important;
+        max-width: none !important;
+        max-height: calc(100vh - 4rem) !important;
+        margin: 0 !important;
+        position: relative !important; /* Reset to relative on mobile */
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
     }
     
     .agent-selection {
@@ -283,12 +313,34 @@
     
     .modal-actions {
         flex-direction: column;
+        gap: 0.75rem;
     }
     
     .btn-cancel,
     .btn-next,
     .btn-submit {
         width: 100%;
+    }
+    
+    .review-modal-header {
+        padding: 1rem;
+    }
+    
+    .review-modal-content {
+        padding: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .star-rating {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .star {
+        font-size: 1.75rem;
     }
 }
 

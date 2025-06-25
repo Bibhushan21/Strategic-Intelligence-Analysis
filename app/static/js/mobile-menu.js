@@ -93,6 +93,36 @@
         console.log('Mobile menu initialized successfully');
     }
     
+    function initializeMoreMenu() {
+        const moreMenuButton = document.getElementById('more-menu-button');
+        const moreMenu = document.getElementById('more-menu');
+        
+        if (!moreMenuButton || !moreMenu) {
+            return; // Elements not found on this page
+        }
+        
+        moreMenuButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            moreMenu.classList.toggle('hidden');
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!moreMenuButton.contains(e.target) && !moreMenu.contains(e.target)) {
+                moreMenu.classList.add('hidden');
+            }
+        });
+        
+        // Close menu on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !moreMenu.classList.contains('hidden')) {
+                moreMenu.classList.add('hidden');
+                moreMenuButton.focus();
+            }
+        });
+    }
+    
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initializeMobileMenu);
@@ -103,7 +133,10 @@
     // Also initialize after a short delay to catch any dynamically loaded content
     setTimeout(initializeMobileMenu, 100);
     
-    // Export for manual initialization if needed
-    window.initializeMobileMenu = initializeMobileMenu;
+            // Export for manual initialization if needed
+        window.initializeMobileMenu = initializeMobileMenu;
+        
+        // Initialize "More" menu for intermediate sizes
+        initializeMoreMenu();
     
 })(); 

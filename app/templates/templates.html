@@ -57,26 +57,49 @@
         <div class="container mx-auto px-4 py-3">
             <div class="flex items-center justify-between">
                 <!-- Logo and Brand -->
-                <div class="flex items-center">
-                    <img src="/static/Multiverz Logo.png" alt="Multiverz Logo" class="h-10 mr-3">
-                    <span class="text-xl font-brand-black font-black text-brand-oxford">Challenges.one</span>
+                <div class="flex items-center flex-shrink-0 min-w-0">
+                    <img src="/static/Multiverz Logo.png" alt="Multiverz Logo" class="h-8 sm:h-10 mr-2 sm:mr-3 flex-shrink-0">
+                    <span class="text-lg sm:text-xl font-brand-black font-black text-brand-oxford truncate">Challenges.one</span>
                 </div>
                 
-                <!-- Navigation Menu -->
-                <div class="hidden md:flex items-center space-x-6">
-                    <a href="/" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Home</a>
-                    <a href="/history" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">History</a>
-                    <a href="/dashboard" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Dashboard</a>
-                    <a href="/performance" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Performance</a>
-                    <a href="#" class="text-brand-lapis font-brand-regular font-medium">Templates</a>
-                    <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">About</a>
-                    <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Contact</a>
-                    <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Help</a>
+                <!-- Navigation Menu - Switch to hamburger menu earlier -->
+                <div class="hidden xl:flex items-center space-x-4 2xl:space-x-6">
+                    <a href="/" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">Home</a>
+                    <a href="/history" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">History</a>
+                    <a href="/dashboard" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">Dashboard</a>
+                    <a href="/performance" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">Performance</a>
+                    <a href="#" class="text-brand-lapis font-brand-regular font-medium whitespace-nowrap">Templates</a>
+                    <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">About</a>
+                    <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">Contact</a>
+                    <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">Help</a>
+                </div>
+                
+                <!-- Intermediate size menu (show fewer items on medium screens) -->
+                <div class="hidden lg:flex xl:hidden items-center space-x-4">
+                    <a href="/" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">Home</a>
+                    <a href="/history" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">History</a>
+                    <a href="/dashboard" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">Dashboard</a>
+                    <a href="#" class="text-brand-lapis font-brand-regular font-medium whitespace-nowrap">Templates</a>
+                    <!-- Menu button for more options -->
+                    <div class="relative">
+                        <button id="more-menu-button" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out flex items-center">
+                            More
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="more-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
+                            <a href="/performance" class="block px-4 py-2 text-brand-nickel hover:text-brand-lapis hover:bg-gray-50 transition duration-150 ease-in-out">Performance</a>
+                            <a href="#about" class="block px-4 py-2 text-brand-nickel hover:text-brand-lapis hover:bg-gray-50 transition duration-150 ease-in-out">About</a>
+                            <a href="#contact" class="block px-4 py-2 text-brand-nickel hover:text-brand-lapis hover:bg-gray-50 transition duration-150 ease-in-out">Contact</a>
+                            <a href="#help" class="block px-4 py-2 text-brand-nickel hover:text-brand-lapis hover:bg-gray-50 transition duration-150 ease-in-out">Help</a>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Mobile Menu Button -->
-                <div class="md:hidden">
-                    <button id="mobile-menu-button" class="text-brand-nickel hover:text-brand-oxford focus:outline-none focus:text-brand-oxford">
+                <div class="lg:hidden flex-shrink-0">
+                    <button id="mobile-menu-button" class="text-brand-nickel hover:text-brand-oxford focus:outline-none focus:text-brand-oxford p-2">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
@@ -85,7 +108,7 @@
             </div>
             
             <!-- Mobile Menu (Hidden by default) -->
-            <div id="mobile-menu" class="md:hidden hidden mt-4 pb-4 border-t border-brand-kodama">
+            <div id="mobile-menu" class="lg:hidden hidden mt-4 pb-4 border-t border-brand-kodama">
                 <div class="flex flex-col space-y-3 pt-4">
                     <a href="/" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Home</a>
                     <a href="/history" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">History</a>

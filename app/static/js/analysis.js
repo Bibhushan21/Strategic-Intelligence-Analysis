@@ -86,7 +86,7 @@ function showProgressIndicator() {
     
     const progressContainer = document.createElement('div');
     progressContainer.id = 'progressContainer';
-    progressContainer.className = 'fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 z-50 max-w-sm border border-brand-lapis/20';
+            progressContainer.className = 'fixed top-20 right-4 bg-white rounded-lg shadow-lg p-4 z-40 max-w-sm border border-brand-lapis/20';
     progressContainer.style.opacity = '0';
     progressContainer.style.transform = 'translateX(100px)';
     progressContainer.style.transition = '0.3s';

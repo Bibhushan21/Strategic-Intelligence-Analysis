@@ -145,9 +145,18 @@ class AgentRatingSystem {
         // Get list of completed agents
         const agents = this.getCompletedAgents();
         
+        // Find the review button that was clicked to position modal near it
+        const reviewButton = document.querySelector('.main-review-btn');
+        console.log('Found review button:', reviewButton, reviewButton ? reviewButton.getBoundingClientRect() : 'not found');
+        
         // Create modal
         const modal = this.createReviewModal(agents);
         document.body.appendChild(modal);
+        
+        // Position modal near the review button
+        if (reviewButton) {
+            this.positionModalNearButton(modal, reviewButton);
+        }
     }
 
     /**
@@ -184,7 +193,7 @@ class AgentRatingSystem {
             <div class="review-modal">
                 <div class="review-modal-header">
                     <h2>Review Analysis</h2>
-                    <button class="modal-close" onclick="this.closest('.review-modal-overlay').remove()">
+                    <button class="modal-close" onclick="AgentRatingSystem.closeModal(this)">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                         </svg>
@@ -208,7 +217,7 @@ class AgentRatingSystem {
                             <label class="form-label">Overall Rating *</label>
                             <div class="star-rating">
                                 ${[1, 2, 3, 4, 5].map(i => `
-                                    <span class="star" data-rating="${i}" onclick="AgentRating.selectRating(this, ${i})">★</span>
+                                    <span class="star" data-rating="${i}" onclick="AgentRatingSystem.selectRating(this, ${i})">★</span>
                                 `).join('')}
                                 <span class="rating-value">Select a rating</span>
                             </div>
@@ -226,15 +235,116 @@ class AgentRatingSystem {
                     </div>
                     
                     <div class="modal-actions">
-                        <button class="btn-cancel" onclick="this.closest('.review-modal-overlay').remove()">Cancel</button>
-                        <button class="btn-next" onclick="AgentRating.showReviewForm()">Next</button>
-                        <button class="btn-submit" onclick="AgentRating.submitModalReview()" style="display: none;">Submit Review</button>
+                        <button class="btn-cancel" onclick="AgentRatingSystem.closeModal(this)">Cancel</button>
+                        <button class="btn-next" onclick="AgentRatingSystem.showReviewForm()">Next</button>
+                        <button class="btn-submit" onclick="AgentRatingSystem.submitModalReview()" style="display: none;">Submit Review</button>
                     </div>
                 </div>
             </div>
         `;
         
         return modal;
+    }
+    
+    /**
+     * Position modal directly below the review button
+     */
+    positionModalNearButton(modal, reviewButton) {
+        const modalContent = modal.querySelector('.review-modal');
+        
+        // Function to calculate and apply positioning
+        const updatePosition = () => {
+            const buttonRect = reviewButton.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            
+            // Check if we're on mobile
+            const isMobile = viewportWidth < 768;
+            
+            if (isMobile) {
+                // On mobile, position at top with some margin
+                modal.style.alignItems = 'flex-start';
+                modal.style.justifyContent = 'center';
+                modal.style.paddingTop = '2rem';
+                modalContent.style.marginTop = '0';
+                modalContent.style.position = 'relative';
+                modalContent.style.top = 'auto';
+                modalContent.style.left = 'auto';
+                modalContent.style.transform = 'none';
+                return;
+            }
+            
+            // Position modal directly below the button
+            modal.style.alignItems = 'flex-start';
+            modal.style.justifyContent = 'flex-start';
+            
+            // Calculate position directly below the button
+            const margin = 10; // Small margin between button and modal
+            const topPosition = buttonRect.bottom + margin + window.scrollY;
+            
+            // Get actual modal width (after it's rendered)
+            modalContent.style.position = 'absolute';
+            modalContent.style.visibility = 'hidden'; // Hide temporarily to measure
+            modalContent.style.left = '0px'; // Reset position for measurement
+            
+            const actualModalWidth = modalContent.offsetWidth;
+            
+            // Center the modal horizontally relative to the button, then move 20px left
+            const buttonCenter = buttonRect.left + (buttonRect.width / 2) + window.scrollX;
+            const leftPosition = buttonCenter - (actualModalWidth / 2) - 100;
+            
+            // Ensure modal doesn't go off-screen horizontally
+            const minLeft = 100; // Minimum margin from left edge
+            const maxLeft = viewportWidth - actualModalWidth - 20; // Maximum position before right edge
+            const finalLeft = Math.max(minLeft, Math.min(leftPosition, maxLeft));
+            
+            // Apply final positioning
+            modalContent.style.top = `${topPosition}px`;
+            modalContent.style.left = `${finalLeft}px`;
+            modalContent.style.margin = '0';
+            modalContent.style.transform = 'none';
+            modalContent.style.visibility = 'visible'; // Show again
+        };
+        
+        // Reset overlay positioning
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.right = '0';
+        modal.style.bottom = '0';
+        
+        // Initial positioning
+        // Use setTimeout to ensure modal is fully rendered
+        setTimeout(updatePosition, 10);
+        
+        // Add resize listener for responsiveness
+        const resizeHandler = () => updatePosition();
+        window.addEventListener('resize', resizeHandler);
+        
+        // Store cleanup function on modal for removal later
+        modal._resizeHandler = resizeHandler;
+        
+        // Add scroll listener to maintain position relative to button
+        const scrollHandler = () => updatePosition();
+        window.addEventListener('scroll', scrollHandler);
+        modal._scrollHandler = scrollHandler;
+    }
+
+    /**
+     * Close modal and cleanup event listeners
+     */
+    static closeModal(button) {
+        const modal = button.closest('.review-modal-overlay');
+        if (modal) {
+            // Cleanup event listeners
+            if (modal._resizeHandler) {
+                window.removeEventListener('resize', modal._resizeHandler);
+            }
+            if (modal._scrollHandler) {
+                window.removeEventListener('scroll', modal._scrollHandler);
+            }
+            // Remove modal
+            modal.remove();
+        }
     }
 
     /**
@@ -300,6 +410,15 @@ class AgentRatingSystem {
      */
     static async submitModalReview() {
         const modal = document.getElementById('reviewModal');
+        const submitBtn = modal.querySelector('.btn-submit');
+        
+        // Prevent multiple clicks by disabling button
+        if (submitBtn.disabled) {
+            return; // Already submitting
+        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+        
         const selectedAgents = Array.from(modal.querySelectorAll('.agent-checkbox:checked')).map(cb => cb.value);
         const rating = parseInt(modal.getAttribute('data-selected-rating'));
         const review = modal.querySelector('.form-textarea').value;
@@ -307,6 +426,9 @@ class AgentRatingSystem {
         
         if (!rating || rating === 0 || isNaN(rating)) {
             alert('Please select a rating');
+            // Re-enable button on error
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Review';
             return;
         }
 
@@ -319,6 +441,9 @@ class AgentRatingSystem {
                     'Cannot Submit Review', 
                     'No analysis session found. Please complete an analysis first before submitting a review.'
                 );
+                // Re-enable button on error
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Review';
                 return;
             }
             
@@ -372,12 +497,23 @@ class AgentRatingSystem {
             const results = await Promise.all(submissionPromises);
             
             console.log(`✅ All ratings submitted successfully:`, results);
-            AgentRatingSystem.showSuccessMessage('Review submitted successfully!', 'Thank you for your feedback!');
+            
+            // Get submit button position before removing modal
+            const submitBtnRect = submitBtn.getBoundingClientRect();
+            
+            AgentRatingSystem.showSuccessMessage('Review submitted successfully!', 'Thank you for your feedback!', {
+                top: submitBtnRect.top + window.scrollY,
+                left: submitBtnRect.left + window.scrollX,
+                width: submitBtnRect.width
+            });
             modal.remove();
             
         } catch (error) {
             console.error('❌ Error submitting review:', error);
             AgentRatingSystem.showErrorMessage('Failed to submit review', error.message || 'Please try again.');
+            // Re-enable button on error
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Review';
         }
     }
 
@@ -433,12 +569,43 @@ class AgentRatingSystem {
     /**
      * Show success message popup
      */
-    static showSuccessMessage(title, message) {
+    static showSuccessMessage(title, message, position = null) {
         const overlay = document.createElement('div');
         overlay.className = 'success-popup-overlay';
         
+        // If position is provided, position at specific location
+        if (position) {
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.right = '0';
+            overlay.style.bottom = '0';
+            overlay.style.display = 'flex';
+            overlay.style.alignItems = 'flex-start';
+            overlay.style.justifyContent = 'flex-start';
+            overlay.style.pointerEvents = 'none'; // Allow clicks through overlay
+        }
+        
         const popup = document.createElement('div');
         popup.className = 'success-popup';
+        
+        // If position provided, position the popup at the exact location
+        if (position) {
+            popup.style.position = 'absolute';
+            popup.style.top = `${position.top}px`;
+            
+            // If width is provided, center horizontally within that width
+            if (position.width) {
+                const popupWidth = 300; // Approximate popup width
+                const centerLeft = position.left + (position.width / 2) - (popupWidth / 2);
+                popup.style.left = `${centerLeft}px`;
+            } else {
+                popup.style.left = `${position.left}px`;
+            }
+            
+            popup.style.pointerEvents = 'auto'; // Allow clicks on popup
+        }
+        
         popup.innerHTML = `
             <span class="success-popup-icon">✅</span>
             <div class="success-popup-title">${title}</div>
