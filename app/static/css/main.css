@@ -754,4 +754,68 @@ body::after {
         transform: translateY(-100px) rotate(360deg);
         opacity: 0;
     }
+}
+
+/* Intro.js Custom Styles */
+.introjs-tooltip {
+    min-width: 350px !important;
+    max-width: 420px !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}
+
+.introjs-tooltip-header {
+    padding: 15px 20px 10px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}
+
+.introjs-tooltip-title {
+    flex: 1 !important;
+    margin-right: 15px !important;
+}
+
+.introjs-skipbutton {
+    font-size: 15px !important;
+    white-space: nowrap !important;
+    padding: 6px 20px !important;
+    min-width: 80px !important;
+    width: auto !important;
+    background-color: rgba(147, 147, 147, 0.1) !important;
+    border: 1px solid #939393 !important;
+    border-radius: 6px !important;
+    color: #00264B !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+    position: relative !important;
+    z-index: 1000 !important;
+    text-align: center !important;
+    display: inline-block !important;
+    box-sizing: border-box !important;
+}
+
+.introjs-skipbutton:hover {
+    background-color: rgba(147, 147, 147, 0.2) !important;
+    border-color: #166697 !important;
+    color: #166697 !important;
+}
+
+.introjs-tooltiptext {
+    padding: 15px 20px !important;
+    box-sizing: border-box !important;
+}
+
+.introjs-tooltipbuttons {
+    padding: 10px 20px 15px !important;
+    box-sizing: border-box !important;
+}
+
+/* Make sure the tooltip has proper spacing */
+.introjs-tooltip.introjs-floating {
+    margin-left: -175px !important; /* Half of min-width for proper centering */
 } 
