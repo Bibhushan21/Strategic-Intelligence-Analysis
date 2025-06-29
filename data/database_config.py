@@ -91,6 +91,17 @@ def get_db_connection():
         if conn:
             conn.close()
 
+def get_db():
+    """
+    FastAPI dependency to get database session.
+    Yields a database session that will be automatically closed.
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 def test_connection():
     """
     Test database connection.

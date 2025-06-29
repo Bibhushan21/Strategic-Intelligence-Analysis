@@ -5,6 +5,45 @@ from data.database_config import Base
 from datetime import datetime
 from typing import Dict, Any, Optional
 
+class User(Base):
+    """
+    User authentication table.
+    Stores user accounts for the Strategic Intelligence App.
+    """
+    __tablename__ = 'users'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, nullable=False, index=True)
+    email = Column(String(100), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    full_name = Column(String(100))
+    is_active = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False)
+    is_admin = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_login = Column(DateTime(timezone=True))
+    login_count = Column(Integer, default=0)
+    
+    # Relationships
+    analysis_sessions = relationship("AnalysisSession", back_populates="user", cascade="all, delete-orphan")
+    analysis_templates = relationship("AnalysisTemplate", back_populates="user", cascade="all, delete-orphan")
+    ratings = relationship("AgentRating", back_populates="user", cascade="all, delete-orphan")
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization (excluding password)."""
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email,
+            'full_name': self.full_name,
+            'is_active': self.is_active,
+            'is_verified': self.is_verified,
+            'is_admin': self.is_admin,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'last_login': self.last_login.isoformat() if self.last_login else None,
+            'login_count': self.login_count
+        }
+
 class AnalysisSession(Base):
     """
     Main analysis session table.
@@ -13,6 +52,7 @@ class AnalysisSession(Base):
     __tablename__ = 'analysis_sessions'
     
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     strategic_question = Column(Text, nullable=False)
     time_frame = Column(String(50))
     region = Column(String(100))
@@ -23,12 +63,14 @@ class AnalysisSession(Base):
     completed_at = Column(DateTime(timezone=True))
     
     # Relationships
+    user = relationship("User", back_populates="analysis_sessions")
     agent_results = relationship("AgentResult", back_populates="session", cascade="all, delete-orphan")
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             'id': self.id,
+            'user_id': self.user_id,
             'strategic_question': self.strategic_question,
             'time_frame': self.time_frame,
             'region': self.region,
@@ -87,6 +129,7 @@ class AnalysisTemplate(Base):
     __tablename__ = 'analysis_templates'
     
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)  # Nullable for system templates
     name = Column(String(200), nullable=False)
     description = Column(Text)
     category = Column(String(100), default='General')  # Template category
@@ -102,10 +145,14 @@ class AnalysisTemplate(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
+    # Relationships
+    user = relationship("User", back_populates="analysis_templates")
+    
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             'id': self.id,
+            'user_id': self.user_id,
             'name': self.name,
             'description': self.description,
             'category': self.category,
@@ -193,7 +240,7 @@ class AgentRating(Base):
     session_id = Column(Integer, ForeignKey('analysis_sessions.id'), nullable=False)
     agent_result_id = Column(Integer, ForeignKey('agent_results.id'), nullable=False)
     agent_name = Column(String(100), nullable=False)
-    user_id = Column(String(100), default='anonymous')  # For future user authentication
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     rating = Column(Integer, nullable=False)  # 1-5 star rating
     review_text = Column(Text)  # Optional text review
     helpful_aspects = Column(JSON)  # What was helpful (array of aspects)
@@ -203,6 +250,7 @@ class AgentRating(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
+    user = relationship("User", back_populates="ratings")
     session = relationship("AnalysisSession", backref="ratings")
     agent_result = relationship("AgentResult", backref="ratings")
     

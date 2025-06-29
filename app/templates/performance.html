@@ -72,6 +72,21 @@
                     <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">About</a>
                     <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Contact</a>
                     <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Help</a>
+                    
+                    <!-- User Info and Logout -->
+                    {% if user %}
+                        <div class="flex items-center space-x-4 ml-6 pl-6 border-l border-brand-kodama">
+                            <span class="text-brand-nickel font-brand-regular font-medium">{{ user.full_name or user.username }}</span>
+                            <form method="post" action="/logout" class="inline">
+                                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-brand-regular font-medium px-4 py-2 rounded-lg transition duration-150 ease-in-out">
+                                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                    </svg>
+                                    Logout
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
                 </div>
                 
                 <!-- Mobile Menu Button -->
@@ -95,6 +110,21 @@
                     <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">About</a>
                     <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Contact</a>
                     <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Help</a>
+                    
+                    <!-- User Info and Logout for Mobile -->
+                    {% if user %}
+                        <div class="pt-4 mt-4 border-t border-brand-kodama">
+                            <p class="text-brand-nickel font-brand-regular font-medium mb-3">{{ user.full_name or user.username }}</p>
+                            <form method="post" action="/logout">
+                                <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white font-brand-regular font-medium px-4 py-2 rounded-lg transition duration-150 ease-in-out">
+                                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                    </svg>
+                                    Logout
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

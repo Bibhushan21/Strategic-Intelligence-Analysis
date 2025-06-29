@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - challenges.one</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --lapis-jewel: #166697;
+            --kodama-white: #E6F1FF;
+            --nickel: #939393;
+            --oxford-blue: #00264B;
+            --pervenche: #008CED;
+            --white: #ffffff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, var(--oxford-blue) 0%, var(--lapis-jewel) 50%, var(--pervenche) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            max-width: 1200px;
+            width: 100%;
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 38, 75, 0.15);
+            overflow: hidden;
+            min-height: 600px;
+        }
+        
+        .login-form-section {
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .logo-section {
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .logo img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+        
+        .logo-text {
+            font-family: 'Roboto Slab', serif;
+            font-weight: 700;
+            font-size: 28px;
+            color: var(--oxford-blue);
+        }
+        
+        .tagline {
+            font-family: 'Roboto', sans-serif;
+            color: var(--nickel);
+            font-size: 14px;
+            margin-left: 65px;
+        }
+        
+        .form-header {
+            margin-bottom: 40px;
+        }
+        
+        .form-title {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 900;
+            font-size: 32px;
+            color: var(--oxford-blue);
+            margin-bottom: 8px;
+        }
+        
+        .form-subtitle {
+            color: var(--nickel);
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 700;
+            color: var(--oxford-blue);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid var(--kodama-white);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: var(--white);
+            color: var(--oxford-blue);
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--pervenche);
+            box-shadow: 0 0 0 3px rgba(0, 140, 237, 0.1);
+        }
+        
+        .password-container {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--nickel);
+            font-size: 18px;
+        }
+        
+        .forgot-password {
+            text-align: right;
+            margin-bottom: 32px;
+        }
+        
+        .forgot-password a {
+            color: var(--lapis-jewel);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        
+        .forgot-password a:hover {
+            color: var(--pervenche);
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--lapis-jewel) 0%, var(--pervenche) 100%);
+            color: var(--white);
+            border: none;
+            border-radius: 12px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 900;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 24px;
+        }
+        
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(22, 102, 151, 0.3);
+        }
+        
+        .signup-link {
+            text-align: center;
+            color: var(--nickel);
+            font-size: 14px;
+        }
+        
+        .signup-link a {
+            color: var(--lapis-jewel);
+            text-decoration: none;
+            font-weight: 700;
+        }
+        
+        .signup-link a:hover {
+            color: var(--pervenche);
+        }
+        
+        .visual-section {
+            background: linear-gradient(135deg, var(--kodama-white) 0%, rgba(22, 102, 151, 0.1) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .visual-content {
+            text-align: center;
+            z-index: 2;
+        }
+        
+        .visual-title {
+            font-family: 'Roboto Slab', serif;
+            font-weight: 700;
+            font-size: 36px;
+            color: var(--oxford-blue);
+            margin-bottom: 20px;
+        }
+        
+        .visual-subtitle {
+            font-size: 18px;
+            color: var(--lapis-jewel);
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+                 .visual-graphic {
+             width: 100%;
+             max-width: 350px;
+             border-radius: 16px;
+             overflow: hidden;
+             box-shadow: 0 10px 30px rgba(22, 102, 151, 0.1);
+         }
+         
+         .visual-graphic img {
+             width: 100%;
+             height: auto;
+             display: block;
+             border-radius: 16px;
+         }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border: 1px solid #f5c6cb;
+            font-size: 14px;
+        }
+        
+        .required {
+            color: #e74c3c;
+        }
+        
+        @media (max-width: 768px) {
+            .login-container {
+                grid-template-columns: 1fr;
+                margin: 20px;
+            }
+            
+            .visual-section {
+                display: none;
+            }
+            
+            .login-form-section {
+                padding: 40px 30px;
+            }
+            
+            .form-title {
+                font-size: 28px;
+            }
+            
+            .visual-title {
+                font-size: 28px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .login-form-section {
+                padding: 30px 20px;
+            }
+            
+            .logo-text {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-form-section">
+            <div class="logo-section">
+                <div class="logo">
+                    <img src="{{ url_for('static', path='Multiverz Logo.png') }}" alt="challenges.one Logo">
+                    <span class="logo-text">challenges.one</span>
+                </div>
+                <div class="tagline">Strategic Intelligence Platform</div>
+            </div>
+            
+            <div class="form-header">
+                <h1 class="form-title">Welcome Back</h1>
+                <p class="form-subtitle">Sign in to access your strategic intelligence dashboard</p>
+            </div>
+            
+            {% if error %}
+            <div class="error-message">
+                {{ error }}
+            </div>
+            {% endif %}
+            
+            <form method="post" action="/login">
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        Email Address <span class="required">*</span>
+                    </label>
+                    <input type="email" name="email" id="email" class="form-input" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        Password <span class="required">*</span>
+                    </label>
+                    <div class="password-container">
+                        <input type="password" name="password" id="password" class="form-input" placeholder="Enter your password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            <span id="eyeIcon">👁️</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="forgot-password">
+                    <a href="#" onclick="alert('Password reset functionality coming soon!')">Forgot Password?</a>
+                </div>
+                
+                <button type="submit" class="login-button">
+                    SIGN IN
+                </button>
+            </form>
+            
+            <div class="signup-link">
+                Don't have an account? <a href="/signup">Create one here</a>
+            </div>
+        </div>
+        
+                 <div class="visual-section">
+             <div class="visual-content">
+                 <h2 class="visual-title">Strategic Intelligence</h2>
+                 <p class="visual-subtitle">Unlock insights, make informed decisions, and drive strategic success with our comprehensive analysis platform.</p>
+                 <div class="visual-graphic">
+                     <img src="https://challenges.one/images/login/main.webp" alt="Strategic Intelligence Dashboard" loading="lazy">
+                 </div>
+             </div>
+         </div>
+    </div>
+    
+    <script>
+        function togglePassword() {
+            const passwordField = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                eyeIcon.textContent = '🙈';
+            } else {
+                passwordField.type = 'password';
+                eyeIcon.textContent = '👁️';
+            }
+        }
+    </script>
+</body>
+</html> 

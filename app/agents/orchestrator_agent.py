@@ -123,7 +123,8 @@ Provide a coordinated analysis plan and execution strategy."""
                 strategic_question=input_data.get('strategic_question', ''),
                 time_frame=input_data.get('time_frame', ''),
                 region=input_data.get('region', ''),
-                additional_instructions=input_data.get('prompt', '')
+                additional_instructions=input_data.get('prompt', ''),
+                user_id=input_data.get('user_id')
             )
             self.session_start_time = time.time()
             

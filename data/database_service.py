@@ -27,7 +27,8 @@ class DatabaseService:
         strategic_question: str,
         time_frame: Optional[str] = None,
         region: Optional[str] = None,
-        additional_instructions: Optional[str] = None
+        additional_instructions: Optional[str] = None,
+        user_id: Optional[int] = None
     ) -> Optional[int]:
         """
         Create a new analysis session.
@@ -40,6 +41,7 @@ class DatabaseService:
                 time_frame=time_frame,
                 region=region,
                 additional_instructions=additional_instructions,
+                user_id=user_id,
                 status='processing'
             )
             session.add(analysis_session)
@@ -1924,65 +1926,308 @@ class DatabaseService:
 
     @staticmethod
     def get_rating_analytics(days_back: int = 30) -> Dict[str, Any]:
-        """
-        Get rating analytics for the dashboard.
-        """
+        """Get comprehensive rating analytics for the past N days."""
         session = get_db_session()
         try:
-            # Calculate date threshold
-            date_threshold = datetime.utcnow() - timedelta(days=days_back)
+            cutoff_date = datetime.utcnow() - timedelta(days=days_back)
             
-            # Get ratings within time period
-            recent_ratings = session.query(AgentRating).filter(
-                AgentRating.created_at >= date_threshold
-            ).all()
+            # Get total ratings count
+            total_ratings = session.query(AgentRating).filter(
+                AgentRating.created_at >= cutoff_date
+            ).count()
             
-            if not recent_ratings:
-                return {
-                    'total_ratings': 0,
-                    'average_rating': 0.0,
-                    'rating_trend': 'stable',
-                    'most_rated_agent': None,
-                    'highest_rated_agent': None,
-                    'rating_distribution': {'5': 0, '4': 0, '3': 0, '2': 0, '1': 0}
+            # Get average rating across all agents
+            avg_rating = session.query(func.avg(AgentRating.rating)).filter(
+                AgentRating.created_at >= cutoff_date
+            ).scalar() or 0
+            
+            # Get ratings distribution
+            ratings_distribution = session.query(
+                AgentRating.rating,
+                func.count(AgentRating.id).label('count')
+            ).filter(
+                AgentRating.created_at >= cutoff_date
+            ).group_by(AgentRating.rating).all()
+            
+            distribution = {f"{rating}_star": count for rating, count in ratings_distribution}
+            
+            # Get agent performance comparison
+            agent_performance = session.query(
+                AgentRating.agent_name,
+                func.avg(AgentRating.rating).label('avg_rating'),
+                func.count(AgentRating.id).label('total_ratings')
+            ).filter(
+                AgentRating.created_at >= cutoff_date
+            ).group_by(AgentRating.agent_name).all()
+            
+            agent_stats = [
+                {
+                    'agent_name': agent_name,
+                    'average_rating': float(avg_rating) if avg_rating else 0,
+                    'total_ratings': total_ratings
                 }
+                for agent_name, avg_rating, total_ratings in agent_performance
+            ]
             
-            # Calculate overall metrics
-            total_ratings = len(recent_ratings)
-            average_rating = sum(r.rating for r in recent_ratings) / total_ratings
+            # Get recent feedback trends
+            daily_ratings = session.query(
+                func.date(AgentRating.created_at).label('date'),
+                func.avg(AgentRating.rating).label('avg_rating'),
+                func.count(AgentRating.id).label('count')
+            ).filter(
+                AgentRating.created_at >= cutoff_date
+            ).group_by(func.date(AgentRating.created_at)).order_by('date').all()
             
-            # Rating distribution
-            distribution = {str(i): 0 for i in range(1, 6)}
-            for rating in recent_ratings:
-                distribution[str(rating.rating)] += 1
-            
-            # Agent-specific metrics
-            agent_ratings = {}
-            for rating in recent_ratings:
-                if rating.agent_name not in agent_ratings:
-                    agent_ratings[rating.agent_name] = []
-                agent_ratings[rating.agent_name].append(rating.rating)
-            
-            # Most rated agent
-            most_rated_agent = max(agent_ratings.keys(), key=lambda x: len(agent_ratings[x])) if agent_ratings else None
-            
-            # Highest rated agent (with minimum 3 ratings)
-            qualified_agents = {k: v for k, v in agent_ratings.items() if len(v) >= 3}
-            highest_rated_agent = max(qualified_agents.keys(), 
-                                    key=lambda x: sum(qualified_agents[x]) / len(qualified_agents[x])) if qualified_agents else None
+            trends = [
+                {
+                    'date': str(date),
+                    'average_rating': float(avg_rating) if avg_rating else 0,
+                    'rating_count': count
+                }
+                for date, avg_rating, count in daily_ratings
+            ]
             
             return {
                 'total_ratings': total_ratings,
-                'average_rating': round(average_rating, 2),
-                'rating_trend': 'positive' if average_rating >= 4.0 else 'needs_improvement' if average_rating < 3.0 else 'stable',
-                'most_rated_agent': most_rated_agent,
-                'highest_rated_agent': highest_rated_agent,
-                'rating_distribution': distribution,
-                'days_analyzed': days_back
+                'average_rating': round(float(avg_rating), 2) if avg_rating else 0,
+                'ratings_distribution': distribution,
+                'agent_performance': agent_stats,
+                'daily_trends': trends,
+                'period_days': days_back
             }
             
         except Exception as e:
             logger.error(f"Failed to get rating analytics: {str(e)}")
-            return {'error': str(e)}
+            return {
+                'total_ratings': 0,
+                'average_rating': 0,
+                'ratings_distribution': {},
+                'agent_performance': [],
+                'daily_trends': [],
+                'period_days': days_back
+            }
+        finally:
+            close_db_session(session)
+
+    # USER-SPECIFIC METHODS FOR DATA ISOLATION
+    
+    @staticmethod
+    def get_analysis_sessions_for_user(
+        user_id: int,
+        limit: int = 50,
+        offset: int = 0,
+        status_filter: Optional[str] = None,
+        region_filter: Optional[str] = None,
+        search_query: Optional[str] = None,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get analysis sessions for a specific user with filtering and pagination.
+        """
+        session = get_db_session()
+        try:
+            query = session.query(AnalysisSession).filter(
+                AnalysisSession.user_id == user_id
+            )
+            
+            # Apply filters
+            if status_filter:
+                query = query.filter(AnalysisSession.status == status_filter)
+            
+            if region_filter:
+                query = query.filter(AnalysisSession.region == region_filter)
+            
+            if search_query:
+                query = query.filter(
+                    or_(
+                        AnalysisSession.strategic_question.ilike(f'%{search_query}%'),
+                        AnalysisSession.additional_instructions.ilike(f'%{search_query}%')
+                    )
+                )
+            
+            if date_from:
+                try:
+                    from_date = datetime.fromisoformat(date_from.replace('Z', '+00:00'))
+                    query = query.filter(AnalysisSession.created_at >= from_date)
+                except:
+                    pass
+            
+            if date_to:
+                try:
+                    to_date = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
+                    query = query.filter(AnalysisSession.created_at <= to_date)
+                except:
+                    pass
+            
+            # Apply pagination and ordering
+            sessions = query.order_by(desc(AnalysisSession.created_at)).offset(offset).limit(limit).all()
+            
+            return [session.to_dict() for session in sessions]
+            
+        except Exception as e:
+            logger.error(f"Failed to get user analysis sessions: {str(e)}")
+            return []
+        finally:
+            close_db_session(session)
+    
+    @staticmethod
+    def get_analysis_sessions_count_for_user(
+        user_id: int,
+        status_filter: Optional[str] = None,
+        region_filter: Optional[str] = None,
+        search_query: Optional[str] = None,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None
+    ) -> int:
+        """
+        Get total count of analysis sessions for a specific user with filtering.
+        """
+        session = get_db_session()
+        try:
+            query = session.query(AnalysisSession).filter(
+                AnalysisSession.user_id == user_id
+            )
+            
+            # Apply same filters as get_analysis_sessions_for_user
+            if status_filter:
+                query = query.filter(AnalysisSession.status == status_filter)
+            
+            if region_filter:
+                query = query.filter(AnalysisSession.region == region_filter)
+            
+            if search_query:
+                query = query.filter(
+                    or_(
+                        AnalysisSession.strategic_question.ilike(f'%{search_query}%'),
+                        AnalysisSession.additional_instructions.ilike(f'%{search_query}%')
+                    )
+                )
+            
+            if date_from:
+                try:
+                    from_date = datetime.fromisoformat(date_from.replace('Z', '+00:00'))
+                    query = query.filter(AnalysisSession.created_at >= from_date)
+                except:
+                    pass
+            
+            if date_to:
+                try:
+                    to_date = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
+                    query = query.filter(AnalysisSession.created_at <= to_date)
+                except:
+                    pass
+            
+            return query.count()
+            
+        except Exception as e:
+            logger.error(f"Failed to get user sessions count: {str(e)}")
+            return 0
+        finally:
+            close_db_session(session)
+    
+    @staticmethod
+    def get_dashboard_stats_for_user(user_id: int, days_back: int = 30) -> Dict[str, Any]:
+        """
+        Get dashboard statistics for a specific user.
+        """
+        session = get_db_session()
+        try:
+            cutoff_date = datetime.utcnow() - timedelta(days=days_back)
+            
+            # Total sessions for this user
+            total_sessions = session.query(AnalysisSession).filter(
+                and_(
+                    AnalysisSession.user_id == user_id,
+                    AnalysisSession.created_at >= cutoff_date
+                )
+            ).count()
+            
+            # Completed sessions for this user
+            completed_sessions = session.query(AnalysisSession).filter(
+                and_(
+                    AnalysisSession.user_id == user_id,
+                    AnalysisSession.status == 'completed',
+                    AnalysisSession.created_at >= cutoff_date
+                )
+            ).count()
+            
+            # Failed sessions for this user
+            failed_sessions = session.query(AnalysisSession).filter(
+                and_(
+                    AnalysisSession.user_id == user_id,
+                    AnalysisSession.status == 'failed',
+                    AnalysisSession.created_at >= cutoff_date
+                )
+            ).count()
+            
+            # Processing sessions for this user
+            processing_sessions = session.query(AnalysisSession).filter(
+                and_(
+                    AnalysisSession.user_id == user_id,
+                    AnalysisSession.status == 'processing',
+                    AnalysisSession.created_at >= cutoff_date
+                )
+            ).count()
+            
+            # Average processing time for this user's completed sessions
+            avg_processing_time = session.query(func.avg(AnalysisSession.total_processing_time)).filter(
+                and_(
+                    AnalysisSession.user_id == user_id,
+                    AnalysisSession.status == 'completed',
+                    AnalysisSession.total_processing_time.isnot(None),
+                    AnalysisSession.created_at >= cutoff_date
+                )
+            ).scalar()
+            
+            # Recent sessions for this user
+            recent_sessions = session.query(AnalysisSession).filter(
+                AnalysisSession.user_id == user_id
+            ).order_by(desc(AnalysisSession.created_at)).limit(5).all()
+            
+            # Sessions by day for chart (last 7 days) for this user
+            sessions_by_day = []
+            for i in range(6, -1, -1):
+                day_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i)
+                day_end = day_start + timedelta(days=1)
+                
+                day_count = session.query(AnalysisSession).filter(
+                    and_(
+                        AnalysisSession.user_id == user_id,
+                        AnalysisSession.created_at >= day_start,
+                        AnalysisSession.created_at < day_end
+                    )
+                ).count()
+                
+                sessions_by_day.append({
+                    'date': day_start.strftime('%Y-%m-%d'),
+                    'count': day_count
+                })
+            
+            return {
+                'total_sessions': total_sessions,
+                'completed_sessions': completed_sessions,
+                'failed_sessions': failed_sessions,
+                'processing_sessions': processing_sessions,
+                'success_rate': round((completed_sessions / total_sessions * 100) if total_sessions > 0 else 0, 1),
+                'average_processing_time': round(float(avg_processing_time), 2) if avg_processing_time else 0,
+                'recent_sessions': [session.to_dict() for session in recent_sessions],
+                'sessions_by_day': sessions_by_day,
+                'period_days': days_back
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get user dashboard stats: {str(e)}")
+            return {
+                'total_sessions': 0,
+                'completed_sessions': 0,
+                'failed_sessions': 0,
+                'processing_sessions': 0,
+                'success_rate': 0,
+                'average_processing_time': 0,
+                'recent_sessions': [],
+                'sessions_by_day': [],
+                'period_days': days_back
+            }
         finally:
             close_db_session(session) 
