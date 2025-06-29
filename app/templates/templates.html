@@ -32,7 +32,6 @@
         }
     </script>
     <link href="/static/css/main.css?v=2.0.0" rel="stylesheet">
-    <script src="/static/js/mobile-menu.js"></script>
 </head>
 <body class="min-h-screen relative overflow-x-hidden bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
     <!-- Floating Background Orbs -->
@@ -63,7 +62,7 @@
                 </div>
                 
                 <!-- Navigation Menu - Switch to hamburger menu earlier -->
-                <div class="hidden xl:flex items-center space-x-4 2xl:space-x-6">
+                <div class="hidden md:flex items-center space-x-4">
                     <a href="/" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">Home</a>
                     <a href="/history" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">History</a>
                     <a href="/dashboard" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">Dashboard</a>
@@ -90,7 +89,7 @@
                 </div>
                 
                 <!-- Intermediate size menu (show fewer items on medium screens) -->
-                <div class="hidden lg:flex xl:hidden items-center space-x-4">
+                <div class="hidden items-center space-x-4">
                     <a href="/" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">Home</a>
                     <a href="/history" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">History</a>
                     <a href="/dashboard" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out whitespace-nowrap">Dashboard</a>
@@ -128,7 +127,7 @@
                 </div>
                 
                 <!-- Mobile Menu Button -->
-                <div class="lg:hidden flex-shrink-0">
+                <div class="md:hidden flex-shrink-0">
                     <button id="mobile-menu-button" class="text-brand-nickel hover:text-brand-oxford focus:outline-none focus:text-brand-oxford p-2">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -138,7 +137,7 @@
             </div>
             
             <!-- Mobile Menu (Hidden by default) -->
-            <div id="mobile-menu" class="lg:hidden hidden mt-4 pb-4 border-t border-brand-kodama">
+            <div id="mobile-menu" class="md:hidden hidden mt-4 pb-4 border-t border-brand-kodama">
                 <div class="flex flex-col space-y-3 pt-4">
                     <a href="/" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Home</a>
                     <a href="/history" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">History</a>
@@ -370,5 +369,67 @@
 
     <script src="/static/js/templates.js" defer></script>
     <script src="/static/js/main.js" defer></script>
+
+    <!-- Mobile Menu Fix Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Mobile menu script loading...');
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            console.log('Button found:', !!mobileMenuButton);
+            console.log('Menu found:', !!mobileMenu);
+            
+            if (mobileMenuButton && mobileMenu) {
+                // Add visual feedback
+                mobileMenuButton.style.cursor = 'pointer';
+                
+                mobileMenuButton.addEventListener('click', function(e) {
+                    console.log('Button clicked!');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Toggle menu - need to handle both 'hidden' and responsive classes
+                    const isCurrentlyHidden = mobileMenu.classList.contains('hidden');
+                    
+                    if (isCurrentlyHidden) {
+                        // Show menu: remove 'hidden' and 'lg:hidden'
+                        mobileMenu.classList.remove('hidden');
+                        mobileMenu.classList.remove('md:hidden');
+                        mobileMenu.style.display = 'block'; // Force display
+                        console.log('Showing menu');
+                    } else {
+                        // Hide menu: add 'hidden' 
+                        mobileMenu.classList.add('hidden');
+                        mobileMenu.style.display = ''; // Reset display
+                        console.log('Hiding menu');
+                    }
+                    
+                    // Update aria-expanded
+                    mobileMenuButton.setAttribute('aria-expanded', !isCurrentlyHidden);
+                    
+                    // Change icon
+                    const svg = mobileMenuButton.querySelector('svg');
+                    if (svg) {
+                        if (isCurrentlyHidden) {
+                            // Menu is now shown, show X
+                            svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+                        } else {
+                            // Menu is now hidden, show hamburger
+                            svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>';
+                        }
+                    }
+                    
+                    console.log('Menu state after toggle. Hidden class:', mobileMenu.classList.contains('hidden'));
+                    console.log('Menu display style:', mobileMenu.style.display);
+                });
+                
+                console.log('Mobile menu initialized successfully');
+            } else {
+                console.error('Mobile menu elements not found');
+            }
+        });
+    </script>
 </body>
 </html> 
