@@ -262,44 +262,25 @@ async def get_current_user_from_cookie(
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database on app startup with comprehensive setup"""
+    """Basic database connection test only - no full initialization"""
     try:
-        print("🚀 Starting database initialization...")
+        print("🔌 Testing database connection...")
         
-        # Import and run comprehensive database initialization
+        # Basic connection test only
         import sys
         from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent.parent / 'data'))
         
-        # Add project root to path
-        project_root = Path(__file__).parent.parent
-        sys.path.insert(0, str(project_root))
+        from data.database_config import test_connection
         
-        # Import the comprehensive setup function
-        from init_cloud_database import init_cloud_database
-        
-        print("Running comprehensive database setup...")
-        success = init_cloud_database()
-        
-        if success:
-            print("✅ Database initialization completed successfully!")
+        if test_connection():
+            print("✅ Database connection successful!")
         else:
-            print("⚠️ Database initialization had issues but app will continue")
+            print("⚠️ Database connection failed!")
             
     except Exception as e:
-        print(f"Warning: Database initialization failed during startup: {e}")
-        print("The application will continue, but some features may not work properly.")
-        print("Please run 'python init_cloud_database.py' manually to fix database issues.")
-        
-        # Try basic table creation as fallback
-        try:
-            print("Attempting basic table creation as fallback...")
-            sys.path.insert(0, str(Path(__file__).parent.parent / 'data'))
-            from data.database_config import engine, test_connection, Base
-            if test_connection():
-                Base.metadata.create_all(bind=engine)
-                print("Basic table creation completed")
-        except Exception as fallback_e:
-            print(f"Even basic table creation failed: {fallback_e}")
+        print(f"Database connection test failed: {e}")
+        print("⚠️ Some features may not work properly.")
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

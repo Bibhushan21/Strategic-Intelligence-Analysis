@@ -387,3 +387,8 @@ After completing an analysis, users can:
 6. View aggregated ratings and analytics
 
 The rating system helps improve agent performance and provides valuable insights for users selecting agents for future analyses. 
+
+Default Admin Credentials:
+Username: admin
+Email: admin@strategicai.com
+Password: admin123

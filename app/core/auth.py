@@ -71,9 +71,12 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
     if not verify_password(password, user.hashed_password):
         return None
     
-    # Update login stats
+    # Update login stats (handle None values)
     user.last_login = datetime.utcnow()
-    user.login_count += 1
+    if user.login_count is None:
+        user.login_count = 1
+    else:
+        user.login_count += 1
     db.commit()
     
     return user

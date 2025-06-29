@@ -13,10 +13,10 @@ from pathlib import Path
 # Add data directory to Python path
 sys.path.insert(0, str(Path(__file__).parent / 'data'))
 
-# Setup logging
+# Setup logging with minimal output for cloud deployment
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    level=logging.WARNING,  # Only show warnings and errors
+    format='%(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -26,50 +26,35 @@ def init_cloud_database():
     Handles both new deployments and existing database updates.
     """
     try:
-        print("=" * 70)
-        print("🚀 CHALLENGES.ONE - Comprehensive Database Setup")
-        print("Strategic Intelligence Platform")
-        print("=" * 70)
+        print("🚀 Starting database setup...")
         
-        # Step 1: Test database connection
-        logger.info("🔌 Testing database connection...")
+        # Test database connection
         if not test_database_connection():
-            logger.error("❌ Database connection failed!")
+            print("❌ Database connection failed!")
             return False
         
-        # Step 2: Create all tables using SQLAlchemy (do this first)
-        logger.info("📋 Creating/verifying database tables...")
-        create_database_tables()  # Don't fail if this has issues
+        # Create all tables using SQLAlchemy
+        create_database_tables()
         
-        # Step 3: Update database schema (add missing columns) - CRITICAL
-        logger.info("🔧 Updating database schema...")
+        # Update database schema (add missing columns)
         if not update_database_schema():
-            logger.error("❌ Schema update failed - this is critical!")
+            print("❌ Schema update failed!")
             return False
         
-        # Step 4: Setup admin user using direct SQL (more reliable)
-        logger.info("👤 Setting up admin user...")
+        # Setup admin user
         if not setup_admin_user_sql():
-            logger.error("❌ Admin user setup failed!")
+            print("❌ Admin user setup failed!")
             return False
         
-        # Step 5: Create templates using direct SQL (more reliable)
-        logger.info("📝 Creating analysis templates...")
+        # Create templates
         if not create_templates_sql():
-            logger.error("❌ Template creation failed!")
+            print("❌ Template creation failed!")
             return False
         
-        # Step 6: Initialize rating summaries using direct SQL
-        logger.info("⭐ Initializing rating summaries...")
-        if not initialize_ratings_sql():
-            logger.error("❌ Rating initialization failed!")
-            return False
+        # Initialize rating summaries
+        initialize_ratings_sql()
         
-        # Step 7: Comprehensive verification
-        verify_complete_setup()
-        
-        print("\n✅ COMPREHENSIVE SETUP COMPLETED SUCCESSFULLY!")
-        print("🎉 Your challenges.one cloud database is ready for production!")
+        print("✅ Database setup completed!")
         return True
         
     except Exception as e:
@@ -80,14 +65,9 @@ def test_database_connection():
     """Test database connection."""
     try:
         from data.database_config import test_connection
-        if test_connection():
-            logger.info("✅ Database connection successful!")
-            return True
-        else:
-            logger.error("❌ Database connection failed!")
-            return False
+        return test_connection()
     except Exception as e:
-        logger.error(f"❌ Connection test failed: {e}")
+        print(f"Connection test failed: {e}")
         return False
 
 def update_database_schema():
@@ -364,10 +344,10 @@ def create_templates_sql():
                     'name': 'Market Entry Strategy',
                     'description': 'Comprehensive analysis for entering new markets',
                     'category': 'Business Strategy',
-                    'strategic_question': 'What are the key considerations and strategic approach for entering new markets?',
+                    'strategic_question_template': 'What are the key considerations and strategic approach for entering new markets?',
                     'default_time_frame': 'medium_term',
                     'default_region': 'global',
-                    'additional_instructions': 'Focus on competitive landscape, regulatory environment, and market dynamics',
+                    'default_instructions': 'Focus on competitive landscape, regulatory environment, and market dynamics',
                     'tags': '["market-entry", "strategy", "business-development"]',
                     'is_public': True,
                     'created_by': 'system'
@@ -376,10 +356,10 @@ def create_templates_sql():
                     'name': 'Technology Impact Analysis',
                     'description': 'Analysis of emerging technology impacts',
                     'category': 'Technology',
-                    'strategic_question': 'How will emerging technologies impact our industry and business?',
+                    'strategic_question_template': 'How will emerging technologies impact our industry and business?',
                     'default_time_frame': 'long_term',
                     'default_region': 'global',
-                    'additional_instructions': 'Focus on technological trends and competitive implications',
+                    'default_instructions': 'Focus on technological trends and competitive implications',
                     'tags': '["technology", "disruption", "innovation"]',
                     'is_public': True,
                     'created_by': 'system'
@@ -388,10 +368,10 @@ def create_templates_sql():
                     'name': 'Competitive Intelligence',
                     'description': 'Comprehensive competitor analysis',
                     'category': 'Competitive Analysis',
-                    'strategic_question': 'What are the competitive dynamics and positioning in our market?',
+                    'strategic_question_template': 'What are the competitive dynamics and positioning in our market?',
                     'default_time_frame': 'short_term',
                     'default_region': 'global',
-                    'additional_instructions': 'Analyze competitor strengths, weaknesses, and strategic moves',
+                    'default_instructions': 'Analyze competitor strengths, weaknesses, and strategic moves',
                     'tags': '["competition", "market-analysis", "strategy"]',
                     'is_public': True,
                     'created_by': 'system'
@@ -400,10 +380,10 @@ def create_templates_sql():
                     'name': 'EV Industry Analysis',
                     'description': 'Electric Vehicle industry market analysis',
                     'category': 'Industry Analysis',
-                    'strategic_question': 'What are the key market opportunities and strategic considerations for EV Industry?',
+                    'strategic_question_template': 'What are the key market opportunities and strategic considerations for EV Industry?',
                     'default_time_frame': 'long_term',
                     'default_region': 'asia',
-                    'additional_instructions': 'Focus on technological advances, infrastructure development, and market penetration strategies',
+                    'default_instructions': 'Focus on technological advances, infrastructure development, and market penetration strategies',
                     'tags': '["electric-vehicles", "automotive", "sustainability"]',
                     'is_public': True,
                     'created_by': 'system'
@@ -412,10 +392,10 @@ def create_templates_sql():
                     'name': 'Regulatory Impact Assessment',
                     'description': 'Analysis of regulatory changes and business implications',
                     'category': 'Regulatory',
-                    'strategic_question': 'How will upcoming regulatory changes affect our business operations?',
+                    'strategic_question_template': 'How will upcoming regulatory changes affect our business operations?',
                     'default_time_frame': 'medium_term',
                     'default_region': 'regional',
-                    'additional_instructions': 'Focus on compliance requirements, business impact, and adaptive strategies',
+                    'default_instructions': 'Focus on compliance requirements, business impact, and adaptive strategies',
                     'tags': '["regulation", "compliance", "risk-management"]',
                     'is_public': True,
                     'created_by': 'system'
@@ -425,17 +405,17 @@ def create_templates_sql():
             for template in templates:
                 cursor.execute("""
                     INSERT INTO analysis_templates 
-                    (name, description, category, strategic_question, default_time_frame, default_region, 
-                     additional_instructions, tags, is_public, created_by, usage_count, created_at)
+                    (name, description, category, strategic_question_template, default_time_frame, default_region, 
+                     default_instructions, tags, is_public, created_by, usage_count, created_at)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 0, NOW())
                 """, (
                     template['name'],
                     template['description'], 
                     template['category'],
-                    template['strategic_question'],
+                    template['strategic_question_template'],
                     template['default_time_frame'],
                     template['default_region'],
-                    template['additional_instructions'],
+                    template['default_instructions'],
                     template['tags'],
                     template['is_public'],
                     template['created_by']
