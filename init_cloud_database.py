@@ -37,15 +37,14 @@ def init_cloud_database():
             logger.error("❌ Database connection failed!")
             return False
         
-        # Step 2: Update database schema (add missing columns)
+        # Step 2: Create all tables using SQLAlchemy (do this first)
+        logger.info("📋 Creating/verifying database tables...")
+        create_database_tables()  # Don't fail if this has issues
+        
+        # Step 3: Update database schema (add missing columns) - CRITICAL
         logger.info("🔧 Updating database schema...")
         if not update_database_schema():
-            logger.warning("⚠️ Schema update had issues, continuing...")
-        
-        # Step 3: Create all tables using SQLAlchemy
-        logger.info("📋 Creating/verifying database tables...")
-        if not create_database_tables():
-            logger.error("❌ Table creation failed!")
+            logger.error("❌ Schema update failed - this is critical!")
             return False
         
         # Step 4: Setup admin user using direct SQL (more reliable)
@@ -137,16 +136,17 @@ def update_analysis_templates_schema(cursor, conn):
         
         for column_name, column_def in columns_to_add:
             try:
+                # Each column addition in its own transaction
                 sql = f"ALTER TABLE analysis_templates ADD COLUMN {column_name} {column_def}"
                 cursor.execute(sql)
+                conn.commit()  # Commit immediately after each successful addition
                 logger.info(f"   ✅ Added column: {column_name}")
             except Exception as e:
+                conn.rollback()  # Rollback the failed operation
                 if "already exists" in str(e):
                     logger.info(f"   ⏭️  Column {column_name} already exists")
                 else:
                     logger.warning(f"   ⚠️  Could not add {column_name}: {e}")
-        
-        conn.commit()
         
     except Exception as e:
         logger.error(f"❌ Failed to update analysis_templates schema: {e}")
@@ -167,16 +167,17 @@ def update_users_schema(cursor, conn):
         
         for column_name, column_def in columns_to_add:
             try:
+                # Each column addition in its own transaction
                 sql = f"ALTER TABLE users ADD COLUMN {column_name} {column_def}"
                 cursor.execute(sql)
+                conn.commit()  # Commit immediately after each successful addition
                 logger.info(f"   ✅ Added column: {column_name}")
             except Exception as e:
+                conn.rollback()  # Rollback the failed operation
                 if "already exists" in str(e):
                     logger.info(f"   ⏭️  Column {column_name} already exists")
                 else:
                     logger.warning(f"   ⚠️  Could not add {column_name}: {e}")
-        
-        conn.commit()
         
     except Exception as e:
         logger.error(f"❌ Failed to update users schema: {e}")
@@ -186,15 +187,61 @@ def update_other_tables_schema(cursor, conn):
     try:
         logger.info("🔧 Updating other tables schema...")
         
-        # Add user_id to analysis_sessions
+        # Add user_id to analysis_sessions - this is critical for user authentication
         try:
-            cursor.execute("ALTER TABLE analysis_sessions ADD COLUMN user_id INTEGER")
-            logger.info("   ✅ Added user_id to analysis_sessions")
-        except Exception as e:
-            if "already exists" in str(e):
-                logger.info("   ⏭️  user_id already exists in analysis_sessions")
+            # First check if column exists
+            cursor.execute("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'analysis_sessions' AND column_name = 'user_id'
+            """)
+            result = cursor.fetchone()
+            
+            if not result:
+                logger.info("   🔄 Adding user_id column to analysis_sessions...")
+                cursor.execute("ALTER TABLE analysis_sessions ADD COLUMN user_id INTEGER")
+                conn.commit()  # Commit the column addition
+                logger.info("   ✅ Added user_id to analysis_sessions")
+                
+                # Add foreign key constraint if possible
+                try:
+                    cursor.execute("""
+                        ALTER TABLE analysis_sessions 
+                        ADD CONSTRAINT fk_analysis_sessions_user_id 
+                        FOREIGN KEY (user_id) REFERENCES users(id)
+                    """)
+                    conn.commit()  # Commit the constraint addition
+                    logger.info("   ✅ Added foreign key constraint for user_id")
+                except Exception as fk_e:
+                    conn.rollback()  # Rollback only the constraint, not the column
+                    logger.warning(f"   ⚠️  Could not add foreign key constraint: {fk_e}")
+                    
             else:
-                logger.warning(f"   ⚠️  Could not add user_id to analysis_sessions: {e}")
+                logger.info("   ⏭️  user_id already exists in analysis_sessions")
+                
+        except Exception as e:
+            logger.error(f"   ❌ CRITICAL: Could not add user_id to analysis_sessions: {e}")
+            # This is critical - re-raise the exception
+            raise
+        
+        # Add user_id to agent_results if missing
+        try:
+            cursor.execute("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'agent_results' AND column_name = 'user_id'
+            """)
+            result = cursor.fetchone()
+            
+            if not result:
+                cursor.execute("ALTER TABLE agent_results ADD COLUMN user_id INTEGER")
+                conn.commit()  # Commit the column addition
+                logger.info("   ✅ Added user_id to agent_results")
+            else:
+                logger.info("   ⏭️  user_id already exists in agent_results")
+                
+        except Exception as e:
+            logger.warning(f"   ⚠️  Could not add user_id to agent_results: {e}")
         
         # Convert agent_ratings.user_id from string to integer if needed
         try:
@@ -217,6 +264,7 @@ def update_other_tables_schema(cursor, conn):
                 """)
                 cursor.execute("ALTER TABLE agent_ratings DROP COLUMN user_id")
                 cursor.execute("ALTER TABLE agent_ratings RENAME COLUMN user_id_new TO user_id")
+                conn.commit()  # Commit all the conversion operations together
                 logger.info("   ✅ Converted agent_ratings.user_id to integer")
             else:
                 logger.info("   ⏭️  agent_ratings.user_id already correct type")
@@ -224,10 +272,12 @@ def update_other_tables_schema(cursor, conn):
         except Exception as e:
             logger.warning(f"   ⚠️  Could not update agent_ratings.user_id: {e}")
         
-        conn.commit()
+        logger.info("✅ Other tables schema update completed!")
         
     except Exception as e:
         logger.error(f"❌ Failed to update other tables schema: {e}")
+        conn.rollback()
+        raise
 
 def create_database_tables():
     """Create all database tables using SQLAlchemy."""
@@ -540,13 +590,100 @@ def verify_complete_setup():
     except Exception as e:
         logger.error(f"❌ Verification failed: {e}")
 
+def fix_schema_issues():
+    """
+    Standalone function to fix common schema issues without full initialization.
+    Useful for fixing deployed applications with schema problems.
+    """
+    print("=" * 50)
+    print("🔧 SCHEMA FIX MODE")
+    print("=" * 50)
+    
+    try:
+        # Test connection
+        if not test_database_connection():
+            return False
+            
+        # Fix schema issues
+        logger.info("🔧 Fixing database schema issues...")
+        if not update_database_schema():
+            logger.error("❌ Schema fix failed!")
+            return False
+            
+        # Verify the fix
+        verify_critical_columns()
+        
+        print("\n✅ SCHEMA FIX COMPLETED!")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Schema fix failed: {e}")
+        return False
+
+def verify_critical_columns():
+    """Verify that critical columns exist."""
+    try:
+        from data.database_config import get_db_connection
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Check critical columns
+            critical_checks = [
+                ("analysis_sessions", "user_id"),
+                ("agent_results", "user_id"), 
+                ("users", "is_admin"),
+                ("users", "is_active"),
+                ("analysis_templates", "is_public")
+            ]
+            
+            print("\n🔍 CRITICAL COLUMNS CHECK:")
+            print("-" * 40)
+            
+            all_good = True
+            for table, column in critical_checks:
+                cursor.execute("""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name = %s AND column_name = %s
+                """, (table, column))
+                exists = cursor.fetchone()
+                
+                status = "✅" if exists else "❌"
+                print(f"{status} {table}.{column}")
+                
+                if not exists:
+                    all_good = False
+            
+            print("-" * 40)
+            if all_good:
+                print("🎉 All critical columns exist!")
+            else:
+                print("⚠️  Some critical columns missing!")
+                
+    except Exception as e:
+        logger.error(f"❌ Column verification failed: {e}")
+
 if __name__ == "__main__":
-    print("Starting challenges.one comprehensive database setup...")
-    success = init_cloud_database()
-    if success:
-        print("\n🎯 SETUP COMPLETED SUCCESSFULLY!")
-        print("Your challenges.one Strategic Intelligence Platform is ready!")
+    import sys
+    
+    # Check for command line arguments
+    if len(sys.argv) > 1 and sys.argv[1] == "--fix-schema":
+        print("Running in schema fix mode...")
+        success = fix_schema_issues()
+        if not success:
+            sys.exit(1)
     else:
-        print("\n💥 SETUP FAILED!")
-        print("Please check the logs above for details.")
-        sys.exit(1) 
+        print("Starting challenges.one comprehensive database setup...")
+        success = init_cloud_database()
+        if success:
+            print("\n🎯 SETUP COMPLETED SUCCESSFULLY!")
+            print("Your challenges.one Strategic Intelligence Platform is ready!")
+        else:
+            print("\n💥 SETUP FAILED!")
+            print("Please check the logs above for details.")
+            sys.exit(1)
+            
+    print("\n📋 Usage Options:")
+    print("  python init_cloud_database.py           # Full setup")
+    print("  python init_cloud_database.py --fix-schema  # Fix schema only") 
