@@ -36,7 +36,7 @@ class RatingSubmission(BaseModel):
     helpful_aspects: Optional[List[str]] = None
     improvement_suggestions: Optional[str] = None
     would_recommend: bool = True
-    user_id: str = "anonymous"
+    user_id: Optional[int] = None
 
 class RatingQuery(BaseModel):
     agent_name: Optional[str] = None

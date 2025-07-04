@@ -6,7 +6,7 @@
 class AgentRatingSystem {
     constructor() {
         this.ratings = new Map();
-        this.currentUserId = 'anonymous';
+        this.currentUserId = null;
         this.ratingEndpoint = '/ratings';
         
         // Initialize when DOM is loaded
@@ -466,7 +466,7 @@ class AgentRatingSystem {
                     helpful_aspects: null, // Could be expanded later
                     improvement_suggestions: suggestions || null,
                     would_recommend: rating >= 4, // 4 or 5 stars = recommend
-                    user_id: "anonymous"
+                    user_id: null
                 };
 
                 console.log(`📊 Submitting rating for ${agentName}:`, {
@@ -474,6 +474,8 @@ class AgentRatingSystem {
                     agent_result_id: agentResultId,
                     rating: rating
                 });
+                
+                console.log(`📊 Full ratingData being sent:`, ratingData);
 
                 const response = await fetch('/ratings/submit', {
                     method: 'POST',

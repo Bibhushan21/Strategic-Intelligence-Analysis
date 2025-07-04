@@ -52,7 +52,7 @@ class AnalysisSession(Base):
     __tablename__ = 'analysis_sessions'
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     strategic_question = Column(Text, nullable=False)
     time_frame = Column(String(50))
     region = Column(String(100))
@@ -240,7 +240,7 @@ class AgentRating(Base):
     session_id = Column(Integer, ForeignKey('analysis_sessions.id'), nullable=False)
     agent_result_id = Column(Integer, ForeignKey('agent_results.id'), nullable=False)
     agent_name = Column(String(100), nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     rating = Column(Integer, nullable=False)  # 1-5 star rating
     review_text = Column(Text)  # Optional text review
     helpful_aspects = Column(JSON)  # What was helpful (array of aspects)

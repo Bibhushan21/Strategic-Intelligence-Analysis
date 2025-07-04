@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, func, and_, or_
+from sqlalchemy import desc, func, and_, or_, case
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional, Tuple
 import logging
@@ -1664,7 +1664,7 @@ class DatabaseService:
         helpful_aspects: Optional[List[str]] = None,
         improvement_suggestions: Optional[str] = None,
         would_recommend: bool = True,
-        user_id: str = 'anonymous'
+        user_id: Optional[int] = None
     ) -> Optional[int]:
         """
         Submit a rating for an agent result.
@@ -1677,13 +1677,15 @@ class DatabaseService:
                 logger.error(f"Invalid rating value: {rating}. Must be between 1 and 5.")
                 return None
 
-            # Check if user has already rated this result
-            existing_rating = session.query(AgentRating).filter(
-                and_(
-                    AgentRating.agent_result_id == agent_result_id,
-                    AgentRating.user_id == user_id
-                )
-            ).first()
+            existing_rating = None
+            if user_id is not None:
+                # Check if user has already rated this result
+                existing_rating = session.query(AgentRating).filter(
+                    and_(
+                        AgentRating.agent_result_id == agent_result_id,
+                        AgentRating.user_id == user_id
+                    )
+                ).first()
 
             if existing_rating:
                 # Update existing rating
@@ -1698,7 +1700,7 @@ class DatabaseService:
                 logger.info(f"Updated rating {existing_rating.id} for agent {agent_name}")
                 
                 # Update rating summary
-                DatabaseService._update_rating_summary(agent_name)
+                DatabaseService._update_rating_summary(agent_name, session)
                 return existing_rating.id
             else:
                 # Create new rating
@@ -1720,7 +1722,7 @@ class DatabaseService:
                 logger.info(f"Created new rating {agent_rating.id} for agent {agent_name}")
                 
                 # Update rating summary
-                DatabaseService._update_rating_summary(agent_name)
+                DatabaseService._update_rating_summary(agent_name, session)
                 return agent_rating.id
                 
         except Exception as e:
@@ -1774,7 +1776,7 @@ class DatabaseService:
                 return summary.to_dict()
             else:
                 # Create default summary if doesn't exist
-                DatabaseService._update_rating_summary(agent_name)
+                DatabaseService._update_rating_summary(agent_name, session)
                 return {
                     'agent_name': agent_name,
                     'total_ratings': 0,
@@ -1810,10 +1812,13 @@ class DatabaseService:
             close_db_session(session)
 
     @staticmethod
-    def get_user_rating_for_result(agent_result_id: int, user_id: str = 'anonymous') -> Optional[Dict[str, Any]]:
+    def get_user_rating_for_result(agent_result_id: int, user_id: Optional[int] = None) -> Optional[Dict[str, Any]]:
         """
         Get user's existing rating for a specific agent result.
         """
+        if user_id is None:
+            return None # Cannot get a rating if user is not specified
+
         session = get_db_session()
         try:
             rating = session.query(AgentRating).filter(
@@ -1854,79 +1859,65 @@ class DatabaseService:
             close_db_session(session)
 
     @staticmethod
-    def _update_rating_summary(agent_name: str) -> bool:
+    def _update_rating_summary(agent_name: str, db_session: Session) -> bool:
         """
-        Update the rating summary for a specific agent.
-        This is called whenever a new rating is submitted.
+        Recalculate and update the rating summary for an agent.
+        This should be called within an existing session.
         """
-        session = get_db_session()
         try:
-            # Calculate summary statistics
-            ratings = session.query(AgentRating).filter(
+            # Aggregate rating data
+            result = db_session.query(
+                func.count(AgentRating.id).label('total_ratings'),
+                func.avg(AgentRating.rating).label('average_rating'),
+                func.count(AgentRating.review_text).label('total_reviews'),
+                func.sum(case((AgentRating.would_recommend == True, 1), else_=0)).label('total_recommendations')
+            ).filter(AgentRating.agent_name == agent_name).one()
+
+            # Rating distribution
+            distribution_result = db_session.query(
+                AgentRating.rating, func.count(AgentRating.id)
+            ).filter(
                 AgentRating.agent_name == agent_name
-            ).all()
-            
-            if not ratings:
-                return True
-            
-            total_ratings = len(ratings)
-            total_score = sum(r.rating for r in ratings)
-            average_rating = total_score / total_ratings if total_ratings > 0 else 0.0
-            
-            # Count ratings by star
-            star_counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
-            for rating in ratings:
-                star_counts[rating.rating] += 1
-            
-            total_reviews = sum(1 for r in ratings if r.review_text and r.review_text.strip())
-            recommendations = sum(1 for r in ratings if r.would_recommend)
-            recommendation_percentage = (recommendations / total_ratings * 100) if total_ratings > 0 else 0.0
-            
-            # Update or create summary
-            summary = session.query(AgentRatingSummary).filter(
+            ).group_by(AgentRating.rating).all()
+
+            distribution = {str(i): 0 for i in range(1, 6)}
+            for rating, count in distribution_result:
+                distribution[str(rating)] = count
+
+            # Find or create summary
+            summary = db_session.query(AgentRatingSummary).filter(
                 AgentRatingSummary.agent_name == agent_name
             ).first()
+
+            if not summary:
+                summary = AgentRatingSummary(agent_name=agent_name)
+                db_session.add(summary)
+
+            # Update summary fields
+            summary.total_ratings = result.total_ratings
+            summary.average_rating = float(result.average_rating) if result.average_rating else 0.0
+            summary.total_reviews = result.total_reviews
+            summary.rating_distribution = distribution
             
-            if summary:
-                summary.total_ratings = total_ratings
-                summary.average_rating = round(average_rating, 2)
-                summary.five_star_count = star_counts[5]
-                summary.four_star_count = star_counts[4]
-                summary.three_star_count = star_counts[3]
-                summary.two_star_count = star_counts[2]
-                summary.one_star_count = star_counts[1]
-                summary.total_reviews = total_reviews
-                summary.recommendation_percentage = round(recommendation_percentage, 1)
-                summary.last_updated = datetime.utcnow()
+            if result.total_ratings > 0:
+                summary.recommendation_percentage = (result.total_recommendations / summary.total_ratings) * 100
             else:
-                summary = AgentRatingSummary(
-                    agent_name=agent_name,
-                    total_ratings=total_ratings,
-                    average_rating=round(average_rating, 2),
-                    five_star_count=star_counts[5],
-                    four_star_count=star_counts[4],
-                    three_star_count=star_counts[3],
-                    two_star_count=star_counts[2],
-                    one_star_count=star_counts[1],
-                    total_reviews=total_reviews,
-                    recommendation_percentage=round(recommendation_percentage, 1)
-                )
-                session.add(summary)
+                summary.recommendation_percentage = 0.0
             
-            session.commit()
-            logger.info(f"Updated rating summary for agent {agent_name}")
+            # The calling function will commit
+            logger.info(f"Updated rating summary for {agent_name}")
             return True
-            
+
         except Exception as e:
-            session.rollback()
-            logger.error(f"Failed to update rating summary: {str(e)}")
-            return False
-        finally:
-            close_db_session(session)
+            logger.error(f"Failed to update rating summary for {agent_name}: {str(e)}")
+            # The calling function should handle rollback
+            raise e
 
     @staticmethod
     def get_rating_analytics(days_back: int = 30) -> Dict[str, Any]:
-        """Get comprehensive rating analytics for the past N days."""
+        """
+        Get comprehensive rating analytics for the past N days.
+        """
         session = get_db_session()
         try:
             cutoff_date = datetime.utcnow() - timedelta(days=days_back)
