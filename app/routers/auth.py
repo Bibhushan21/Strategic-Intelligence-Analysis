@@ -71,8 +71,8 @@ async def login_form(
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
     
-    # Redirect to dashboard with token in cookie
-    response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+    # Redirect to home page with token in cookie
+    response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
     response.set_cookie(
         key="access_token", 
         value=f"Bearer {access_token}", 
@@ -121,7 +121,7 @@ async def signup_form(
             data={"sub": str(user.id)}, expires_delta=access_token_expires
         )
         
-        response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+        response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
         response.set_cookie(
             key="access_token", 
             value=f"Bearer {access_token}", 

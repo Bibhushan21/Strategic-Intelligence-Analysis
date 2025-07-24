@@ -6,23 +6,23 @@ logger = logging.getLogger(__name__)
 
 class BestPracticesAgent(BaseAgent):
     def get_system_prompt(self) -> str:
-        return """You are the Best Practices Agent. Your task is to find and analyze 3 to 5 best practices for the given challenge.
+        return """You are the Best Practices Agent. Your task is to find and analyze 3 to 5 REAL best practices for the given challenge using verified sources.
 
 For each best practice, provide the following information in this exact format:
 
 ### Best Practice [Number]: [Title]
 **Time Frame:** [When was it implemented]\n
 **Organization:** [Who implemented it]\n
-**Challenge:** [What was the challenge context]\n
-**Problem:** [What they were trying to solve]\n
-**Solution:** [Brief summary of their approach]\n
+**Challenge:** [Provide 2-3 sentences describing the challenge context, its complexity, and why it was significant for the organization]\n
+**Problem:** [Provide 2-3 sentences explaining what they were trying to solve, the specific pain points, and the urgency behind the need for a solution]\n
+**Solution:** [Provide 2-3 sentences summarizing their approach, key methodologies used, and what made their solution unique or effective]\n
 **Implementation Steps:**
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
-**Results:** [Key outcomes or impact]\n
+1. [Provide 2-3 sentences explaining this step in detail, including specific actions taken, resources involved, and key considerations]
+2. [Provide 2-3 sentences explaining this step in detail, including specific actions taken, resources involved, and key considerations]
+3. [Provide 2-3 sentences explaining this step in detail, including specific actions taken, resources involved, and key considerations]
+**Results:** [Provide 2-3 sentences detailing key outcomes, measurable impacts, and long-term benefits achieved from the implementation]\n
 **Categorical Tags:** [Tag 1], [Tag 2], [Tag 3], [Tag 4], [Tag 5]\n
-**Source:** [Where this information comes from]
+**Reference:** [Real URL, research paper, case study, or official publication]
 
 After providing all best practices, include:
 
@@ -30,16 +30,21 @@ After providing all best practices, include:
 [Combined recommendation that takes the best elements from the practices above]
 
 ### Key Implementation Steps
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
+1. [Provide 2-3 sentences explaining this step comprehensively, including rationale, execution details, and success factors]
+2. [Provide 2-3 sentences explaining this step comprehensively, including rationale, execution details, and success factors]
+3. [Provide 2-3 sentences explaining this step comprehensively, including rationale, execution details, and success factors]
 
 ### Success Metrics
-1. [Metric 1]
-2. [Metric 2]
-3. [Metric 3]
+1. [Provide 2-3 sentences explaining this metric in detail, including how to measure it, why it's important, and what success looks like]
+2. [Provide 2-3 sentences explaining this metric in detail, including how to measure it, why it's important, and what success looks like]
+3. [Provide 2-3 sentences explaining this metric in detail, including how to measure it, why it's important, and what success looks like]
 
-Keep responses concise and focused on actionable insights. Ensure all sections and fields are included for each best practice."""
+IMPORTANT: 
+- Use REAL organizations, companies, governments, or institutions
+- Provide ACTUAL references (URLs, research papers, case studies)
+- Base information on factual, verifiable sources
+- If uncertain about specific details, use realistic but clearly indicated examples
+- Provide comprehensive, detailed responses with 2-3 sentences for each specified section to ensure thorough analysis and actionable insights"""
 
     def format_prompt(self, input_data: Dict[str, Any]) -> str:
         strategic_question = input_data.get('strategic_question', 'N/A')
@@ -74,12 +79,16 @@ Please provide 3 best practices and a next practice recommendation."""
             prompt = self.format_prompt(input_data)
             response = await self.invoke_llm(prompt)
             
-            # TODO: Implement parsing of 'response' into a list of structured practice dictionaries
-            parsed_practices_list = [] 
+            # Extract references from the response
+            references = self._extract_references(response)
+            
+            # Parse practices (basic implementation)
+            parsed_practices_list = self._parse_practices(response)
             
             return self.format_output({
                 "raw_response": response,
-                "parsed_practices": parsed_practices_list # Pass potentially parsed data
+                "parsed_practices": parsed_practices_list,
+                "references": references
             })
             
         except Exception as e:
@@ -90,11 +99,51 @@ Please provide 3 best practices and a next practice recommendation."""
                 "agent_type": self.__class__.__name__
             }
 
+    def _extract_references(self, response: str) -> list:
+        """Extract references from the response"""
+        import re
+        references = []
+        
+        # Look for **Reference:** lines
+        reference_pattern = r'\*\*Reference:\*\*\s*([^\n]+)'
+        matches = re.findall(reference_pattern, response, re.IGNORECASE)
+        
+        for i, match in enumerate(matches, 1):
+            references.append({
+                "id": i,
+                "title": f"Best Practice {i} Reference",
+                "source": match.strip()
+            })
+        
+        return references
+
+    def _parse_practices(self, response: str) -> list:
+        """Basic parsing of practices from response"""
+        practices = []
+        
+        # Simple implementation - split by ### Best Practice
+        import re
+        practice_sections = re.split(r'### Best Practice \d+:', response)
+        
+        for i, section in enumerate(practice_sections[1:], 1):  # Skip first empty split
+            lines = section.strip().split('\n')
+            if lines:
+                title = lines[0].strip() if lines else f"Practice {i}"
+                practices.append({
+                    "number": i,
+                    "title": title,
+                    "content": section.strip()
+                })
+        
+        return practices
+
     def format_output(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Format the output in a structured way."""
         raw_response = data.get("raw_response", "")
-        # Get the list of practices that process() would have parsed (currently a placeholder)
+        # Get the list of practices that process() would have parsed
         structured_practices_list = data.get("parsed_practices", [])
+        # Get extracted references
+        references = data.get("references", [])
         
         # Create a human-readable markdown format that matches the raw output
         markdown_output = "# Best Practices Analysis\n\n"
@@ -115,6 +164,7 @@ Please provide 3 best practices and a next practice recommendation."""
             "status": "success",
             "data": {
                 "structured_practices": structured_practices_list, # Key for downstream
+                "references": references, # References for display
                 "raw_sections": {"raw_response": raw_response}, # Keep old raw_sections structure for compatibility if needed, or deprecate
                 "raw_response": raw_response, # Direct access to raw response
                 "formatted_output": markdown_output

@@ -14,27 +14,34 @@ Format your response exactly like this:
 ## Weak Signals:
 **[Number]. [Title]**\n
    - **Domain:** [Domain]
-    **Description:** [2 sentence]
+    **Description:** [Provide exactly 5 sentences describing this weak signal comprehensively. Explain what it is, why it's emerging, its current state, potential implications, and how it might evolve over time. Include specific examples, evidence of its presence, and why it matters for strategic planning.]
     **Impact:** [1-10]
     **Time:** [Near/Medium/Long]\n
 
 ##Key Uncertainties:
 ** [Number]. [Title]**\n
    - **Domain:** [Domain]
-    **Description:** [2 sentence]
+    **Description:** [Provide exactly 5 sentences describing this uncertainty thoroughly. Explain the nature of the uncertainty, why it exists, what factors contribute to it, potential outcomes, and how it could significantly impact the strategic landscape. Include the range of possibilities and why this uncertainty is particularly important to monitor.]
     **Impact:** [1-10]
     **Time:** [Near/Medium/Long]\n
 
 ## Change Drivers:
 
-**Tech:** [1 key driver]\n
-**Market:** [1 key driver]\n
-**Society:** [1 key driver]\n
-**Demographics:** [1 key driver]\n
-**Economic:** [1 key driver]\n
-**Political:** [1 key driver]\n
-**Legal:** [1 key driver]\n
-**Environmental:** [1 key driver]\n
+**Tech:** [Provide 3 sentences explaining this technology driver in detail, including its current development stage, potential applications, and expected impact on the industry or society]
+
+**Market:** [Provide 3 sentences explaining this market driver comprehensively, including current trends, driving forces, and implications for competitive dynamics and consumer behavior]
+
+**Society:** [Provide 3 sentences explaining this social driver thoroughly, including demographic shifts, cultural changes, and their broader implications for social structures and behaviors]
+
+**Demographics:** [Provide 3 sentences explaining this demographic driver in detail, including population trends, generational shifts, and their impact on economic and social systems]
+
+**Economic:** [Provide 3 sentences explaining this economic driver comprehensively, including financial trends, policy implications, and effects on market dynamics and business environments]
+
+**Political:** [Provide 3 sentences explaining this political driver thoroughly, including governance trends, policy developments, and their impact on regulatory environments and institutional frameworks]
+
+**Legal:** [Provide 3 sentences explaining this legal driver in detail, including regulatory changes, compliance requirements, and their implications for operational frameworks and business practices]
+
+**Environmental:** [Provide 3 sentences explaining this environmental driver comprehensively, including ecological trends, sustainability challenges, and their impact on resource availability and environmental policies]
 """
 
     def format_prompt(self, input_data: Dict[str, Any]) -> str:
@@ -67,28 +74,19 @@ For the time frame \"{time_frame}\" and region \"{region}\":
 
 Identify up to 3 critical Weak Signals, up to 3 Key Uncertainties, and the main Change Drivers (one for each relevant STEEPLED category).
 Focus on the most impactful and relevant items for the problem context.
-For each Weak Signal and Key Uncertainty, provide a title, domain, a 1-2 sentence description, impact rating, and time frame.
+For each Weak Signal and Key Uncertainty, provide a title, domain, a comprehensive 5-sentence description, impact rating, and time frame.
+For each Change Driver, provide a detailed 3-sentence explanation.
 Adhere strictly to the output format sections: ## Weak Signals:, ## Key Uncertainties:, ## Change Drivers: as specified in system instructions."""
 
     async def process(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         try:
             prompt = self.format_prompt(input_data)
-            response = await asyncio.wait_for(
-                self.invoke_llm(prompt),
-                timeout=15
-            )
+            response = await self.invoke_llm(prompt)
             
             return self.format_output({
                 "raw_response": response
             })
             
-        except asyncio.TimeoutError:
-            logger.error("HorizonScanningAgent timed out")
-            return {
-                "status": "error",
-                "error": "Agent timed out. Please try again with a more focused prompt.",
-                "agent_type": self.__class__.__name__
-            }
         except Exception as e:
             logger.error(f"Error in HorizonScanningAgent: {str(e)}")
             return {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analysis History - Strategic Intelligence App</title>
+    <title>Analysis History - Challenges.one</title>
     <!-- Google Fonts for Company Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +14,6 @@
             theme: {
                 extend: {
                     colors: {
-                        // Company Brand Colors (Palette 1)
                         'brand-lapis': '#166697',
                         'brand-kodama': '#E6F1FF', 
                         'brand-nickel': '#939393',
@@ -31,339 +30,467 @@
             }
         }
     </script>
-    <link href="/static/css/main.css?v=2.0.0" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="/static/css/home.css" rel="stylesheet">
 </head>
-<body class="min-h-screen relative overflow-x-hidden bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
-    <!-- Floating Background Orbs -->
-    <div class="floating-orb orb-1"></div>
-    <div class="floating-orb orb-2"></div>
-    <div class="floating-orb orb-3"></div>
-    
-    <!-- Floating Particles -->
-    <div class="particles">
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-    </div>
-
-    <nav class="bg-brand-white shadow-md">
-        <div class="container mx-auto px-4 py-3">
+<body class="bg-slate-50">
+    <div id="root">
+        <div class="min-h-screen bg-slate-100 text-slate-800">
+            <!-- Header -->
+            <header class="bg-brand-oxford text-white shadow-md">
+                <div class="container mx-auto max-w-5xl px-4 py-6">
             <div class="flex items-center justify-between">
                 <!-- Logo and Brand -->
                 <div class="flex items-center">
-                    <img src="/static/Multiverz Logo.png" alt="Multiverz Logo" class="h-10 mr-3">
-                    <span class="text-xl font-brand-black font-black text-brand-oxford">Challenges.one</span>
+                            <img src="/static/Multiverz Logo.png" alt="Challenges.one Logo" class="h-10 mr-3">
+                            <div>
+                                <h1 class="text-2xl md:text-3xl font-brand-black font-black text-white">Challenges.one</h1>
+                                <p class="text-sm text-brand-kodama">Strategic Intelligence Platform</p>
+                            </div>
                 </div>
-                
-                <!-- Navigation Menu -->
-                <div class="hidden md:flex items-center space-x-6">
-                    <a href="/" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Home</a>
-                    <a href="#" class="text-brand-lapis font-brand-regular font-medium">History</a>
-                    <a href="/dashboard" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Dashboard</a>
-                    <a href="/performance" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Performance</a>
-                    <a href="/templates" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Templates</a>
-                    <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">About</a>
-                    <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Contact</a>
-                    <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Help</a>
-                    
-                    <!-- User Info and Logout -->
-                    {% if user %}
-                        <div class="flex items-center space-x-4 ml-6 pl-6 border-l border-brand-kodama">
-                            <span class="text-brand-nickel font-brand-regular font-medium">{{ user.full_name or user.username }}</span>
-                            <form method="post" action="/logout" class="inline">
-                                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-brand-regular font-medium px-4 py-2 rounded-lg transition duration-150 ease-in-out">
-                                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        <!-- Navigation -->
+                        <div class="flex items-center space-x-4">
+                            <a href="/" class="text-brand-kodama hover:text-white transition duration-200 font-brand-regular">
+                                <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                                     </svg>
-                                    Logout
-                                </button>
-                            </form>
+                                Back to Analysis
+                            </a>
                         </div>
-                    {% endif %}
+                    </div>
                 </div>
+            </header>
                 
-                <!-- Mobile Menu Button -->
-                <div class="md:hidden">
-                    <button id="mobile-menu-button" class="text-brand-nickel hover:text-brand-oxford focus:outline-none focus:text-brand-oxford">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            <!-- Main Content -->
+            <main class="container mx-auto max-w-5xl px-4 py-8">
+                <!-- Header Section -->
+                <section class="bg-white p-6 md:p-8 rounded-xl shadow-lg mb-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-3xl font-bold text-brand-oxford font-brand-slab">Analysis History</h2>
+                            <p class="text-brand-nickel mt-2 font-brand-regular">View and manage your previous strategic analyses</p>
+                        </div>
+                        <div class="flex space-x-3">
+                            <button id="refreshHistory" class="bg-brand-lapis text-white px-4 py-2 rounded-lg hover:bg-brand-oxford transition duration-200 font-brand-regular">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                         </svg>
+                                Refresh
                     </button>
                 </div>
             </div>
             
-            <!-- Mobile Menu (Hidden by default) -->
-            <div id="mobile-menu" class="md:hidden hidden mt-4 pb-4 border-t border-brand-kodama">
-                <div class="flex flex-col space-y-3 pt-4">
-                    <a href="/" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Home</a>
-                    <a href="#" class="text-brand-lapis font-brand-regular font-medium">History</a>
-                    <a href="/dashboard" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Dashboard</a>
-                    <a href="/performance" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Performance</a>
-                    <a href="/templates" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Templates</a>
-                    <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">About</a>
-                    <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Contact</a>
-                    <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition duration-150 ease-in-out">Help</a>
-                    
-                    <!-- User Info and Logout for Mobile -->
-                    {% if user %}
-                        <div class="pt-4 mt-4 border-t border-brand-kodama">
-                            <p class="text-brand-nickel font-brand-regular font-medium mb-3">{{ user.full_name or user.username }}</p>
-                            <form method="post" action="/logout">
-                                <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white font-brand-regular font-medium px-4 py-2 rounded-lg transition duration-150 ease-in-out">
-                                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                                    </svg>
-                                    Logout
-                                </button>
-                            </form>
+                    <!-- Filters -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-brand-oxford mb-2 font-brand-regular">Search</label>
+                            <input type="text" id="searchInput" placeholder="Search analyses..." 
+                                   class="w-full px-4 py-2 border-2 border-brand-nickel rounded-lg focus:ring-2 focus:ring-brand-lapis focus:border-brand-lapis outline-none transition duration-200 font-brand-regular">
                         </div>
-                    {% endif %}
+                        <div>
+                            <label class="block text-sm font-medium text-brand-oxford mb-2 font-brand-regular">Status</label>
+                            <select id="statusFilter" class="w-full px-4 py-2 border-2 border-brand-nickel rounded-lg focus:ring-2 focus:ring-brand-lapis focus:border-brand-lapis outline-none transition duration-200 font-brand-regular">
+                                <option value="">All Status</option>
+                                <option value="completed">Completed</option>
+                                <option value="failed">Failed</option>
+                                <option value="in_progress">In Progress</option>
+                            </select>
                 </div>
+                        <div>
+                            <label class="block text-sm font-medium text-brand-oxford mb-2 font-brand-regular">Region</label>
+                            <select id="regionFilter" class="w-full px-4 py-2 border-2 border-brand-nickel rounded-lg focus:ring-2 focus:ring-brand-lapis focus:border-brand-lapis outline-none transition duration-200 font-brand-regular">
+                                <option value="">All Regions</option>
+                                <option value="Global">Global</option>
+                                <option value="North America">North America</option>
+                                <option value="Europe">Europe</option>
+                                <option value="Asia">Asia</option>
+                                <option value="Africa">Africa</option>
+                                <option value="Latin America">Latin America</option>
+                            </select>
             </div>
         </div>
-    </nav>
+                </section>
 
-    <div class="container mx-auto px-4 py-8">
-        <!-- Page Header -->
-        <div class="text-center mb-10">
-            <h1 class="text-4xl font-brand-slab font-bold text-brand-oxford mb-4">Analysis History</h1>
-            <p class="text-lg text-brand-nickel max-w-2xl mx-auto font-brand-regular">Browse and search through your strategic intelligence analyses</p>
-        </div>
-
-        <!-- Search and Filter Section -->
-        <div class="max-w-6xl mx-auto bg-gradient-to-br from-brand-white to-brand-kodama rounded-3xl shadow-2xl p-6 mb-8 border border-brand-kodama">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Search Box -->
-                <div class="lg:col-span-2">
-                    <label for="searchInput" class="block text-sm font-brand-regular font-medium text-brand-oxford mb-2">Search</label>
-                    <div class="relative">
-                        <input type="text" id="searchInput" placeholder="Search by question or keywords..." 
-                               class="w-full rounded-xl border-0 bg-brand-white/80 shadow-inner focus:ring-2 focus:ring-brand-lapis focus:bg-brand-white transition-all duration-300 p-3 pl-10 text-brand-oxford font-brand-regular">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-brand-nickel" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                <!-- Loading Section -->
+                <section id="loading-section" class="bg-white p-6 md:p-8 rounded-xl shadow-lg mb-8 hidden">
+                    <div class="text-center">
+                        <div class="inline-flex items-center justify-center w-12 h-12 bg-brand-lapis rounded-full mb-4">
+                            <svg class="w-6 h-6 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                         </div>
+                        <p class="text-brand-nickel font-brand-regular">Loading analysis history...</p>
                     </div>
-                </div>
+                </section>
 
-                <!-- Status Filter -->
-                <div>
-                    <label for="statusFilter" class="block text-sm font-brand-regular font-medium text-brand-oxford mb-2">Status</label>
-                    <select id="statusFilter" class="w-full rounded-xl border-0 bg-brand-white/80 shadow-inner focus:ring-2 focus:ring-brand-lapis focus:bg-brand-white transition-all duration-300 p-3 text-brand-oxford font-brand-regular">
-                        <option value="">All Statuses</option>
-                        <option value="completed">Completed</option>
-                        <option value="processing">Processing</option>
-                        <option value="failed">Failed</option>
-                    </select>
-                </div>
-
-                <!-- Region Filter -->
-                <div>
-                    <label for="regionFilter" class="block text-sm font-brand-regular font-medium text-brand-oxford mb-2">Region</label>
-                    <select id="regionFilter" class="w-full rounded-xl border-0 bg-brand-white/80 shadow-inner focus:ring-2 focus:ring-brand-lapis focus:bg-brand-white transition-all duration-300 p-3 text-brand-oxford font-brand-regular">
-                        <option value="">All Regions</option>
-                        <option value="global">Global</option>
-                        <option value="north_america">North America</option>
-                        <option value="europe">Europe</option>
-                        <option value="asia">Asia</option>
-                        <option value="africa">Africa</option>
-                        <option value="latin_america">Latin America</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex justify-between items-center mt-6">
-                <div class="flex space-x-3">
-                    <button id="applyFilters" class="bg-gradient-to-r from-brand-lapis to-brand-pervenche text-white font-brand-black font-medium px-6 py-2 rounded-xl hover:from-brand-oxford hover:to-brand-lapis focus:outline-none focus:ring-2 focus:ring-brand-lapis/30 transition-all duration-300">
-                        Apply Filters
-                    </button>
-                    <button id="clearFilters" class="bg-gradient-to-r from-brand-oxford to-brand-nickel text-white font-brand-black font-medium px-6 py-2 rounded-xl hover:from-brand-nickel hover:to-brand-oxford focus:outline-none focus:ring-2 focus:ring-brand-oxford/30 transition-all duration-300">
-                        Clear
-                    </button>
-                </div>
-                <div class="text-sm text-brand-nickel font-brand-regular">
-                    <span id="resultCount">Loading...</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Results Section -->
-        <div class="max-w-6xl mx-auto">
-            <!-- Loading State -->
-            <div id="loadingState" class="text-center py-12">
-                <div class="relative inline-block">
-                    <div class="w-12 h-12 border-4 border-gray-200 rounded-full"></div>
-                    <div class="absolute top-0 left-0 w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                </div>
-                <p class="mt-4 text-gray-600 font-medium">Loading analysis history...</p>
-            </div>
-
-            <!-- History Grid -->
-            <div id="historyGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
-                <!-- Session cards will be inserted here -->
-            </div>
+                <!-- History Results -->
+                <section id="historyResults">
+                    <!-- Results will be populated here -->
+                </section>
 
             <!-- Empty State -->
-            <div id="emptyState" class="text-center py-16 hidden">
-                <div class="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v11a2 2 0 002 2h2m0-13h10a2 2 0 012 2v11a2 2 0 01-2 2H9m0-13V4a2 2 0 012-2h2a2 2 0 012 2v1"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-semibold text-gray-600 mb-2">No analyses found</h3>
-                <p class="text-gray-500 mb-6">Try adjusting your search criteria or create a new analysis.</p>
-                                    <a href="/" class="bg-gradient-to-r from-brand-lapis to-brand-pervenche text-white font-brand-black font-medium px-8 py-3 rounded-xl hover:from-brand-oxford hover:to-brand-lapis focus:outline-none focus:ring-2 focus:ring-brand-lapis/30 transition-all duration-300">
-                        Start New Analysis
-                    </a>
-            </div>
-
-            <!-- Load More Button -->
-            <div id="loadMoreSection" class="text-center mt-8 hidden">
-                <button id="loadMoreBtn" class="bg-white border border-gray-300 text-gray-700 font-medium px-8 py-3 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300">
-                    Load More
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Session Detail Modal -->
-    <div id="sessionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            <!-- Modal Header -->
-            <div class="bg-gradient-to-r from-brand-lapis to-brand-pervenche p-6 text-white">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-2xl font-brand-black font-bold">Analysis Details</h2>
-                    <button id="closeModal" class="text-white hover:text-brand-kodama transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                <section id="emptyState" class="bg-white p-6 md:p-8 rounded-xl shadow-lg text-center hidden">
+                    <div class="max-w-md mx-auto">
+                        <svg class="w-16 h-16 text-brand-nickel mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                    </button>
+                        <h3 class="text-xl font-bold text-brand-oxford mb-2 font-brand-slab">No Analyses Found</h3>
+                        <p class="text-brand-nickel mb-6 font-brand-regular">You haven't created any strategic analyses yet. Start your first analysis to see it here.</p>
+                        <a href="/" class="bg-brand-lapis text-white px-6 py-3 rounded-lg hover:bg-brand-oxford transition duration-200 inline-flex items-center font-brand-black">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Create Analysis
+                        </a>
                 </div>
-            </div>
+                </section>
+            </main>
             
-            <!-- Modal Content -->
-            <div id="modalContent" class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-                <!-- Content will be loaded here -->
-            </div>
+
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-16">
-        <div class="container mx-auto px-4 py-12">
-            <!-- Main Footer Content -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-                <!-- Logo and Description Section -->
-                <div class="lg:col-span-3">
-                    <div class="flex items-center mb-4">
-                        <img src="/static/Multiverz Logo.png" alt="Multiverz Logo" class="h-12 w-auto">
+    <script>
+        // History page functionality
+        let currentAnalyses = [];
+        let filteredAnalyses = [];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAnalysisHistory();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Search input
+            document.getElementById('searchInput').addEventListener('input', filterAnalyses);
+            
+            // Filter dropdowns
+            document.getElementById('statusFilter').addEventListener('change', filterAnalyses);
+            document.getElementById('regionFilter').addEventListener('change', filterAnalyses);
+            
+            // Refresh button
+            document.getElementById('refreshHistory').addEventListener('click', loadAnalysisHistory);
+        }
+
+        async function loadAnalysisHistory() {
+            showLoading();
+            
+            try {
+                const response = await fetch('/api/analysis-history?limit=50');
+                if (response.ok) {
+                    const data = await response.json();
+                    currentAnalyses = data.data?.sessions || [];
+                    filteredAnalyses = [...currentAnalyses];
+                    displayAnalyses();
+                } else {
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+                showEmptyState();
+            }
+            
+            hideLoading();
+        }
+
+        function filterAnalyses() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const regionFilter = document.getElementById('regionFilter').value;
+
+            filteredAnalyses = currentAnalyses.filter(analysis => {
+                const matchesSearch = !searchTerm || 
+                    analysis.strategic_question?.toLowerCase().includes(searchTerm) ||
+                    analysis.region?.toLowerCase().includes(searchTerm);
+                
+                const matchesStatus = !statusFilter || analysis.status === statusFilter;
+                const matchesRegion = !regionFilter || analysis.region === regionFilter;
+
+                return matchesSearch && matchesStatus && matchesRegion;
+            });
+
+            displayAnalyses();
+        }
+
+        function displayAnalyses() {
+            const resultsContainer = document.getElementById('historyResults');
+            const emptyState = document.getElementById('emptyState');
+
+            if (filteredAnalyses.length === 0) {
+                resultsContainer.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            
+            const analysesHTML = filteredAnalyses.map(analysis => `
+                <div class="bg-white p-6 rounded-xl shadow-lg mb-6 hover:shadow-xl transition-shadow duration-200">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-bold text-brand-oxford font-brand-slab mb-2">
+                                ${analysis.strategic_question || 'Untitled Analysis'}
+                            </h3>
+                            <div class="flex flex-wrap gap-4 text-sm text-brand-nickel font-brand-regular">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    ${analysis.time_frame || 'N/A'}
+                                </span>
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    ${analysis.region || 'N/A'}
+                                </span>
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    ${new Date(analysis.created_at).toLocaleDateString()}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="ml-4 flex items-center space-x-2">
+                            ${getStatusBadge(analysis.status)}
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-brand-kodama">
+                        <div class="text-sm text-brand-nickel font-brand-regular">
+                            Session ID: ${analysis.id || 'N/A'}
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="viewAnalysis('${analysis.id}')" 
+                                    class="bg-brand-lapis text-white px-4 py-2 rounded-lg hover:bg-brand-oxford transition duration-200 text-sm font-brand-regular">
+                                View Details
+                            </button>
+                            <button onclick="downloadAnalysis('${analysis.id}')" 
+                                    class="bg-brand-pervenche text-white px-4 py-2 rounded-lg hover:bg-brand-lapis transition duration-200 text-sm font-brand-regular">
+                                Download
+                            </button>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Description Section -->
-                <div class="lg:col-span-9 lg:border-l-4 lg:border-brand-lapis lg:pl-8">
-                    <p class="text-brand-nickel text-justify leading-relaxed font-brand-regular">
-                        Strategic Intelligence App is a cutting-edge platform that harnesses the power of artificial intelligence 
-                        to deliver comprehensive strategic analysis and decision-making support. Our mission is to empower 
-                        organizations and individuals with data-driven insights that transform complex challenges into 
-                        strategic opportunities, enabling smarter decisions for a better future.
+            `).join('');
+
+            resultsContainer.innerHTML = analysesHTML;
+        }
+
+        function getStatusBadge(status) {
+            const statusConfig = {
+                'completed': { color: 'bg-green-100 text-green-800', text: 'Completed' },
+                'failed': { color: 'bg-red-100 text-red-800', text: 'Failed' },
+                'in_progress': { color: 'bg-yellow-100 text-yellow-800', text: 'In Progress' }
+            };
+
+            const config = statusConfig[status] || { color: 'bg-gray-100 text-gray-800', text: 'Unknown' };
+            
+            return `<span class="px-3 py-1 rounded-full text-xs font-medium ${config.color}">${config.text}</span>`;
+        }
+
+        function showLoading() {
+            document.getElementById('loading-section').classList.remove('hidden');
+            document.getElementById('historyResults').innerHTML = '';
+            document.getElementById('emptyState').classList.add('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-section').classList.add('hidden');
+        }
+
+        function showEmptyState() {
+            document.getElementById('emptyState').classList.remove('hidden');
+            document.getElementById('historyResults').innerHTML = '';
+        }
+
+        function viewAnalysis(sessionId) {
+            // Create and show modal with analysis details
+            fetch(`/api/analysis-session/${sessionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showAnalysisModal(data.data);
+                    } else {
+                        alert('Failed to load analysis details');
+                    }
+                })
+                .catch(error => {
+                    console.error('View error:', error);
+                    alert('Error loading analysis details');
+                });
+        }
+
+        function showAnalysisModal(session) {
+            // Create modal HTML
+            const modalHTML = `
+                <div id="analysisModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                        <!-- Modal Header -->
+                        <div class="bg-brand-oxford text-white p-6 flex justify-between items-center">
+                            <h2 class="text-xl font-brand-black">Analysis Details - Session ${session.id}</h2>
+                            <button onclick="closeAnalysisModal()" class="text-white hover:text-brand-kodama text-2xl">&times;</button>
+                        </div>
+                        
+                        <!-- Modal Content -->
+                        <div class="flex-1 overflow-y-auto p-6">
+                            <!-- Session Info -->
+                            <div class="bg-brand-kodama bg-opacity-10 p-4 rounded-lg mb-6">
+                                <h3 class="text-lg font-brand-slab mb-3 text-brand-oxford">Question & Context</h3>
+                                <div class="space-y-2 text-brand-nickel font-brand-regular">
+                                    <p><strong>Strategic Question:</strong> ${session.strategic_question}</p>
+                                    <p><strong>Time Frame:</strong> ${session.time_frame || 'N/A'}</p>
+                                    <p><strong>Region:</strong> ${session.region || 'N/A'}</p>
+                                    <p><strong>Created:</strong> ${new Date(session.created_at).toLocaleString()}</p>
+                                    <p><strong>Status:</strong> <span class="px-2 py-1 rounded-full text-xs ${session.status === 'completed' ? 'bg-green-100 text-green-800' : session.status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">${session.status}</span></p>
+                                    ${session.additional_instructions ? `<p><strong>Additional Instructions:</strong> ${session.additional_instructions}</p>` : ''}
+                                </div>
+                            </div>
+                            
+                            <!-- Agent Results -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-brand-slab text-brand-oxford">Agent Results</h3>
+                                ${session.agent_results && session.agent_results.length > 0 ? 
+                                    session.agent_results.map(result => `
+                                        <div class="border border-brand-kodama rounded-lg p-4">
+                                            <div class="flex justify-between items-center mb-3">
+                                                <h4 class="font-brand-slab text-brand-oxford">${result.agent_name}</h4>
+                                                <span class="px-2 py-1 rounded-full text-xs ${result.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${result.status}</span>
+                                            </div>
+                                            <div class="text-brand-nickel font-brand-regular">
+                                                ${result.formatted_output ? 
+                                                    `<div class="prose max-w-none">${result.formatted_output.split('\\n').map(line => `<p>${line}</p>`).join('')}</div>` :
+                                                    result.raw_response ? 
+                                                    `<p>${result.raw_response}</p>` :
+                                                    '<p class="text-gray-500 italic">No output available</p>'
+                                                }
+                                            </div>
+                                            ${result.processing_time ? `<div class="text-xs text-brand-nickel mt-2">Processing Time: ${result.processing_time.toFixed(2)}s</div>` : ''}
+                                        </div>
+                                    `).join('') :
+                                    '<p class="text-brand-nickel font-brand-regular italic">No agent results available</p>'
+                                }
+                            </div>
+                        </div>
+                        
+                        <!-- Modal Footer -->
+                        <div class="bg-gray-50 p-4 flex justify-end gap-3">
+                            <button onclick="downloadAnalysis(${session.id})" class="bg-brand-pervenche text-white px-4 py-2 rounded-lg hover:bg-brand-lapis transition duration-200 font-brand-regular">
+                                Download
+                            </button>
+                            <button onclick="closeAnalysisModal()" class="bg-brand-nickel text-white px-4 py-2 rounded-lg hover:bg-brand-oxford transition duration-200 font-brand-regular">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to page
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
+            
+            // Close modal when clicking outside
+            document.getElementById('analysisModal').addEventListener('click', function(e) {
+                if (e.target.id === 'analysisModal') {
+                    closeAnalysisModal();
+                }
+            });
+        }
+
+        function closeAnalysisModal() {
+            const modal = document.getElementById('analysisModal');
+            if (modal) {
+                modal.remove();
+                document.body.style.overflow = '';
+            }
+        }
+
+        function downloadAnalysis(sessionId) {
+            try {
+                // Create a simple text download of the analysis
+                fetch(`/api/analysis-session/${sessionId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            const session = data.data;
+                            let content = `Strategic Intelligence Analysis Report\n`;
+                            content += `=========================================\n\n`;
+                            content += `Strategic Question: ${session.strategic_question}\n`;
+                            content += `Time Frame: ${session.time_frame || 'N/A'}\n`;
+                            content += `Region: ${session.region || 'N/A'}\n`;
+                            content += `Created: ${new Date(session.created_at).toLocaleString()}\n`;
+                            content += `Status: ${session.status}\n\n`;
+                            
+                            // Add agent results if available
+                            if (session.agent_results && session.agent_results.length > 0) {
+                                content += `Agent Results:\n`;
+                                content += `==============\n\n`;
+                                session.agent_results.forEach(result => {
+                                    content += `${result.agent_name}:\n`;
+                                    content += `${'-'.repeat(result.agent_name.length + 1)}\n`;
+                                    content += `${result.formatted_output || result.raw_response || 'No output available'}\n\n`;
+                                });
+                            }
+                            
+                            // Create download
+                            const blob = new Blob([content], { type: 'text/plain' });
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `analysis_${sessionId}_${new Date().toISOString().split('T')[0]}.txt`;
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+                        } else {
+                            alert('Failed to load analysis data for download');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Download error:', error);
+                        alert('Error downloading analysis');
+                    });
+            } catch (error) {
+                console.error('Download error:', error);
+                alert('Error downloading analysis');
+            }
+        }
+    </script>
+    
+    <!-- Footer -->
+    <footer class="text-center text-lg-start pt-4 bg-white border-t border-brand-kodama mt-16">
+        <div class="container mx-auto max-w-5xl p-4">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 mb-5">
+                <div class="md:col-span-2 flex justify-center md:justify-start">
+                    <img src="/static/Multiverz Logo.png" alt="Challenges.one Logo" class="h-16 w-auto">
+                </div>
+                <div class="md:col-span-10 md:border-l-2 md:border-brand-lapis md:pl-6">
+                    <p class="mb-0 text-justify text-brand-nickel font-brand-regular text-sm leading-relaxed">
+                        Challenges.one is a social impact-driven open innovation platform that harnesses collective intelligence to create meaningful change in people's lives. With a mission to positively impact at least 100,000 lives through each challenge featured on the platform, it empowers participants to think strategically about future solutions while making a tangible difference.
                     </p>
                 </div>
             </div>
-            
-            <!-- Navigation Links -->
-            <div class="flex flex-wrap justify-center lg:justify-start items-center gap-8 mb-8">
-                <a href="#about" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">About Us</a>
-                <a href="#contact" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Contact Us</a>
-                <a href="#terms" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Terms & Conditions</a>
-                <a href="#privacy" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Privacy Policy</a>
-                <a href="#help" class="text-brand-nickel hover:text-brand-lapis font-brand-regular font-medium transition-colors duration-200">Help & Support</a>
+            <div class="flex flex-col md:flex-row md:items-center justify-between">
+                <div class="mb-4 md:mb-0">
+                    <ul class="flex flex-wrap justify-center md:justify-start gap-4 md:gap-8 mb-0 font-brand-regular">
+                        <li><a href="/about-us" class="text-brand-nickel hover:text-brand-oxford transition duration-200 no-underline">About Us</a></li>
+                        <li><a href="/contact-us" class="text-brand-nickel hover:text-brand-oxford transition duration-200 no-underline">Contact Us</a></li>
+                        <li><a href="/terms-conditions" class="text-brand-nickel hover:text-brand-oxford transition duration-200 no-underline">Terms & Conditions</a></li>
+                        <li><a href="/privacy-policy" class="text-brand-nickel hover:text-brand-oxford transition duration-200 no-underline">Privacy Policy</a></li>
+                    </ul>
+                </div>
             </div>
-            
-            <!-- Divider -->
-            <hr class="border-gray-300 mb-6">
-            
-            <!-- Copyright -->
+            <hr class="border-2 border-brand-lapis my-4">
             <div class="text-center">
-                <p class="text-gray-500 font-medium">
-                    Multiverz © 2025. All rights reserved.
-                </p>
+                <p class="mb-0 text-brand-nickel font-brand-regular pb-5">Multiverz © 2025</p>
             </div>
         </div>
     </footer>
-
-    <script src="/static/js/history.js" defer></script>
-    <script src="/static/js/main.js" defer></script>
-
-    <!-- Mobile Menu Fix Script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Mobile menu script loading...');
-            
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            const mobileMenu = document.getElementById('mobile-menu');
-            
-            console.log('Button found:', !!mobileMenuButton);
-            console.log('Menu found:', !!mobileMenu);
-            
-            if (mobileMenuButton && mobileMenu) {
-                // Add visual feedback
-                mobileMenuButton.style.cursor = 'pointer';
-                
-                mobileMenuButton.addEventListener('click', function(e) {
-                    console.log('Button clicked!');
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    // Toggle menu - need to handle both 'hidden' and responsive classes
-                    const isCurrentlyHidden = mobileMenu.classList.contains('hidden');
-                    
-                    if (isCurrentlyHidden) {
-                        // Show menu: remove 'hidden' and 'md:hidden'
-                        mobileMenu.classList.remove('hidden');
-                        mobileMenu.classList.remove('md:hidden');
-                        mobileMenu.style.display = 'block'; // Force display
-                        console.log('Showing menu');
-                    } else {
-                        // Hide menu: add 'hidden' 
-                        mobileMenu.classList.add('hidden');
-                        mobileMenu.style.display = ''; // Reset display
-                        console.log('Hiding menu');
-                    }
-                    
-                    // Update aria-expanded
-                    mobileMenuButton.setAttribute('aria-expanded', !isCurrentlyHidden);
-                    
-                    // Change icon
-                    const svg = mobileMenuButton.querySelector('svg');
-                    if (svg) {
-                        if (isCurrentlyHidden) {
-                            // Menu is now shown, show X
-                            svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
-                        } else {
-                            // Menu is now hidden, show hamburger
-                            svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>';
-                        }
-                    }
-                    
-                    console.log('Menu state after toggle. Hidden class:', mobileMenu.classList.contains('hidden'));
-                    console.log('Menu display style:', mobileMenu.style.display);
-                });
-                
-                console.log('Mobile menu initialized successfully');
-            } else {
-                console.error('Mobile menu elements not found');
-            }
-        });
-    </script>
 </body>
 </html> 

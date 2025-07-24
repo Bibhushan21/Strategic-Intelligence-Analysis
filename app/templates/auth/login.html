@@ -355,6 +355,36 @@
          </div>
     </div>
     
+    <!-- Footer -->
+    <footer class="text-center text-lg-start pt-4 bg-white border-t border-gray-200 mt-16">
+        <div class="container mx-auto max-w-5xl p-4">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 mb-5">
+                <div class="md:col-span-2 flex justify-center md:justify-start">
+                    <img src="{{ url_for('static', path='Multiverz Logo.png') }}" alt="Challenges.one Logo" class="h-16 w-auto">
+                </div>
+                <div class="md:col-span-10 md:border-l-2 border-blue-600 md:pl-6">
+                    <p class="mb-0 text-justify text-gray-600 text-sm leading-relaxed">
+                        Challenges.one is a social impact-driven open innovation platform that harnesses collective intelligence to create meaningful change in people's lives. With a mission to positively impact at least 100,000 lives through each challenge featured on the platform, it empowers participants to think strategically about future solutions while making a tangible difference.
+                    </p>
+                </div>
+            </div>
+            <div class="flex flex-col md:flex-row md:items-center justify-between">
+                <div class="mb-4 md:mb-0">
+                    <ul class="flex flex-wrap justify-center md:justify-start gap-4 md:gap-8 mb-0">
+                        <li><a href="/about-us" class="text-gray-600 hover:text-gray-800 transition duration-200 no-underline">About Us</a></li>
+                        <li><a href="/contact-us" class="text-gray-600 hover:text-gray-800 transition duration-200 no-underline">Contact Us</a></li>
+                        <li><a href="/terms-conditions" class="text-gray-600 hover:text-gray-800 transition duration-200 no-underline">Terms & Conditions</a></li>
+                        <li><a href="/privacy-policy" class="text-gray-600 hover:text-gray-800 transition duration-200 no-underline">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="border-2 border-blue-600 my-4">
+            <div class="text-center">
+                <p class="mb-0 text-gray-600 pb-5">Multiverz © 2025</p>
+            </div>
+        </div>
+    </footer>
+    
     <script>
         function togglePassword() {
             const passwordField = document.getElementById('password');

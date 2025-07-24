@@ -32,26 +32,26 @@ Each action must be ranked using three key criteria:
     {
       "rank": 1,
       "title": "Action Title",
-      "justification": "Why this is ranked highest—urgency, impact, feasibility"
+      "justification": "Provide 5-7 sentences explaining why this is ranked highest based on urgency, impact, and feasibility criteria. Begin by explaining the urgency factors - why this action must be completed soon and what happens if it's delayed. Continue by detailing the impact this action will have on advancing the solution, mitigating risks, and creating positive outcomes. Then assess the feasibility by explaining current resource availability, capability requirements, and implementation readiness. Include analysis of how this action enables or supports other strategic initiatives. Conclude by synthesizing these three criteria to demonstrate why this ranking is optimal for achieving strategic objectives while maintaining practical implementation considerations."
     },
     {
       "rank": 2,
       "title": "Action Title", 
-      "justification": "..."
+      "justification": "Provide 5-7 sentences explaining why this is ranked second based on urgency, impact, and feasibility criteria. Begin by explaining the urgency factors - why this action must be completed soon and what happens if it's delayed. Continue by detailing the impact this action will have on advancing the solution, mitigating risks, and creating positive outcomes. Then assess the feasibility by explaining current resource availability, capability requirements, and implementation readiness. Include analysis of how this action enables or supports other strategic initiatives. Conclude by synthesizing these three criteria to demonstrate why this ranking is optimal for achieving strategic objectives while maintaining practical implementation considerations."
     }
   ],
   "medium_term_prioritization": [
     {
       "rank": 1,
       "title": "Action Title",
-      "justification": "..."
+      "justification": "Provide 5-7 sentences explaining why this is ranked highest based on urgency, impact, and feasibility criteria. Begin by explaining the urgency factors - why this action must be completed soon and what happens if it's delayed. Continue by detailing the impact this action will have on advancing the solution, mitigating risks, and creating positive outcomes. Then assess the feasibility by explaining current resource availability, capability requirements, and implementation readiness. Include analysis of how this action enables or supports other strategic initiatives. Conclude by synthesizing these three criteria to demonstrate why this ranking is optimal for achieving strategic objectives while maintaining practical implementation considerations."
     }
   ],
   "long_term_prioritization": [
     {
       "rank": 1,
       "title": "Action Title",
-      "justification": "..."
+      "justification": "Provide 5-7 sentences explaining why this is ranked highest based on urgency, impact, and feasibility criteria. Begin by explaining the urgency factors - why this action must be completed soon and what happens if it's delayed. Continue by detailing the impact this action will have on advancing the solution, mitigating risks, and creating positive outcomes. Then assess the feasibility by explaining current resource availability, capability requirements, and implementation readiness. Include analysis of how this action enables or supports other strategic initiatives. Conclude by synthesizing these three criteria to demonstrate why this ranking is optimal for achieving strategic objectives while maintaining practical implementation considerations."
     }
   ]
 }
@@ -59,14 +59,16 @@ Each action must be ranked using three key criteria:
 
 📝 Instructions
 - Rank tasks from highest to lowest (1 = top priority) within each time horizon
-- Each task must have a brief, specific justification using the 3 criteria
+- Each task must have a comprehensive justification of 5-7 sentences using the 3 criteria
 - If tasks are dependent on others or not yet feasible, rank them lower
+- Ensure justifications are thorough, analytical, and provide clear reasoning for the prioritization
 
 ✅ Guidelines
 - Prioritize urgent, high-impact, feasible tasks
 - Use simple, decision-oriented language
 - Keep rankings time-horizon specific, do not cross-rank between near/medium/long term
-- Ensure alignment with long-term goals and strategic focus"""
+- Ensure alignment with long-term goals and strategic focus
+- Provide detailed, comprehensive justifications that fully explain the ranking rationale"""
 
     def format_prompt(self, input_data: Dict[str, Any]) -> str:
         strategic_question = input_data.get('strategic_question', 'N/A')

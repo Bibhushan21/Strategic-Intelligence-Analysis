@@ -24,7 +24,7 @@ import uvicorn
 
 from data.database_service import DatabaseService
 from app.agents.orchestrator_agent import OrchestratorAgent
-from app.routers import ratings, analysis, auth
+from app.routers import auth
 from app.core.auth import get_current_active_user, verify_token, get_user_by_id
 from data.database_config import get_db
 from sqlalchemy.orm import Session
@@ -211,8 +211,6 @@ def clean_string_for_json(text):
 app = FastAPI(title="Strategic Intelligence App")
 
 # Include routers
-app.include_router(ratings.router)
-app.include_router(analysis.router)
 app.include_router(auth.router)
 
 # Authentication helper for cookie-based auth
@@ -303,33 +301,31 @@ class PDFRequest(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
+    """Strategic Intelligence Analysis Home Page - Open access for analytics"""
+    # Allow open access to the home page for strategic analysis
+    user = None
     try:
-        # Try to get user from cookie, if it fails, redirect to login
+        # Try to get user from cookie if available, but don't require it
         user = await get_current_user_from_cookie(
             access_token=request.cookies.get("access_token"),
             db=next(get_db())
         )
-        # If user is authenticated, show the main analysis page
-        return templates.TemplateResponse("index.html", {"request": request, "user": user})
     except:
-        # If not authenticated, show login page
-        return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+        # User not authenticated, but that's okay for the home page
+        pass
+    
+    return templates.TemplateResponse("home.html", {"request": request, "user": user})
+
+@app.get("/analysis", response_class=HTMLResponse)
+async def analysis(request: Request, current_user=Depends(get_current_user_from_cookie)):
+    """Original streaming analysis page (for compatibility)"""
+    return templates.TemplateResponse("analysis.html", {"request": request, "user": current_user})
 
 @app.get("/history", response_class=HTMLResponse)
 async def history(request: Request, current_user=Depends(get_current_user_from_cookie)):
     return templates.TemplateResponse("history.html", {"request": request, "user": current_user})
 
-@app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request, current_user=Depends(get_current_user_from_cookie)):
-    return templates.TemplateResponse("dashboard.html", {"request": request, "user": current_user})
 
-@app.get("/performance", response_class=HTMLResponse)
-async def performance(request: Request, current_user=Depends(get_current_user_from_cookie)):
-    return templates.TemplateResponse("performance.html", {"request": request, "user": current_user})
-
-@app.get("/templates", response_class=HTMLResponse)
-async def templates_page(request: Request, current_user=Depends(get_current_user_from_cookie)):
-    return templates.TemplateResponse("templates.html", {"request": request, "user": current_user})
 
 @app.get("/api/analysis-history")
 async def get_analysis_history(
@@ -338,7 +334,7 @@ async def get_analysis_history(
     status: Optional[str] = None,
     region: Optional[str] = None,
     search: Optional[str] = None,
-    current_user=Depends(get_current_user_from_cookie)
+    request: Request = None
 ):
     try:
         # Add database imports for this endpoint
@@ -357,8 +353,11 @@ async def get_analysis_history(
         try:
             from database_service import DatabaseService
             
-            # Admin users see all data, regular users see only their own data
-            if is_admin_user(current_user):
+            # For now, just show all sessions (no authentication required)
+            current_user = None
+            
+            # Admin users see all data, regular users see only their own data, anonymous users see all data
+            if current_user and is_admin_user(current_user):
                 # Admin sees all analysis sessions
                 sessions = DatabaseService.get_analysis_sessions(
                     limit=limit,
@@ -374,7 +373,7 @@ async def get_analysis_history(
                     region_filter=region,
                     search_query=search
                 )
-            else:
+            elif current_user:
                 # Regular user sees only their own analysis sessions
                 sessions = DatabaseService.get_analysis_sessions_for_user(
                     user_id=current_user.id,
@@ -388,6 +387,22 @@ async def get_analysis_history(
                 # Get total count with same filters - only for current user
                 total_count = DatabaseService.get_analysis_sessions_count_for_user(
                     user_id=current_user.id,
+                    status_filter=status,
+                    region_filter=region,
+                    search_query=search
+                )
+            else:
+                # Anonymous user sees all sessions (limited info)
+                sessions = DatabaseService.get_analysis_sessions(
+                    limit=limit,
+                    offset=offset,
+                    status_filter=status,
+                    region_filter=region,
+                    search_query=search
+                )
+                
+                # Get total count with same filters - all sessions for anonymous
+                total_count = DatabaseService.get_analysis_sessions_count(
                     status_filter=status,
                     region_filter=region,
                     search_query=search
@@ -419,142 +434,6 @@ async def get_analysis_history(
 def is_admin_user(user) -> bool:
     """Check if the user is an admin user."""
     return getattr(user, 'is_admin', False) or user.username == "admin" or user.email == "admin@strategicai.com"
-
-@app.get("/api/dashboard-stats")
-async def get_dashboard_stats(days_back: int = 30, current_user=Depends(get_current_user_from_cookie)):
-    try:
-        # Add database imports for this endpoint
-        import sys
-        import os
-        from pathlib import Path
-        
-        # Get the project root directory
-        current_file = Path(__file__).resolve()
-        project_root = current_file.parent.parent
-        data_path = project_root / 'data'
-        
-        # Add data directory to Python path
-        sys.path.insert(0, str(data_path))
-        
-        try:
-            from database_service import DatabaseService
-            
-            # Admin users see all data, regular users see only their own data
-            if is_admin_user(current_user):
-                # Admin sees all dashboard statistics
-                stats = DatabaseService.get_dashboard_stats(days_back=days_back)
-            else:
-                # Regular user sees only their own statistics
-                stats = DatabaseService.get_dashboard_stats_for_user(
-                    user_id=current_user.id, 
-                    days_back=days_back
-                )
-            
-            return {
-                "status": "success",
-                "data": stats
-            }
-            
-        except ImportError:
-            return {
-                "status": "error",
-                "message": "Database not available",
-                "data": {}
-            }
-            
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch dashboard stats: {str(e)}")
-
-@app.get("/api/performance-analytics")
-async def get_performance_analytics(days_back: int = 30, current_user=Depends(get_current_user_from_cookie)):
-    try:
-        # Add database imports for this endpoint
-        import sys
-        import os
-        from pathlib import Path
-        
-        # Get the project root directory
-        current_file = Path(__file__).resolve()
-        project_root = current_file.parent.parent
-        data_path = project_root / 'data'
-        
-        # Add data directory to Python path
-        sys.path.insert(0, str(data_path))
-        
-        try:
-            from database_service import DatabaseService
-            
-            # Get performance analytics
-            analytics = DatabaseService.get_performance_analytics(days_back=days_back)
-            
-            return {
-                "status": "success",
-                "data": analytics
-            }
-            
-        except ImportError:
-            return {
-                "status": "error",
-                "message": "Database not available",
-                "data": {}
-            }
-            
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch performance analytics: {str(e)}")
-
-@app.get("/api/templates")
-async def get_templates(
-    category: Optional[str] = None,
-    search: Optional[str] = None,
-    limit: int = 50,
-    offset: int = 0
-):
-    """Get analysis templates with filtering"""
-    try:
-        # Add database imports for this endpoint
-        import sys
-        import os
-        from pathlib import Path
-        
-        # Get the project root directory
-        current_file = Path(__file__).resolve()
-        project_root = current_file.parent.parent
-        data_path = project_root / 'data'
-        
-        # Add data directory to Python path
-        sys.path.insert(0, str(data_path))
-        
-        try:
-            from database_service import DatabaseService
-            
-            templates_list = DatabaseService.get_templates(
-                category=category,
-                search_query=search,
-                limit=limit,
-                offset=offset
-            )
-            
-            return {
-                "status": "success",
-                "data": {
-                    "templates": templates_list,
-                    "pagination": {
-                        "limit": limit,
-                        "offset": offset,
-                        "has_more": len(templates_list) == limit
-                    }
-                }
-            }
-            
-        except ImportError:
-            return {
-                "status": "error",
-                "message": "Database not available",
-                "data": {"templates": [], "pagination": {"limit": limit, "offset": offset, "has_more": False}}
-            }
-            
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
 
 @app.get("/api/templates/categories")
 async def get_template_categories():
@@ -817,6 +696,41 @@ async def analyze(request: AnalysisRequest, current_user=Depends(get_current_use
             stream_agent_outputs_realtime(orchestrator, input_data, current_user.id),
             media_type="application/x-ndjson"
         )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/analyze-batch")
+async def analyze_batch(request: AnalysisRequest, current_request: Request):
+    """Process analysis and return all agent results at once (for home page)"""
+    try:
+        # Initialize orchestrator
+        orchestrator = OrchestratorAgent()
+        
+        # Convert request to dict
+        input_data = request.dict()
+        
+        # Try to get current user for attribution (optional)
+        try:
+            if current_request and current_request.cookies.get("access_token"):
+                current_user = await get_current_user_from_cookie(
+                    access_token=current_request.cookies.get("access_token"),
+                    db=next(get_db())
+                )
+                if current_user:
+                    input_data['user_id'] = current_user.id
+        except:
+            pass  # Continue without user attribution if auth fails
+        
+        # Process all agents and return complete results
+        results = await orchestrator.process(input_data)
+        
+        # Return the complete analysis results
+        return {
+            "status": "success",
+            "results": results,
+            "session_id": orchestrator.current_session_id
+        }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

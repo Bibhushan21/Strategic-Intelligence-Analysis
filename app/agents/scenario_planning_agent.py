@@ -14,7 +14,7 @@ class ScenarioPlanningAgent(BaseAgent):
     def get_system_prompt(self) -> str:
         return """You are the Scenario Planning Agent. Your task is to analyze a given problem statement and generate 8 well-structured future scenarios using two strategic foresight frameworks:
 
-🌐 1. GBN Framework (Global Business Network)
+ 1. GBN Framework (Global Business Network)
 Identify 2 critical uncertainties or weak signals that could strongly shape the future of the problem.
 
 Place one uncertainty on the X-axis and one on the Y-axis to form a 2x2 matrix.
@@ -29,7 +29,7 @@ matrix_position: A1, A2, B1, or B2 (indicating quadrant)
 
 description: A narrative (150–300 words) that describes how this future might unfold and how it affects the original challenge
 
-🔁 2. Change Progression Model
+ 2. Change Progression Model
 Choose 1 key uncertainty or weak signal.
 
 Show how it might evolve over 4 levels of change:
@@ -51,7 +51,7 @@ title: A creative title that reflects the future
 description: A scenario (150–300 words) that shows how the system evolves and the effects of the change
 
 
-🧠 Notes for Writing
+ Notes for Writing
 All scenarios must be realistic, internally consistent, and clearly based on the original problem statement.
 
 Use engaging but clear language so that decision-makers can visualize each future.
@@ -128,11 +128,11 @@ Ensure all requested fields for each scenario type are present and distinct. Adh
             if not stripped_line and not description_buffer: # Skip empty lines unless in a description
                 continue
 
-            if "🌐 1. GBN Framework" in line or "1. GBN Framework" in line:
+            if " 1. GBN Framework" in line or "1. GBN Framework" in line:
                 save_current_scenario()
                 current_framework = "gbn"
                 continue
-            elif "🔁 2. Change Progression Model" in line or "2. Change Progression Model" in line:
+            elif " 2. Change Progression Model" in line or "2. Change Progression Model" in line:
                 save_current_scenario()
                 current_framework = "change_progression"
                 continue
@@ -222,7 +222,7 @@ Ensure all requested fields for each scenario type are present and distinct. Adh
 
         markdown_output = "# Scenario Planning Analysis\n\n"
 
-        markdown_output += "## 🌐 GBN Framework Scenarios\n\n"
+        markdown_output += "##  GBN Framework Scenarios\n\n"
         if structured_scenarios["gbn_scenarios"]:
             for i, scenario in enumerate(structured_scenarios["gbn_scenarios"], 1):
                 markdown_output += f"### GBN Scenario {i}: {scenario.get('title', 'N/A')}\n\n"
@@ -231,7 +231,7 @@ Ensure all requested fields for each scenario type are present and distinct. Adh
         else:
             markdown_output += "No GBN scenarios were parsed or generated.\n\n"
         
-        markdown_output += "## 🔁 Change Progression Model Scenarios\n\n"
+        markdown_output += "##  Change Progression Model Scenarios\n\n"
         if structured_scenarios["change_progression_scenarios"]:
             for i, scenario in enumerate(structured_scenarios["change_progression_scenarios"], 1):
                 markdown_output += f"### Change Progression Scenario {i}: {scenario.get('title', 'N/A')} ({scenario.get('level', 'N/A')})\n\n"

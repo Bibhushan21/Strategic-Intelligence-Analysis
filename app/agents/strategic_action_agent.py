@@ -29,16 +29,16 @@ You MUST format your response using exactly this markdown structure:
 **Summary:** [1-2 sentence description]
 
 **Action Items:**
-1. **[Action Name]** - [Description] -- **Priority:** [High/Medium/Low]
-2. **[Action Name]** - [Description] -- **Priority:** [High/Medium/Low]
-3. **[Action Name]** - [Description] -- **Priority:** [High/Medium/Low]
+1. **[Action Name]** - [Provide exactly 3 sentences describing this action in comprehensive detail. Explain what needs to be done, how it should be executed, why it's important, what resources are required, and what specific outcomes are expected. Include implementation considerations, potential challenges, and success indicators.] -- **Priority:** [High/Medium/Low]
+2. **[Action Name]** - [Provide exactly 3 sentences describing this action in comprehensive detail. Explain what needs to be done, how it should be executed, why it's important, what resources are required, and what specific outcomes are expected. Include implementation considerations, potential challenges, and success indicators.] -- **Priority:** [High/Medium/Low]
+3. **[Action Name]** - [Provide exactly 3 sentences describing this action in comprehensive detail. Explain what needs to be done, how it should be executed, why it's important, what resources are required, and what specific outcomes are expected. Include implementation considerations, potential challenges, and success indicators.] -- **Priority:** [High/Medium/Low]
 
 #### Strategic Idea 2: [Title]
 **Summary:** [1-2 sentence description]
 
 **Action Items:**
-1. **[Action Name]** - [Description] -- **Priority:** [High/Medium/Low]
-2. **[Action Name]** - [Description] -- **Priority:** [High/Medium/Low]
+1. **[Action Name]** - [Provide exactly 3 sentences describing this action in comprehensive detail. Explain what needs to be done, how it should be executed, why it's important, what resources are required, and what specific outcomes are expected. Include implementation considerations, potential challenges, and success indicators.] -- **Priority:** [High/Medium/Low]
+2. **[Action Name]** - [Provide exactly 3 sentences describing this action in comprehensive detail. Explain what needs to be done, how it should be executed, why it's important, what resources are required, and what specific outcomes are expected. Include implementation considerations, potential challenges, and success indicators.] -- **Priority:** [High/Medium/Low]
 
 ### Medium-Term (2–5 years): Strategic positioning, moderate complexity
 
@@ -46,8 +46,8 @@ You MUST format your response using exactly this markdown structure:
 **Summary:** [1-2 sentence description]
 
 **Action Items:**
-1. **[Action Name]** - [Description] -- **Priority:** [High/Medium/Low]
-2. **[Action Name]** - [Description] -- **Priority:** [High/Medium/Low]
+1. **[Action Name]** - [Provide exactly 3 sentences describing this action in comprehensive detail. Explain what needs to be done, how it should be executed, why it's important, what resources are required, and what specific outcomes are expected. Include implementation considerations, potential challenges, and success indicators.] -- **Priority:** [High/Medium/Low]
+2. **[Action Name]** - [Provide exactly 3 sentences describing this action in comprehensive detail. Explain what needs to be done, how it should be executed, why it's important, what resources are required, and what specific outcomes are expected. Include implementation considerations, potential challenges, and success indicators.] -- **Priority:** [High/Medium/Low]
 
 ### Long-Term (5–10 years): Visionary transformation
 
@@ -55,8 +55,8 @@ You MUST format your response using exactly this markdown structure:
 **Summary:** [1-2 sentence description]
 
 **Action Items:**
-1. **[Action Name]** - [Description] -- **Priority:** [High/Medium/Low]
-2. **[Action Name]** - [Description] -- **Priority:** [High/Medium/Low]
+1. **[Action Name]** - [Provide exactly 3 sentences describing this action in comprehensive detail. Explain what needs to be done, how it should be executed, why it's important, what resources are required, and what specific outcomes are expected. Include implementation considerations, potential challenges, and success indicators.] -- **Priority:** [High/Medium/Low]
+2. **[Action Name]** - [Provide exactly 3 sentences describing this action in comprehensive detail. Explain what needs to be done, how it should be executed, why it's important, what resources are required, and what specific outcomes are expected. Include implementation considerations, potential challenges, and success indicators.] -- **Priority:** [High/Medium/Low]
 
 🛠️ Guidelines for Each Strategic Idea:
 - Provide 2-3 strategic ideas per time horizon
@@ -64,6 +64,7 @@ You MUST format your response using exactly this markdown structure:
 - Assign priority (High/Medium/Low) based on urgency, impact, and feasibility
 - Keep actions solution-oriented and operationally defined
 - Use simple, direct language suitable for decision-makers
+- Ensure each action item description contains exactly 3 comprehensive sentences with detailed implementation guidance
 
 ✅ CRITICAL: Follow the exact markdown format above. Use ### for time horizons, #### for strategic ideas, **bold** for summaries and action items."""
 
