@@ -301,23 +301,21 @@ class PDFRequest(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    """Landing page - Redirect to login if not authenticated, otherwise show dashboard"""
+    """Landing page - Show dashboard directly without authentication"""
+    # Create a mock user or None for template compatibility
     user = None
     try:
-        # Try to get user from cookie if available
+        # Try to get user from cookie if available (optional)
         user = await get_current_user_from_cookie(
             access_token=request.cookies.get("access_token"),
             db=next(get_db())
         )
-        # If user is authenticated, show the main dashboard
-        if user:
-            return templates.TemplateResponse("home.html", {"request": request, "user": user})
     except:
-        # User not authenticated
+        # User not authenticated - continue without user
         pass
     
-    # If no user is authenticated, show the login page as landing page
-    return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+    # Always show the main dashboard regardless of authentication
+    return templates.TemplateResponse("home.html", {"request": request, "user": user})
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request, current_user=Depends(get_current_user_from_cookie)):
@@ -325,13 +323,36 @@ async def dashboard(request: Request, current_user=Depends(get_current_user_from
     return templates.TemplateResponse("home.html", {"request": request, "user": current_user})
 
 @app.get("/analysis", response_class=HTMLResponse)
-async def analysis(request: Request, current_user=Depends(get_current_user_from_cookie)):
+async def analysis(request: Request):
     """Original streaming analysis page (for compatibility)"""
-    return templates.TemplateResponse("analysis.html", {"request": request, "user": current_user})
+    user = None
+    try:
+        # Try to get user from cookie if available (optional)
+        user = await get_current_user_from_cookie(
+            access_token=request.cookies.get("access_token"),
+            db=next(get_db())
+        )
+    except:
+        # User not authenticated - continue without user
+        pass
+    
+    return templates.TemplateResponse("analysis.html", {"request": request, "user": user})
 
 @app.get("/history", response_class=HTMLResponse)
-async def history(request: Request, current_user=Depends(get_current_user_from_cookie)):
-    return templates.TemplateResponse("history.html", {"request": request, "user": current_user})
+async def history(request: Request):
+    """History page - accessible without authentication"""
+    user = None
+    try:
+        # Try to get user from cookie if available (optional)
+        user = await get_current_user_from_cookie(
+            access_token=request.cookies.get("access_token"),
+            db=next(get_db())
+        )
+    except:
+        # User not authenticated - continue without user
+        pass
+    
+    return templates.TemplateResponse("history.html", {"request": request, "user": user})
 
 
 
@@ -691,7 +712,7 @@ async def stream_agent_outputs_realtime(orchestrator: OrchestratorAgent, input_d
         yield safe_json_dumps({"error": str(e)}) + "\n"
 
 @app.post("/analyze")
-async def analyze(request: AnalysisRequest, current_user=Depends(get_current_user_from_cookie)):
+async def analyze(request: AnalysisRequest, current_request: Request):
     try:
         # Initialize orchestrator
         orchestrator = OrchestratorAgent()
@@ -699,9 +720,22 @@ async def analyze(request: AnalysisRequest, current_user=Depends(get_current_use
         # Convert request to dict
         input_data = request.dict()
         
-        # Return real-time streaming response with user information
+        # Try to get current user for attribution (optional)
+        user_id = None
+        try:
+            if current_request and current_request.cookies.get("access_token"):
+                current_user = await get_current_user_from_cookie(
+                    access_token=current_request.cookies.get("access_token"),
+                    db=next(get_db())
+                )
+                if current_user:
+                    user_id = current_user.id
+        except:
+            pass  # Continue without user attribution if auth fails
+        
+        # Return real-time streaming response with optional user information
         return StreamingResponse(
-            stream_agent_outputs_realtime(orchestrator, input_data, current_user.id),
+            stream_agent_outputs_realtime(orchestrator, input_data, user_id),
             media_type="application/x-ndjson"
         )
         
@@ -1321,7 +1355,7 @@ async def get_user_analytics(user_id: str):
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 @app.get("/api/analysis-session/{session_id}")
-async def get_analysis_session(session_id: int, current_user=Depends(get_current_user_from_cookie)):
+async def get_analysis_session(session_id: int, request: Request):
     try:
         # Add database imports for this endpoint
         import sys
@@ -1348,8 +1382,20 @@ async def get_analysis_session(session_id: int, current_user=Depends(get_current
                     "message": "Session not found"
                 }, status_code=404)
             
-            # Admin users can access all sessions, regular users only their own
-            if not is_admin_user(current_user) and session.get('user_id') != current_user.id:
+            # Try to get current user for access control (optional)
+            current_user = None
+            try:
+                if request and request.cookies.get("access_token"):
+                    current_user = await get_current_user_from_cookie(
+                        access_token=request.cookies.get("access_token"),
+                        db=next(get_db())
+                    )
+            except:
+                pass  # Continue without user authentication
+            
+            # If user is authenticated and not admin, check access to their own sessions only
+            # If no user is authenticated, allow access to all sessions (for demo purposes)
+            if current_user and not is_admin_user(current_user) and session.get('user_id') != current_user.id:
                 return JSONResponse({
                     "status": "error",
                     "message": "Access denied"
