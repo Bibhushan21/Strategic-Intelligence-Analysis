@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - challenges.one</title>
+    <title>Welcome to Challenges.one - Strategic Intelligence Platform</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -25,6 +25,14 @@
             font-family: 'Roboto', sans-serif;
             background: linear-gradient(135deg, var(--oxford-blue) 0%, var(--lapis-jewel) 50%, var(--pervenche) 100%);
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .main-content {
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -286,10 +294,208 @@
                 font-size: 24px;
             }
         }
+        
+        /* Footer Styles */
+        footer {
+            margin-top: auto;
+        }
+        
+        footer a {
+            text-decoration: none;
+        }
+        
+        footer a:hover {
+            text-decoration: none;
+        }
+        
+        footer ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        /* Grid system for footer */
+        .grid {
+            display: grid;
+        }
+        
+        .grid-cols-1 {
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+        }
+        
+        .gap-4 {
+            gap: 1rem;
+        }
+        
+        .gap-6 {
+            gap: 1.5rem;
+        }
+        
+        .gap-8 {
+            gap: 2rem;
+        }
+        
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+        
+        .mb-6 {
+            margin-bottom: 1.5rem;
+        }
+        
+        .mb-0 {
+            margin-bottom: 0;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .text-justify {
+            text-align: justify;
+        }
+        
+        .text-sm {
+            font-size: 0.875rem;
+        }
+        
+        .leading-relaxed {
+            line-height: 1.625;
+        }
+        
+        .flex {
+            display: flex;
+        }
+        
+        .flex-col {
+            flex-direction: column;
+        }
+        
+        .flex-row {
+            flex-direction: row;
+        }
+        
+        .flex-wrap {
+            flex-wrap: wrap;
+        }
+        
+        .justify-center {
+            justify-content: center;
+        }
+        
+        .justify-start {
+            justify-content: flex-start;
+        }
+        
+        .justify-between {
+            justify-content: space-between;
+        }
+        
+        .items-center {
+            align-items: center;
+        }
+        
+        .text-gray-600 {
+            color: #6B7280;
+        }
+        
+        .hover\\:text-blue-600:hover {
+            color: #2563EB;
+        }
+        
+        .transition {
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+        }
+        
+        .duration-200 {
+            transition-duration: 200ms;
+        }
+        
+        .max-w-6xl {
+            max-width: 72rem;
+        }
+        
+        .mx-auto {
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .px-6 {
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+        
+        .py-8 {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        
+        .h-16 {
+            height: 4rem;
+        }
+        
+        .w-auto {
+            width: auto;
+        }
+        
+        .border-blue-600 {
+            border-color: #2563EB;
+        }
+        
+        .border-l-2 {
+            border-left-width: 2px;
+        }
+        
+        .pl-6 {
+            padding-left: 1.5rem;
+        }
+        
+        @media (min-width: 768px) {
+            .md\\:grid-cols-12 {
+                grid-template-columns: repeat(12, minmax(0, 1fr));
+            }
+            
+            .md\\:col-span-2 {
+                grid-column: span 2 / span 2;
+            }
+            
+            .md\\:col-span-10 {
+                grid-column: span 10 / span 10;
+            }
+            
+            .md\\:border-l-2 {
+                border-left-width: 2px;
+            }
+            
+            .md\\:pl-6 {
+                padding-left: 1.5rem;
+            }
+            
+            .md\\:justify-start {
+                justify-content: flex-start;
+            }
+            
+            .md\\:flex-row {
+                flex-direction: row;
+            }
+            
+            .md\\:items-center {
+                align-items: center;
+            }
+            
+            .md\\:mb-0 {
+                margin-bottom: 0;
+            }
+            
+            .md\\:gap-8 {
+                gap: 2rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="login-container">
+    <div class="main-content">
+        <div class="login-container">
         <div class="login-form-section">
             <div class="logo-section">
                 <div class="logo">
@@ -300,8 +506,8 @@
             </div>
             
             <div class="form-header">
-                <h1 class="form-title">Welcome Back</h1>
-                <p class="form-subtitle">Sign in to access your strategic intelligence dashboard</p>
+                <h1 class="form-title">Welcome</h1>
+                <p class="form-subtitle">Sign in to unlock strategic intelligence and drive meaningful change</p>
             </div>
             
             {% if error %}
@@ -353,34 +559,35 @@
                  </div>
              </div>
          </div>
+        </div>
     </div>
     
     <!-- Footer -->
-    <footer class="text-center text-lg-start pt-4 bg-white border-t border-gray-200 mt-16">
-        <div class="container mx-auto max-w-5xl p-4">
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 mb-5">
+    <footer class="bg-white border-t-2 border-gray-200 mt-auto">
+        <div class="max-w-6xl mx-auto px-6 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 mb-6">
                 <div class="md:col-span-2 flex justify-center md:justify-start">
                     <img src="{{ url_for('static', path='Multiverz Logo.png') }}" alt="Challenges.one Logo" class="h-16 w-auto">
                 </div>
                 <div class="md:col-span-10 md:border-l-2 border-blue-600 md:pl-6">
-                    <p class="mb-0 text-justify text-gray-600 text-sm leading-relaxed">
+                    <p class="text-gray-600 text-sm leading-relaxed text-justify mb-0">
                         Challenges.one is a social impact-driven open innovation platform that harnesses collective intelligence to create meaningful change in people's lives. With a mission to positively impact at least 100,000 lives through each challenge featured on the platform, it empowers participants to think strategically about future solutions while making a tangible difference.
                     </p>
                 </div>
             </div>
             <div class="flex flex-col md:flex-row md:items-center justify-between">
                 <div class="mb-4 md:mb-0">
-                    <ul class="flex flex-wrap justify-center md:justify-start gap-4 md:gap-8 mb-0">
-                        <li><a href="/about-us" class="text-gray-600 hover:text-gray-800 transition duration-200 no-underline">About Us</a></li>
-                        <li><a href="/contact-us" class="text-gray-600 hover:text-gray-800 transition duration-200 no-underline">Contact Us</a></li>
-                        <li><a href="/terms-conditions" class="text-gray-600 hover:text-gray-800 transition duration-200 no-underline">Terms & Conditions</a></li>
-                        <li><a href="/privacy-policy" class="text-gray-600 hover:text-gray-800 transition duration-200 no-underline">Privacy Policy</a></li>
+                    <ul class="flex flex-wrap justify-center md:justify-start gap-4 md:gap-8 list-none p-0 m-0">
+                        <li><a href="/about-us" class="text-gray-600 hover:text-blue-600 transition duration-200 text-decoration-none">About Us</a></li>
+                        <li><a href="/contact-us" class="text-gray-600 hover:text-blue-600 transition duration-200 text-decoration-none">Contact Us</a></li>
+                        <li><a href="/terms-conditions" class="text-gray-600 hover:text-blue-600 transition duration-200 text-decoration-none">Terms & Conditions</a></li>
+                        <li><a href="/privacy-policy" class="text-gray-600 hover:text-blue-600 transition duration-200 text-decoration-none">Privacy Policy</a></li>
                     </ul>
                 </div>
             </div>
-            <hr class="border-2 border-blue-600 my-4">
+            <hr style="border: 1px solid #3b82f6; margin: 1.5rem 0;">
             <div class="text-center">
-                <p class="mb-0 text-gray-600 pb-5">Multiverz © 2025</p>
+                <p class="text-gray-600 text-sm mb-0">Multiverz © 2025</p>
             </div>
         </div>
     </footer>

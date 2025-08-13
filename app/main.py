@@ -301,20 +301,28 @@ class PDFRequest(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    """Strategic Intelligence Analysis Home Page - Open access for analytics"""
-    # Allow open access to the home page for strategic analysis
+    """Landing page - Redirect to login if not authenticated, otherwise show dashboard"""
     user = None
     try:
-        # Try to get user from cookie if available, but don't require it
+        # Try to get user from cookie if available
         user = await get_current_user_from_cookie(
             access_token=request.cookies.get("access_token"),
             db=next(get_db())
         )
+        # If user is authenticated, show the main dashboard
+        if user:
+            return templates.TemplateResponse("home.html", {"request": request, "user": user})
     except:
-        # User not authenticated, but that's okay for the home page
+        # User not authenticated
         pass
     
-    return templates.TemplateResponse("home.html", {"request": request, "user": user})
+    # If no user is authenticated, show the login page as landing page
+    return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request, current_user=Depends(get_current_user_from_cookie)):
+    """Main dashboard for authenticated users"""
+    return templates.TemplateResponse("home.html", {"request": request, "user": current_user})
 
 @app.get("/analysis", response_class=HTMLResponse)
 async def analysis(request: Request, current_user=Depends(get_current_user_from_cookie)):
