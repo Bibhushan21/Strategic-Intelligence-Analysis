@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 
-from fastapi import FastAPI, HTTPException, Request, Form, BackgroundTasks, Cookie, Depends, status
+from fastapi import FastAPI, HTTPException, Request, Form, BackgroundTasks, status
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -24,10 +24,8 @@ import uvicorn
 
 from data.database_service import DatabaseService
 from app.agents.orchestrator_agent import OrchestratorAgent
-from app.routers import auth
-from app.core.auth import get_current_active_user, verify_token, get_user_by_id
-from data.database_config import get_db
-from sqlalchemy.orm import Session
+# Authentication imports removed for direct access
+# Database imports removed for simplified access
 
 
 def safe_json_dumps(data):
@@ -210,53 +208,9 @@ def clean_string_for_json(text):
 
 app = FastAPI(title="Strategic Intelligence App")
 
-# Include routers
-app.include_router(auth.router)
+# Authentication router removed for direct access
 
-# Authentication helper for cookie-based auth
-async def get_current_user_from_cookie(
-    access_token: str = Cookie(None),
-    db: Session = Depends(get_db)
-):
-    """Get current user from cookie token."""
-    if not access_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    # Extract token from "Bearer <token>" format
-    if access_token.startswith("Bearer "):
-        token = access_token[7:]
-    else:
-        token = access_token
-    
-    payload = verify_token(token)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    user_id = payload.get("sub")
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    user = get_user_by_id(db, user_id=int(user_id))
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    return user
+# Authentication helper removed for direct access
 
 @app.on_event("startup")
 async def startup_event():
@@ -301,37 +255,22 @@ class PDFRequest(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    """Landing page - Redirect to login if not authenticated, otherwise show dashboard"""
-    user = None
-    try:
-        # Try to get user from cookie if available
-        user = await get_current_user_from_cookie(
-            access_token=request.cookies.get("access_token"),
-            db=next(get_db())
-        )
-        # If user is authenticated, show the main dashboard
-        if user:
-            return templates.TemplateResponse("home.html", {"request": request, "user": user})
-    except:
-        # User not authenticated
-        pass
-    
-    # If no user is authenticated, show the login page as landing page
-    return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+    """Landing page - Direct access to home page without authentication"""
+    return templates.TemplateResponse("home.html", {"request": request})
 
 @app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request, current_user=Depends(get_current_user_from_cookie)):
-    """Main dashboard for authenticated users"""
-    return templates.TemplateResponse("home.html", {"request": request, "user": current_user})
+async def dashboard(request: Request):
+    """Main dashboard (redirect to home)"""
+    return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
 
 @app.get("/analysis", response_class=HTMLResponse)
-async def analysis(request: Request, current_user=Depends(get_current_user_from_cookie)):
+async def analysis(request: Request):
     """Original streaming analysis page (for compatibility)"""
-    return templates.TemplateResponse("analysis.html", {"request": request, "user": current_user})
+    return templates.TemplateResponse("analysis.html", {"request": request})
 
 @app.get("/history", response_class=HTMLResponse)
-async def history(request: Request, current_user=Depends(get_current_user_from_cookie)):
-    return templates.TemplateResponse("history.html", {"request": request, "user": current_user})
+async def history(request: Request):
+    return templates.TemplateResponse("history.html", {"request": request})
 
 
 
@@ -361,60 +300,21 @@ async def get_analysis_history(
         try:
             from database_service import DatabaseService
             
-            # For now, just show all sessions (no authentication required)
-            current_user = None
+            # Show all sessions (no authentication required)
+            sessions = DatabaseService.get_analysis_sessions(
+                limit=limit,
+                offset=offset,
+                status_filter=status,
+                region_filter=region,
+                search_query=search
+            )
             
-            # Admin users see all data, regular users see only their own data, anonymous users see all data
-            if current_user and is_admin_user(current_user):
-                # Admin sees all analysis sessions
-                sessions = DatabaseService.get_analysis_sessions(
-                    limit=limit,
-                    offset=offset,
-                    status_filter=status,
-                    region_filter=region,
-                    search_query=search
-                )
-                
-                # Get total count with same filters - all sessions for admin
-                total_count = DatabaseService.get_analysis_sessions_count(
-                    status_filter=status,
-                    region_filter=region,
-                    search_query=search
-                )
-            elif current_user:
-                # Regular user sees only their own analysis sessions
-                sessions = DatabaseService.get_analysis_sessions_for_user(
-                    user_id=current_user.id,
-                    limit=limit,
-                    offset=offset,
-                    status_filter=status,
-                    region_filter=region,
-                    search_query=search
-                )
-                
-                # Get total count with same filters - only for current user
-                total_count = DatabaseService.get_analysis_sessions_count_for_user(
-                    user_id=current_user.id,
-                    status_filter=status,
-                    region_filter=region,
-                    search_query=search
-                )
-            else:
-                # Anonymous user sees all sessions (limited info)
-                sessions = DatabaseService.get_analysis_sessions(
-                    limit=limit,
-                    offset=offset,
-                    status_filter=status,
-                    region_filter=region,
-                    search_query=search
-                )
-                
-                # Get total count with same filters - all sessions for anonymous
-                total_count = DatabaseService.get_analysis_sessions_count(
-                    status_filter=status,
-                    region_filter=region,
-                    search_query=search
-                )
+            # Get total count with same filters
+            total_count = DatabaseService.get_analysis_sessions_count(
+                status_filter=status,
+                region_filter=region,
+                search_query=search
+            )
             
             return {
                 "status": "success",
@@ -439,9 +339,7 @@ async def get_analysis_history(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch analysis history: {str(e)}")
 
-def is_admin_user(user) -> bool:
-    """Check if the user is an admin user."""
-    return getattr(user, 'is_admin', False) or user.username == "admin" or user.email == "admin@strategicai.com"
+# Admin user check removed for direct access
 
 @app.get("/api/templates/categories")
 async def get_template_categories():
@@ -691,7 +589,7 @@ async def stream_agent_outputs_realtime(orchestrator: OrchestratorAgent, input_d
         yield safe_json_dumps({"error": str(e)}) + "\n"
 
 @app.post("/analyze")
-async def analyze(request: AnalysisRequest, current_user=Depends(get_current_user_from_cookie)):
+async def analyze(request: AnalysisRequest):
     try:
         # Initialize orchestrator
         orchestrator = OrchestratorAgent()
@@ -699,9 +597,9 @@ async def analyze(request: AnalysisRequest, current_user=Depends(get_current_use
         # Convert request to dict
         input_data = request.dict()
         
-        # Return real-time streaming response with user information
+        # Return real-time streaming response without user information
         return StreamingResponse(
-            stream_agent_outputs_realtime(orchestrator, input_data, current_user.id),
+            stream_agent_outputs_realtime(orchestrator, input_data),
             media_type="application/x-ndjson"
         )
         
@@ -709,7 +607,7 @@ async def analyze(request: AnalysisRequest, current_user=Depends(get_current_use
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/analyze-batch")
-async def analyze_batch(request: AnalysisRequest, current_request: Request):
+async def analyze_batch(request: AnalysisRequest):
     """Process analysis and return all agent results at once (for home page)"""
     try:
         # Initialize orchestrator
@@ -717,18 +615,6 @@ async def analyze_batch(request: AnalysisRequest, current_request: Request):
         
         # Convert request to dict
         input_data = request.dict()
-        
-        # Try to get current user for attribution (optional)
-        try:
-            if current_request and current_request.cookies.get("access_token"):
-                current_user = await get_current_user_from_cookie(
-                    access_token=current_request.cookies.get("access_token"),
-                    db=next(get_db())
-                )
-                if current_user:
-                    input_data['user_id'] = current_user.id
-        except:
-            pass  # Continue without user attribution if auth fails
         
         # Process all agents and return complete results
         results = await orchestrator.process(input_data)
@@ -1321,7 +1207,7 @@ async def get_user_analytics(user_id: str):
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 @app.get("/api/analysis-session/{session_id}")
-async def get_analysis_session(session_id: int, current_user=Depends(get_current_user_from_cookie)):
+async def get_analysis_session(session_id: int):
     try:
         # Add database imports for this endpoint
         import sys
@@ -1347,13 +1233,6 @@ async def get_analysis_session(session_id: int, current_user=Depends(get_current
                     "status": "error",
                     "message": "Session not found"
                 }, status_code=404)
-            
-            # Admin users can access all sessions, regular users only their own
-            if not is_admin_user(current_user) and session.get('user_id') != current_user.id:
-                return JSONResponse({
-                    "status": "error",
-                    "message": "Access denied"
-                }, status_code=403)
             
             return {
                 "status": "success",

@@ -64,23 +64,7 @@
                                 </svg>
                                 History
                             </a>
-                            {% if user %}
-                                <div class="flex items-center space-x-4">
-                                    <span class="text-brand-oxford font-brand-regular">{{ user.full_name or user.username }}</span>
-                                    <form method="post" action="/logout" class="inline">
-                                        <button type="submit" class="text-brand-oxford hover:text-brand-lapis transition duration-200 font-brand-regular flex items-center">
-                                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                                            </svg>
-                                            Logout
-                                        </button>
-                                    </form>
-                                </div>
-                            {% else %}
-                                <a href="/login" class="bg-brand-lapis text-white px-4 py-2 rounded-lg hover:bg-brand-pervenche transition duration-200 font-brand-regular">
-                                    Login
-                                </a>
-                            {% endif %}
+                            <!-- Authentication removed for direct access -->
                         </div>
                         
                         <!-- Mobile menu button -->
@@ -103,23 +87,7 @@
                                 History
                             </a>
                             
-                            {% if user %}
-                                <div class="pt-3 border-t border-brand-kodama">
-                                    <p class="text-brand-oxford font-brand-regular mb-3">{{ user.full_name or user.username }}</p>
-                                    <form method="post" action="/logout">
-                                        <button type="submit" class="text-brand-oxford hover:text-brand-lapis font-brand-regular transition duration-200 flex items-center">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                                            </svg>
-                                            Logout
-                                        </button>
-                                    </form>
-                                </div>
-                            {% else %}
-                                <a href="/login" class="bg-brand-lapis text-white px-4 py-2 rounded-lg hover:bg-brand-pervenche transition duration-200 font-brand-regular">
-                                    Login
-                                </a>
-                            {% endif %}
+                            <!-- Authentication removed for direct access -->
                         </div>
                     </div>
                 </div>
