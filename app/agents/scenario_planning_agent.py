@@ -250,21 +250,21 @@ Ensure all requested fields for each scenario type are present and distinct. Adh
         })
         raw_response = data.get("raw_response", "") # Get raw_response for fallback or partial display
 
-        markdown_output = "# Scenario Planning Analysis\n\n"
+        markdown_output = ""
 
-        markdown_output += "##  GBN Framework Scenarios\n\n"
+        markdown_output += "# GBN Framework Scenarios\n\n"
         if structured_scenarios["gbn_scenarios"]:
             for i, scenario in enumerate(structured_scenarios["gbn_scenarios"], 1):
-                markdown_output += f"### GBN Scenario {i}: {scenario.get('title', 'N/A')}\n\n"
+                markdown_output += f"## GBN Scenario {i}: **{scenario.get('title', 'N/A')}**\n\n"
                 markdown_output += f"**Matrix Position:** {scenario.get('matrix_position', 'N/A')}\n\n"
                 markdown_output += f"**Description:**\n{scenario.get('description', 'N/A')}\n\n---\n\n"
         else:
             markdown_output += "No GBN scenarios were parsed or generated.\n\n"
         
-        markdown_output += "##  Change Progression Model Scenarios\n\n"
+        markdown_output += "# Change Progression Model Scenarios\n\n"
         if structured_scenarios["change_progression_scenarios"]:
             for i, scenario in enumerate(structured_scenarios["change_progression_scenarios"], 1):
-                markdown_output += f"### Change Progression Scenario {i}: {scenario.get('title', 'N/A')} ({scenario.get('level', 'N/A')})\n\n"
+                markdown_output += f"## Change Progression Scenario {i}: **{scenario.get('title', 'N/A')}** ({scenario.get('level', 'N/A')})\n\n"
                 markdown_output += f"**Level:** {scenario.get('level', 'N/A')}\n\n"
                 markdown_output += f"**Description:**\n{scenario.get('description', 'N/A')}\n\n---\n\n"
         else:
@@ -272,8 +272,26 @@ Ensure all requested fields for each scenario type are present and distinct. Adh
 
         # Fallback for markdown if parsing somehow failed badly but we have a raw response
         if not structured_scenarios["gbn_scenarios"] and not structured_scenarios["change_progression_scenarios"] and raw_response:
-            logger.warn("Scenario parsing resulted in empty structured data; using raw response for markdown.")
-            markdown_output = "# Mapping Potential Futures To Inform Presents Decicisions)\n\n" + raw_response
+            logger.warn("Scenario parsing resulted in empty structured data; formatting raw response for markdown.")
+            
+            formatted_response = raw_response
+            
+            # Make main headers H1 and bold
+            formatted_response = re.sub(r'^\s*\d+\.\s*(GBN Framework)', r'# **\1**', formatted_response, flags=re.MULTILINE | re.IGNORECASE)
+            formatted_response = re.sub(r'^\s*\d+\.\s*(Change Progression Model)', r'# **\1**', formatted_response, flags=re.MULTILINE | re.IGNORECASE)
+            formatted_response = re.sub(r'^\s*(\*\*?Synthesis of scenarios:\*\*?)', r'# **Synthesis of Scenarios**', formatted_response, flags=re.MULTILINE | re.IGNORECASE)
+            formatted_response = re.sub(r'^\s*(\*\*?Key strategic insights.+:\*\*?)', r'# **Key Strategic Insights and Early Warning Indicators**', formatted_response, flags=re.MULTILINE | re.IGNORECASE)
+
+            # Make scenario titles H2 and bold
+            formatted_response = re.sub(r'^\s*(?:[\*\-]\s*)?title:\s*\*\*(.*)\*\*', r'## **\1**', formatted_response, flags=re.MULTILINE)
+            formatted_response = re.sub(r'^\s*(?:[\*\-]\s*)?title:\s*(.*)', r'## **\1**', formatted_response, flags=re.MULTILINE)
+
+            # Bold the other labels
+            formatted_response = re.sub(r'^\s*(?:[\*\-]\s*)?(matrix_position:)', r'**\1**', formatted_response, flags=re.MULTILINE | re.IGNORECASE)
+            formatted_response = re.sub(r'^\s*(?:[\*\-]\s*)?(level:)', r'**\1**', formatted_response, flags=re.MULTILINE | re.IGNORECASE)
+            formatted_response = re.sub(r'^\s*(?:[\*\-]\s*)?(description:)', r'**\1**', formatted_response, flags=re.MULTILINE | re.IGNORECASE)
+            
+            markdown_output = formatted_response
 
         
         return {

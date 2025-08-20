@@ -496,17 +496,17 @@ Create exactly 3 initiatives total. Make titles specific and descriptive based o
     def format_output(self, blueprints: List[Dict[str, Any]], response: str) -> Dict[str, Any]:
         """Format the output in a structured way."""
         # Create a human-readable markdown format
-        markdown_output = "# Detailing of High Impact Actionable Ideas\n\n"
+        markdown_output = "\n\n"
         
         if not blueprints:
             markdown_output += "No high-impact initiatives identified.\n"
         else:
-            markdown_output += f"## Strategic Implementation Roadmap\n\n"
+            markdown_output += f"# Strategic Implementation Roadmap\n\n"
             markdown_output += f"This comprehensive roadmap outlines {len(blueprints)} strategic initiatives designed to address high-priority actions across all time horizons.\n\n"
             
             for i, blueprint in enumerate(blueprints, 1):
                 time_horizon = blueprint.get('time_horizon', 'Not specified')
-                markdown_output += f"## {time_horizon} Initiative: {blueprint.get('title', 'Untitled Initiative')}\n\n"
+                markdown_output += f"# {time_horizon} Initiative: {blueprint.get('title', 'Untitled Initiative')}\n\n"
                 markdown_output += f"**Time Horizon:** {time_horizon}\n\n"
                 markdown_output += f"**Why Important:** {blueprint.get('why_important', 'Not specified')}\n\n"
                 markdown_output += f"**Who It Impacts:** {blueprint.get('who_it_impacts', 'Not specified')}\n\n"
@@ -515,7 +515,7 @@ Create exactly 3 initiatives total. Make titles specific and descriptive based o
                 # Success Metrics
                 metrics = blueprint.get('success_metrics', [])
                 if metrics:
-                    markdown_output += "**Success Metrics:**\n"
+                    markdown_output += "# Success Metrics:\n"
                     for metric in metrics:
                         markdown_output += f"- {metric}\n"
                     markdown_output += "\n"
@@ -523,7 +523,7 @@ Create exactly 3 initiatives total. Make titles specific and descriptive based o
                 # Immediate Tasks
                 tasks = blueprint.get('immediate_tasks', [])
                 if tasks:
-                    markdown_output += "**Immediate Tasks to Begin Implementation:**\n"
+                    markdown_output += "# Immediate Tasks to Begin Implementation:\n"
                     for j, task in enumerate(tasks, 1):
                         markdown_output += f"{j}. {task}\n"
                     markdown_output += "\n"

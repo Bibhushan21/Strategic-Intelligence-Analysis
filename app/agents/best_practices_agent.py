@@ -58,42 +58,42 @@ You MUST format your response using exactly this structure:
 ### Best Practice 1: [Title]
 **Time Frame:** [When was it implemented]
 **Organization:** [Who implemented it]
-**Challenge:** [Challenge context description]
-**Problem:** [What they were trying to solve]
-**Solution:** [Their approach and methodology]
+**Challenge:** [A detailed, 4-5 sentence description of the challenge context]
+**Problem:** [A detailed, 4-5 sentence description of what they were trying to solve]
+**Solution:** [A detailed, 4-5 sentence description of their approach and methodology]
 **Implementation Steps:**
 1. [Step 1 details]
 2. [Step 2 details]
 3. [Step 3 details]
-**Results:** [Key outcomes and impacts]
+**Results:** [A detailed, 4-5 sentence description of key outcomes and impacts]
 **Categorical Tags:** [Tag 1], [Tag 2], [Tag 3], [Tag 4], [Tag 5]
 **Reference:** [Full citation or URL]
 
 ### Best Practice 2: [Title]
 **Time Frame:** [When was it implemented]
 **Organization:** [Who implemented it]
-**Challenge:** [Challenge context description]
-**Problem:** [What they were trying to solve]
-**Solution:** [Their approach and methodology]
+**Challenge:** [A detailed, 4-5 sentence description of the challenge context]
+**Problem:** [A detailed, 4-5 sentence description of what they were trying to solve]
+**Solution:** [A detailed, 4-5 sentence description of their approach and methodology]
 **Implementation Steps:**
 1. [Step 1 details]
 2. [Step 2 details]
 3. [Step 3 details]
-**Results:** [Key outcomes and impacts]
+**Results:** [A detailed, 4-5 sentence description of key outcomes and impacts]
 **Categorical Tags:** [Tag 1], [Tag 2], [Tag 3], [Tag 4], [Tag 5]
 **Reference:** [Full citation or URL]
 
 ### Best Practice 3: [Title]
 **Time Frame:** [When was it implemented]
 **Organization:** [Who implemented it]
-**Challenge:** [Challenge context description]
-**Problem:** [What they were trying to solve]
-**Solution:** [Their approach and methodology]
+**Challenge:** [A detailed, 4-5 sentence description of the challenge context]
+**Problem:** [A detailed, 4-5 sentence description of what they were trying to solve]
+**Solution:** [A detailed, 4-5 sentence description of their approach and methodology]
 **Implementation Steps:**
 1. [Step 1 details]
 2. [Step 2 details]
 3. [Step 3 details]
-**Results:** [Key outcomes and impacts]
+**Results:** [A detailed, 4-5 sentence description of key outcomes and impacts]
 **Categorical Tags:** [Tag 1], [Tag 2], [Tag 3], [Tag 4], [Tag 5]
 **Reference:** [Full citation or URL]
 
@@ -216,9 +216,10 @@ Please provide 3 best practices and a next practice recommendation."""
         references = data.get("references", [])
         
         # Create a human-readable markdown format that matches the raw output
-        markdown_output = "# Identifying Proven Strategies To Inform Solution Design \n\n"
+        markdown_output = " \n\n"
         
         # Split the raw response into sections
+        raw_response = raw_response.replace("###", "#")
         sections = raw_response.split("\n\n")
         
         for section in sections:

@@ -145,6 +145,14 @@ h1, h2, h3 {
     line-height: 1.6;
 }
 
+.section-content h1 {
+    font-size: 1.5rem; /* Equivalent to text-2xl */
+    font-weight: 700; /* Equivalent to font-bold */
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: #1e293b; /* A dark slate gray for good contrast */
+}
+
 .section-content strong {
     color: #1e293b;
     font-weight: 600;

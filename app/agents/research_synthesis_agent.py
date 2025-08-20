@@ -26,6 +26,7 @@ When given a problem statement or challenge along with all research outputs:
 1. Restate the challenge in your own words to confirm understanding.
 2. Analyze all inputs holistically, focusing on interconnections, implications, and strategic meaning rather than repeating raw findings.
 3. Structure your synthesis into five action-oriented sections.
+4. For every major section, identify identical subheadings, consolidate the text from them, and rewrite the grouped points into a single, cohesive paragraph. Use connecting words and phrases to ensure a logical flow. DO NOT use bullet points or numbered lists in the final output.
 
 The Five-Section Research Synthesis Framework
 
@@ -35,7 +36,7 @@ For each key insight:
 1. State the Insight – What is the most critical finding across all research inputs?
 2. Actionable Implication – How does this insight directly inform strategy or intervention?
 3. Strategic Translation – What concrete action or policy does this suggest?
-Deliverable: 2-3 comprehensive insights, each with detailed bullet points covering multiple aspects.
+Deliverable: 3-4 complete insight blocks, each with its own Insight, Actionable Implication, and Strategic Translation sections, which will then be consolidated into paragraphs.
 
 Section 2 – Opportunity Spaces (Where to Act or Innovate)
 Purpose: Identify high-leverage domains for action or innovation based on research and scenario exploration.
@@ -43,7 +44,7 @@ For each opportunity space:
 1. Define the Opportunity – Where is there greatest potential for high-impact intervention?
 2. Rationale – What research or scenario insights highlight this as a priority?
 3. Potential Impact – What tangible benefits or transformative effects could result?
-Deliverable: 2-3 comprehensive opportunity areas, each with detailed bullet points covering multiple dimensions.
+Deliverable: 3–5 clearly defined opportunity areas with brief justifications.
 
 Section 3 – Risk and Resilience (Anticipating Challenges & Building Robustness)
 Purpose: Identify risks and outline practical resilience strategies to remain adaptable under uncertainty.
@@ -51,7 +52,7 @@ For each risk:
 1. Risk Description – What uncertainty or vulnerability emerged from research or scenarios?
 2. Resilience Strategy – What action can mitigate this risk or increase adaptability?
 3. Futureproofing – How can the strategy work under multiple future scenarios?
-Deliverable: 2-3 comprehensive risk areas, each with detailed bullet points covering multiple aspects and mitigation strategies.
+Deliverable: A two-column list mapping risks → resilience strategies.
 
 Section 4 – Innovation Pathways (Transformative Solutions, Not Incremental Fixes)
 Purpose: Highlight breakthrough opportunities by challenging outdated approaches.
@@ -59,7 +60,7 @@ For each pathway:
 1. Gap in Current Approach – Where are existing methods failing or insufficient?
 2. Emerging Innovation – What new idea, model, or technology could drive transformative change?
 3. Strategic Fit – How does this directly advance the challenge solution?
-Deliverable: 2-3 comprehensive innovation pathways, each with detailed bullet points covering gaps, innovations, and strategic fit.
+Deliverable: A list of innovation opportunities mapped to specific gaps.
 
 Section 5 – Quick Wins vs. Long-Term Strategies (Balanced Roadmap)
 Purpose: Provide a two-tier action plan balancing urgent needs with sustainable success.
@@ -69,131 +70,68 @@ Purpose: Provide a two-tier action plan balancing urgent needs with sustainable 
 Deliverable: A two-part roadmap (Quick Wins | Long-Term Strategies).
 
 CRITICAL OUTPUT FORMAT REQUIREMENTS
-You MUST format your response using exactly this structure:
+You MUST format your response using exactly this structure, with each subheading followed by a single, consolidated paragraph. DO NOT use bullet points.
+
+Here is an example for "Key Insights":
 
 **Section 1: Key Insights**
 
 **Insight:**
-- [Supporting detail 1]
-- [Supporting detail 2]
-- [Supporting detail 3]
-- [Supporting detail 4]
-- [Supporting detail 5]
-- [Supporting detail 6]
+AI-powered tools offer significant productivity gains but require careful management of associated risks, as European businesses increasingly adopt them for efficiency while concerns around data privacy and job displacement persist. Simultaneously, a growing consumer demand for sustainability and ethical practices necessitates a shift in business strategy, given that European consumers prioritize these values and companies failing to adapt face reputational damage.
 
 **Actionable Implication:**
-- [Specific implication 1]
-- [Specific implication 2]
-- [Specific implication 3]
-- [Specific implication 4]
-- [Specific implication 5]
-- [Specific implication 6]
+To address these insights, businesses must strategically adopt AI tools while mitigating negative consequences, prioritizing those that enhance productivity without causing significant job displacement and implementing robust data governance. It is also essential to integrate sustainability and ethical considerations into core operations by developing transparent supply chains and implementing measurable sustainability targets.
 
 **Strategic Translation:**
-- [Specific action 1]
-- [Specific action 2]
-- [Specific action 3]
-- [Specific action 4]
-- [Specific action 5]
-- [Specific action 6]
+Long-term success requires developing a phased AI integration plan with clear ethical guidelines, including piloting tools in specific departments and establishing an ethics committee. In parallel, sustainability must be embedded into product development, marketing, and corporate governance, which involves designing eco-friendly products and transparently communicating these efforts to consumers.
 
+---
+
+Apply the same paragraph-based consolidation to all other sections:
 
 **Section 2: Opportunity Spaces**
 
 **Opportunity:**
-- [Key opportunity aspect 1]
-- [Key opportunity aspect 2]
-- [Key opportunity aspect 3]
-- [Key opportunity aspect 4]
-- [Key opportunity aspect 5]
-- [Key opportunity aspect 6]
+[A single paragraph consolidating all "Opportunity" points]
 
 **Rationale:**
-- [Research insight 1]
-- [Research insight 2]
-- [Research insight 3]
-- [Research insight 4]
-- [Research insight 5]
-- [Research insight 6]
+[A single paragraph consolidating all "Rationale" points]
 
 **Potential Impact:**
-- [Specific benefit 1]
-- [Specific benefit 2] 
-- [Specific benefit 3]
-- [Specific benefit 4]
-- [Specific benefit 5]
-- [Specific benefit 6]
-
-
+[A single paragraph consolidating all "Potential Impact" points]
 
 **Section 3: Risk & Resilience**
 
 **Risk:**
-- [Specific risk factor 1]
-- [Specific risk factor 2]
-- [Specific risk factor 3]
-- [Specific risk factor 4]
-- [Specific risk factor 5]
-- [Specific risk factor 6]
+[A single paragraph consolidating all "Risk" points]
 
 **Resilience Strategy:**
-- [Mitigation approach 1]
-- [Mitigation approach 2]
-- [Mitigation approach 3]
-- [Mitigation approach 4]
-- [Mitigation approach 5]
-- [Mitigation approach 6]
+[A single paragraph consolidating all "Resilience Strategy" points]
 
 **Futureproofing:**
-- [Scenario adaptation 1] 
-- [Scenario adaptation 2]
-- [Scenario adaptation 3]
-- [Scenario adaptation 4]
-
-
-
+[A single paragraph consolidating all "Futureproofing" points]
 
 **Section 4: Innovation Pathways**
 
 **Gap:**
-- [Specific gap 1]
-- [Specific gap 2]
-- [Specific gap 3]
-- [Specific gap 4]
-- [Specific gap 5]
-- [Specific gap 6]
+[A single paragraph consolidating all "Gap" points]
 
 **Emerging Innovation:**
-- [Innovation approach 1]
-- [Innovation approach 2]
-- [Innovation approach 3]
-- [Innovation approach 4]
-- [Innovation approach 5]
-- [Innovation approach 6]
+[A single paragraph consolidating all "Emerging Innovation" points]
 
 **Strategic Fit:**
-- [Strategic alignment 1]
-- [Strategic alignment 2]
-- [Strategic alignment 3]
-- [Strategic alignment 4]
-- [Strategic alignment 5]
-- [Strategic alignment 6]
-
-
+[A single paragraph consolidating all "Strategic Fit" points]
 
 **Section 5: Quick Wins vs Long-Term Strategies**
+
 **Quick Wins:**
-- [Quick win 1 - immediate high-impact action]
-- [Quick win 2 - immediate high-impact action]
-- [Quick win 3 - immediate high-impact action]
+[A single paragraph consolidating all "Quick Wins" points]
 
 **Long-Term Strategies:**
-- [Long-term strategy 1 - foundational initiative for 3-10 years]
-- [Long-term strategy 2 - foundational initiative for 3-10 years]
-- [Long-term strategy 3 - foundational initiative for 3-10 years]
+[A single paragraph consolidating all "Long-Term Strategies" points]
 
 **Balance Consideration:**
-- [How quick wins lay groundwork for long-term success]
+[A single paragraph for the "Balance Consideration" section]
 
 Guidelines for the Agent
 * Synthesize, don't duplicate – Focus on meaning and implications, not raw data.
@@ -349,7 +287,7 @@ Ensure all insights are grounded in the provided research and scenarios.
     def format_output(self, parsed_data: Dict[str, Any]) -> Dict[str, Any]:
         """Format the output in a structured way based on the new 5-section parsing."""
         try:
-            markdown_output = "# Distilling Insight To Inform Strategic Planning\n\n"
+            markdown_output = "\n\n"
             
             section_titles_map = {
                 "key_insights": " Key Insights",
@@ -361,7 +299,7 @@ Ensure all insights are grounded in the provided research and scenarios.
 
             for section_key, display_title in section_titles_map.items():
                 if parsed_data.get(section_key):
-                    markdown_output += f"## {display_title}\n\n"
+                    markdown_output += f"# **{display_title.strip()}**\n\n"
                     for item in parsed_data[section_key]:
                         # For numbered format, preserve the structure as-is
                         if item.strip():

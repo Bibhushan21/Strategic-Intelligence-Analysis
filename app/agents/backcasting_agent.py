@@ -48,26 +48,26 @@ You MUST format your response as structured JSON exactly like this:
     {
       "rank": 1,
       "title": "Action Item Title",
-      "justification": "Brief justification in 1-2 sentences explaining why this task is highest priority based on urgency, impact, and feasibility criteria."
+      "justification": "A detailed justification of exactly 7 sentences explaining why this task is the highest priority. This should include a thorough analysis of its urgency, impact, and feasibility, and how it aligns with the overall strategic goals."
     },
     {
       "rank": 2,
       "title": "Action Item Title", 
-      "justification": "Brief justification in 1-2 sentences explaining the ranking rationale."
+      "justification": "A detailed justification of exactly 7 sentences explaining the ranking rationale. This should include a thorough analysis of its urgency, impact, and feasibility, and how it aligns with the overall strategic goals."
     }
   ],
   "medium_term_prioritization": [
     {
       "rank": 1,
       "title": "Action Item Title",
-      "justification": "Brief justification in 1-2 sentences explaining the ranking rationale."
+      "justification": "A detailed justification of exactly 7 sentences explaining the ranking rationale. This should include a thorough analysis of its urgency, impact, and feasibility, and how it aligns with the overall strategic goals."
     }
   ],
   "long_term_prioritization": [
     {
       "rank": 1,
       "title": "Action Item Title",
-      "justification": "Brief justification in 1-2 sentences explaining the ranking rationale."
+      "justification": "A detailed justification of exactly 7 sentences explaining the ranking rationale. This should include a thorough analysis of its urgency, impact, and feasibility, and how it aligns with the overall strategic goals."
     }
   ]
 }
@@ -291,7 +291,7 @@ Focus on creating an actionable priority sequence that decision-makers can execu
     def format_output(self, prioritization_data: Dict[str, Any], response: str) -> Dict[str, Any]:
         """Format the output in a structured way."""
         # Create a human-readable markdown format
-        markdown_output = "# Future to Present Planning\n\n"
+        markdown_output = "\n\n"
         
         time_horizons = {
             'near_term_prioritization': 'Near-Term (0–2 years)',
@@ -302,7 +302,7 @@ Focus on creating an actionable priority sequence that decision-makers can execu
         for section_key, section_title in time_horizons.items():
             items = prioritization_data.get(section_key, [])
             if items:
-                markdown_output += f"## {section_title}\n\n"
+                markdown_output += f"# {section_title}\n\n"
                 for item in sorted(items, key=lambda x: x.get('rank', 999)):
                     rank = item.get('rank', 'N/A')
                     title = item.get('title', 'Untitled Action')
@@ -312,7 +312,7 @@ Focus on creating an actionable priority sequence that decision-makers can execu
                     markdown_output += f"**Justification:** {justification}\n\n"
                     markdown_output += "---\n\n"
             else:
-                markdown_output += f"## {section_title}\n\nNo action items identified for this time horizon.\n\n"
+                markdown_output += f"# {section_title}\n\nNo action items identified for this time horizon.\n\n"
         
         return {
             "status": "success",

@@ -171,9 +171,10 @@ Adhere strictly to the output format sections: ## Weak Signals:, ## Key Uncertai
         raw_response = data.get("raw_response", "")
         
         # Create a human-readable markdown format that matches the raw output
-        markdown_output = "# Spotting Early Signs of Future Trends\n\n"
+        markdown_output = "\n\n"
         
         # Split the raw response into sections
+        raw_response = raw_response.replace("##", "#")
         sections = raw_response.split("\n\n")
         
         for section in sections:

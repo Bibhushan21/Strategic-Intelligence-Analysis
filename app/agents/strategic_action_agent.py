@@ -567,11 +567,11 @@ Focus on creating a practical and actionable roadmap.
         return result
 
     def format_output(self, parsed_action_plan: Dict[str, Any], raw_response: str = "") -> Dict[str, Any]:
-        markdown_output = "# Identifying Actionable Ideas\n\n"
+        markdown_output = "\n\n"
         time_horizon_map = {
-            "near_term_ideas": "## Near-Term (0–2 years)",
-            "medium_term_ideas": "## Medium-Term (2–5 years)",
-            "long_term_ideas": "## Long-Term (5–10 years)"
+            "near_term_ideas": "# Near-Term (0–2 years)",
+            "medium_term_ideas": "# Medium-Term (2–5 years)",
+            "long_term_ideas": "# Long-Term (5–10 years)"
         }
 
         any_ideas_found = False

@@ -104,7 +104,9 @@ Output Guidelines
 * Highlight critical insights and blind spots (bold or bullet key points).
 * Show connections between different sections (e.g., how root causes influence implementation challenges).
 * Conclude with 3â€“5 key takeaways to guide final solution development.
-* Be concise but deep - prioritize insight over length."""
+* Be concise but deep - prioritize insight over length.
+* For each question, provide a detailed answer that is 4-5 sentences long.
+"""
 
     def format_prompt(self, input_data: Dict[str, Any]) -> str:
         strategic_question = input_data.get('strategic_question', 'N/A')
@@ -199,7 +201,7 @@ Please analyze this strategic challenge using The Problem Explorer's Checklist Â
         raw_response_from_process = data.get("raw_response", "")
         
         # Create a human-readable markdown format
-        markdown_output = "# A Framework For Comprehensive Problem Analysis\n\n"
+        markdown_output = "\n\n"
         
         # Add acknowledgment
         if structured_data_from_process.get('acknowledgment'):
@@ -209,7 +211,7 @@ Please analyze this strategic challenge using The Problem Explorer's Checklist Â
         for section in ['section1', 'section2', 'section3', 'section4', 'section5']:
             if section in structured_data_from_process:
                 section_data = structured_data_from_process[section]
-                markdown_output += f"## {section_data['title']}\n\n"
+                markdown_output += f"# {section_data['title']}\n\n"
                 for item in section_data['content']:
                     # Don't add bullet point if item already has one
                     if item.startswith('-') or item.startswith('â€¢'):
@@ -220,7 +222,7 @@ Please analyze this strategic challenge using The Problem Explorer's Checklist Â
         
         # Add takeaways
         if structured_data_from_process.get('takeaways'):
-            markdown_output += "## Key Takeaways\n\n"
+            markdown_output += "# Key Takeaways\n\n"
             for takeaway in structured_data_from_process['takeaways']:
                 markdown_output += f"- {takeaway}\n"
         
